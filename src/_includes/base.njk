@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }}</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            padding-left: 450px;
+        }
+
+        .sidebar {
+            background: #f5f5f5;
+            padding: 20px;
+            border-right: 1px solid #ddd;
+            position: fixed;
+            width: 250px;
+            height: 100vh;
+            top: 0;
+            left: 0;
+            overflow-y: auto;
+        }
+
+        .content {
+            padding: 40px;
+            max-width: 800px;
+        }
+
+        .nav-section {
+            margin-bottom: 30px;
+        }
+
+        .nav-section h3 {
+            margin: 0 0 10px 0;
+            color: #333;
+            font-size: 16px;
+        }
+
+        .nav-links {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .nav-links li {
+            margin: 5px 0;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: #555;
+            padding: 5px 0;
+            display: block;
+        }
+
+        .nav-links a:hover {
+            color: #000;
+        }
+
+        .nav-links .active a {
+            color: #007cba;
+            font-weight: bold;
+        }
+
+        .nav-category {
+            margin: 15px 0;
+        }
+
+        .nav-sublinks {
+            list-style: none;
+            padding: 0;
+            margin: 5px 0 0 15px;
+        }
+
+        .nav-sublinks li {
+            margin: 3px 0;
+        }
+
+        .nav-sublinks a {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .nav-sublinks .active a {
+            color: #007cba;
+            font-weight: bold;
+        }
+
+        /* Мобильная адаптация */
+        @media (max-width: 768px) {
+            body {
+                padding-left: 0;
+            }
+
+            .sidebar {
+                position: static;
+                width: 100%;
+                height: auto;
+            }
+
+            .content {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Левое меню -->
+    <nav class="sidebar">
+        <div class="nav-section">
+            <h3>🏠</h3>
+            <ul class="nav-links">
+                <li class="{% if page.url == '/' %}active{% endif %}">
+                    <a href="/">Главная</a>
+                </li>
+            </ul>
+        </div>
+
+        <div class="nav-section">
+            <h3>⛩️ Аниме</h3>
+            <ul class="nav-links">
+                {% for anime in collections.anime %}
+                <li class="{% if page.url == anime.url %}active{% endif %}">
+                    <a href="{{ anime.url }}">{{ anime.data.title }}</a>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <div class="nav-section">
+            <h3>🏛️ Философия</h3>
+            <ul class="nav-links">
+                {% for categoryName, category in collections.philosophyCategories %}
+                <li class="nav-category">
+                    <strong>{{ categoryName | capitalize }}</strong>
+                    <ul class="nav-sublinks">
+                        {% for item in category.items %}
+                        <li class="{% if page.url == item.url %}active{% endif %}">
+                            <a href="{{ item.url }}">{{ item.data.title }}</a>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Основной контент -->
+    <main class="content">
+        {{ content | safe }}
+    </main>
+</body>
+</html>
