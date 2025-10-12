@@ -34,12 +34,58 @@
             line-height: 1.7;
             color: var(--text-primary);
             background: white;
-            display: grid;
-            grid-template-columns: 300px 1fr;
-            min-height: 100vh;
             font-weight: 400;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* Десктопная версия */
+        .desktop-layout {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            min-height: 100vh;
+        }
+
+        /* Кнопка гамбургер (скрыта на десктопе) */
+        .menu-toggle {
+            display: none;
+            position: fixed;
+            top: 1rem;
+            left: 1rem;
+            z-index: 1001;
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 0.75rem;
+            cursor: pointer;
+            width: 44px;
+            height: 44px;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 4px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .menu-toggle span {
+            display: block;
+            width: 20px;
+            height: 2px;
+            background: var(--text-primary);
+            transition: all 0.3s ease;
+            border-radius: 1px;
+        }
+
+        .menu-toggle.active span:nth-child(1) {
+            transform: rotate(45deg) translate(6px, 6px);
+        }
+
+        .menu-toggle.active span:nth-child(2) {
+            opacity: 0;
+        }
+
+        .menu-toggle.active span:nth-child(3) {
+            transform: rotate(-45deg) translate(6px, -6px);
         }
 
         /* Сайдбар */
@@ -51,7 +97,6 @@
             top: 0;
             overflow-y: auto;
             padding: 0;
-            font-family: var(--font-sans);
         }
 
         .sidebar-header {
@@ -236,31 +281,35 @@
             line-height: 1.6;
         }
 
-        .content strong {
-            font-weight: 600;
-            color: var(--active-color);
-        }
-
-        .content em {
-            font-style: italic;
-            color: var(--text-primary);
-        }
-
         /* Мобильная адаптация */
         @media (max-width: 768px) {
-            body {
-                grid-template-columns: 1fr;
-                font-size: 16px;
+            .desktop-layout {
+                display: block;
+            }
+
+            .menu-toggle {
+                display: flex;
             }
 
             .sidebar {
-                position: static;
-                height: auto;
-                max-height: 60vh;
+                position: fixed;
+                top: 0;
+                left: -280px; /* Скрыто за экраном */
+                width: 280px;
+                height: 100vh;
+                z-index: 1000;
+                transition: left 0.3s ease;
+                box-shadow: 2px 0 12px rgba(0,0,0,0.1);
+            }
+
+            .sidebar.active {
+                left: 0; /* Показываем */
             }
 
             .content {
-                padding: 2.5rem 1.8rem;
+                padding: 5rem 1.8rem 2rem;
+                width: 100%;
+                max-width: none;
             }
 
             .content h1 {
@@ -269,6 +318,27 @@
 
             .content h2 {
                 font-size: 1.5rem;
+            }
+
+            /* Затемнение фона при открытом меню */
+            .sidebar-overlay {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0,0,0,0.5);
+                z-index: 999;
+            }
+
+            .sidebar-overlay.active {
+                display: block;
+            }
+
+            /* Запрещаем скролл при открытом меню */
+            body.menu-open {
+                overflow: hidden;
             }
         }
 
@@ -280,58 +350,112 @@
     </style>
 </head>
 <body class="cyrillic-optimized">
+    <!-- Кнопка гамбургер-меню -->
+    <button class="menu-toggle" id="menuToggle" aria-label="Открыть меню">
+        <span></span>
+        <span></span>
+        <span></span>
+    </button>
+
+    <!-- Затемнение фона -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
     <!-- Левое меню -->
-    <nav class="sidebar">
-        <!-- Заголовок сайта -->
-        <div class="sidebar-header">
-            <a href="{{ pathPrefix }}/" class="site-title">Мысли и заметки</a>
-            <div class="site-subtitle">Собрание размышлений</div>
-        </div>
+    <div class="desktop-layout">
+        <nav class="sidebar" id="sidebar">
+            <!-- Заголовок сайта -->
+            <div class="sidebar-header">
+                <a href="{{ pathPrefix }}/" class="site-title">Мысли и заметки</a>
+                <div class="site-subtitle">Собрание размышлений</div>
+            </div>
 
-        <!-- Главная страница -->
-        <div class="nav-section">
-            <ul class="nav-links">
-                <li class="{% if page.url == '/' %}active{% endif %}">
-                    <a href="{{ pathPrefix }}/">🏠︎ Главная</a>
-                </li>
-            </ul>
-        </div>
+            <!-- Главная страница -->
+            <div class="nav-section">
+                <ul class="nav-links">
+                    <li class="{% if page.url == '/' %}active{% endif %}">
+                        <a href="{{ pathPrefix }}/">🏠︎ Главная</a>
+                    </li>
+                </ul>
+            </div>
 
-        <!-- Аниме -->
-        <div class="nav-section">
-            <h3>⛩️ Аниме</h3>
-            <ul class="nav-links">
-                {% for anime in collections.anime %}
-                <li class="{% if page.url == anime.url %}active{% endif %}">
-                    <a href="{{ pathPrefix }}{{ anime.url }}">{{ anime.data.title }}</a>
-                </li>
-                {% endfor %}
-            </ul>
-        </div>
+            <!-- Аниме -->
+            <div class="nav-section">
+                <h3>⛩️ Аниме</h3>
+                <ul class="nav-links">
+                    {% for anime in collections.anime %}
+                    <li class="{% if page.url == anime.url %}active{% endif %}">
+                        <a href="{{ pathPrefix }}{{ anime.url }}">{{ anime.data.title }}</a>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
 
-        <!-- Философия -->
-        <div class="nav-section">
-            <h3>🏛️ Философия</h3>
-            <ul class="nav-links">
-                {% for categoryName, category in collections.philosophyCategories %}
-                <li class="nav-category">
-                    <strong>{{ categoryName }}</strong>
-                    <ul class="nav-sublinks">
-                        {% for item in category.items %}
-                        <li class="{% if page.url == item.url %}active{% endif %}">
-                            <a href="{{ pathPrefix }}{{ item.url }}">{{ item.data.title }}</a>
-                        </li>
-                        {% endfor %}
-                    </ul>
-                </li>
-                {% endfor %}
-            </ul>
-        </div>
-    </nav>
+            <!-- Философия -->
+            <div class="nav-section">
+                <h3>🏛️ Философия</h3>
+                <ul class="nav-links">
+                    {% for categoryName, category in collections.philosophyCategories %}
+                    <li class="nav-category">
+                        <strong>{{ categoryName }}</strong>
+                        <ul class="nav-sublinks">
+                            {% for item in category.items %}
+                            <li class="{% if page.url == item.url %}active{% endif %}">
+                                <a href="{{ pathPrefix }}{{ item.url }}">{{ item.data.title }}</a>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </nav>
 
-    <!-- Основной контент -->
-    <main class="content">
-        {{ content | safe }}
-    </main>
+        <!-- Основной контент -->
+        <main class="content">
+            {{ content | safe }}
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const menuToggle = document.getElementById('menuToggle');
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            const body = document.body;
+
+            function toggleMenu() {
+                menuToggle.classList.toggle('active');
+                sidebar.classList.toggle('active');
+                overlay.classList.toggle('active');
+                body.classList.toggle('menu-open');
+            }
+
+            // Клик по гамбургеру
+            menuToggle.addEventListener('click', toggleMenu);
+
+            // Клик по overlay (закрытие меню)
+            overlay.addEventListener('click', toggleMenu);
+
+            // Клик по ссылке в меню (закрытие на мобильных)
+            const navLinks = document.querySelectorAll('.sidebar a');
+            navLinks.forEach(link => {
+                link.addEventListener('click', function() {
+                    if (window.innerWidth <= 768) {
+                        toggleMenu();
+                    }
+                });
+            });
+
+            // Закрытие меню при изменении размера окна
+            window.addEventListener('resize', function() {
+                if (window.innerWidth > 768) {
+                    menuToggle.classList.remove('active');
+                    sidebar.classList.remove('active');
+                    overlay.classList.remove('active');
+                    body.classList.remove('menu-open');
+                }
+            });
+        });
+    </script>
 </body>
 </html>
