@@ -9,7 +9,6 @@ Gemfile.lock
 .idea/
 
 *.log
-package-lock.json
 
 _site/
 node_modules/
