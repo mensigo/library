@@ -1,4 +1,9 @@
 module.exports = function(eleventyConfig) {
+    // Добавляем глобальные данные
+    eleventyConfig.addGlobalData("pathPrefix", () => {
+        return process.env.NODE_ENV === 'production' ? '/library' : '';
+    });
+
     // Копируем статические файлы
     eleventyConfig.addPassthroughCopy("src/css");
 
@@ -35,6 +40,6 @@ module.exports = function(eleventyConfig) {
             includes: "_includes"
         },
         templateFormats: ["md", "njk"],
-        markdownTemplateEngine: "njk"
+        markdownTemplateEngine: "njk",
     };
 };

@@ -284,7 +284,7 @@
     <nav class="sidebar">
         <!-- Заголовок сайта -->
         <div class="sidebar-header">
-            <a href="/" class="site-title">Мысли и заметки</a>
+            <a href="{{ pathPrefix }}/" class="site-title">Мысли и заметки</a>
             <div class="site-subtitle">Собрание размышлений</div>
         </div>
 
@@ -292,7 +292,7 @@
         <div class="nav-section">
             <ul class="nav-links">
                 <li class="{% if page.url == '/' %}active{% endif %}">
-                    <a href="/">🏠︎ Главная</a>
+                    <a href="{{ pathPrefix }}/">🏠︎ Главная</a>
                 </li>
             </ul>
         </div>
@@ -303,7 +303,7 @@
             <ul class="nav-links">
                 {% for anime in collections.anime %}
                 <li class="{% if page.url == anime.url %}active{% endif %}">
-                    <a href="{{ anime.url }}">{{ anime.data.title }}</a>
+                    <a href="{{ pathPrefix }}{{ anime.url }}">{{ anime.data.title }}</a>
                 </li>
                 {% endfor %}
             </ul>
@@ -319,7 +319,7 @@
                     <ul class="nav-sublinks">
                         {% for item in category.items %}
                         <li class="{% if page.url == item.url %}active{% endif %}">
-                            <a href="{{ item.url }}">{{ item.data.title }}</a>
+                            <a href="{{ pathPrefix }}{{ item.url }}">{{ item.data.title }}</a>
                         </li>
                         {% endfor %}
                     </ul>
