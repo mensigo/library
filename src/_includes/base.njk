@@ -5,103 +5,202 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ title }}</title>
     <style>
-        body {
+        /* Базовые стили */
+        :root {
+            --sidebar-bg: #fafafa;
+            --border-color: #eaeaea;
+            --text-primary: #2d3748;
+            --text-secondary: #718096;
+            --accent-color: #4a5568;
+            --hover-color: #2d3748;
+            --active-color: #1a202c;
+        }
+
+        * {
             margin: 0;
-            font-family: Arial, sans-serif;
-            padding-left: 450px;
+            padding: 0;
+            box-sizing: border-box;
         }
 
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background: white;
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            min-height: 100vh;
+        }
+
+        /* Сайдбар */
         .sidebar {
-            background: #f5f5f5;
-            padding: 20px;
-            border-right: 1px solid #ddd;
-            position: fixed;
-            width: 250px;
+            background: var(--sidebar-bg);
+            border-right: 1px solid var(--border-color);
             height: 100vh;
+            position: sticky;
             top: 0;
-            left: 0;
             overflow-y: auto;
+            padding: 0;
         }
 
-        .content {
-            padding: 40px;
-            max-width: 800px;
+        .sidebar-header {
+            padding: 2rem 1.5rem 1rem;
+            border-bottom: 1px solid var(--border-color);
         }
 
+        .site-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            text-decoration: none;
+            display: block;
+        }
+
+        .site-subtitle {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-top: 0.25rem;
+        }
+
+        /* Навигация */
         .nav-section {
-            margin-bottom: 30px;
+            padding: 1.5rem 1.5rem 0;
+        }
+
+        .nav-section:last-child {
+            padding-bottom: 2rem;
         }
 
         .nav-section h3 {
-            margin: 0 0 10px 0;
-            color: #333;
-            font-size: 16px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-secondary);
+            margin-bottom: 0.75rem;
         }
 
         .nav-links {
             list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-
-        .nav-links li {
-            margin: 5px 0;
         }
 
         .nav-links a {
             text-decoration: none;
-            color: #555;
-            padding: 5px 0;
+            color: var(--text-primary);
             display: block;
+            padding: 0.5rem 0;
+            font-size: 0.95rem;
+            transition: color 0.2s ease;
+            border-left: 2px solid transparent;
+            padding-left: 0.75rem;
+            margin-left: -0.75rem;
         }
 
         .nav-links a:hover {
-            color: #000;
+            color: var(--hover-color);
+            border-left-color: var(--border-color);
         }
 
         .nav-links .active a {
-            color: #007cba;
-            font-weight: bold;
+            color: var(--active-color);
+            font-weight: 500;
+            border-left-color: var(--accent-color);
         }
 
+        /* Вложенная навигация для философии */
         .nav-category {
-            margin: 15px 0;
+            margin-bottom: 1rem;
+        }
+
+        .nav-category > strong {
+            display: block;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+            text-transform: capitalize;
         }
 
         .nav-sublinks {
             list-style: none;
-            padding: 0;
-            margin: 5px 0 0 15px;
+            padding-left: 0.75rem;
         }
 
         .nav-sublinks li {
-            margin: 3px 0;
+            margin: 0.25rem 0;
         }
 
         .nav-sublinks a {
-            color: #666;
-            font-size: 14px;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            padding: 0.25rem 0;
+            border-left: 1px solid transparent;
+        }
+
+        .nav-sublinks a:hover {
+            color: var(--hover-color);
+            border-left-color: var(--border-color);
         }
 
         .nav-sublinks .active a {
-            color: #007cba;
-            font-weight: bold;
+            color: var(--active-color);
+            border-left-color: var(--accent-color);
+        }
+
+        /* Основной контент */
+        .content {
+            padding: 3rem 4rem;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .content h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            line-height: 1.2;
+            margin-bottom: 1.5rem;
+            color: var(--active-color);
+        }
+
+        .content h2 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin: 2rem 0 1rem;
+            color: var(--text-primary);
+        }
+
+        .content p {
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+
+        .content ul, .content ol {
+            margin: 1rem 0;
+            padding-left: 1.5rem;
+        }
+
+        .content li {
+            margin: 0.5rem 0;
         }
 
         /* Мобильная адаптация */
         @media (max-width: 768px) {
             body {
-                padding-left: 0;
+                grid-template-columns: 1fr;
             }
 
             .sidebar {
                 position: static;
-                width: 100%;
                 height: auto;
+                max-height: 50vh;
             }
 
             .content {
-                padding: 20px;
+                padding: 2rem 1.5rem;
+            }
+
+            .content h1 {
+                font-size: 2rem;
             }
         }
     </style>
@@ -109,15 +208,22 @@
 <body>
     <!-- Левое меню -->
     <nav class="sidebar">
+        <!-- Заголовок сайта -->
+        <div class="sidebar-header">
+            <a href="/" class="site-title">Мысли и заметки</a>
+            <div class="site-subtitle">Собрание размышлений</div>
+        </div>
+
+        <!-- Главная страница -->
         <div class="nav-section">
-            <h3>🏠</h3>
             <ul class="nav-links">
                 <li class="{% if page.url == '/' %}active{% endif %}">
-                    <a href="/">Главная</a>
+                    <a href="/">🏠︎ Главная</a>
                 </li>
             </ul>
         </div>
 
+        <!-- Аниме -->
         <div class="nav-section">
             <h3>⛩️ Аниме</h3>
             <ul class="nav-links">
@@ -129,12 +235,13 @@
             </ul>
         </div>
 
+        <!-- Философия -->
         <div class="nav-section">
             <h3>🏛️ Философия</h3>
             <ul class="nav-links">
                 {% for categoryName, category in collections.philosophyCategories %}
                 <li class="nav-category">
-                    <strong>{{ categoryName | capitalize }}</strong>
+                    <strong>{{ categoryName }}</strong>
                     <ul class="nav-sublinks">
                         {% for item in category.items %}
                         <li class="{% if page.url == item.url %}active{% endif %}">
