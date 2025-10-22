@@ -4,17 +4,18 @@ module.exports = function(eleventyConfig) {
         return process.env.NODE_ENV === 'production' ? '/library' : '';
     });
 
-    // Копируем статические файлы
+    // Копируем статические & js файлы
     eleventyConfig.addPassthroughCopy("src/css");
+    eleventyConfig.addPassthroughCopy("src/js");
 
     // Коллекция аниме
     eleventyConfig.addCollection("anime", function(collection) {
-        return collection.getFilteredByGlob("src/anime/*.md");
+        return collection.getFilteredByGlob("src/pages/anime/*.md");
     });
 
     // Коллекция философских категорий (папки)
     eleventyConfig.addCollection("philosophyCategories", function(collection) {
-        const philosophyItems = collection.getFilteredByGlob("src/philosophy/**/*.md");
+        const philosophyItems = collection.getFilteredByGlob("src/pages/philosophy/**/*.md");
         const categories = {};
 
         philosophyItems.forEach(item => {
