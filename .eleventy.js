@@ -21,7 +21,7 @@ module.exports = function(eleventyConfig) {
         philosophyItems.forEach(item => {
             // Получаем категорию из пути (например: "seneca")
             const pathParts = item.filePathStem.split('/');
-            const category = pathParts[2]; // src/философия/СЕНЕКА/файл.md
+            const category = pathParts[3];  // src/pages/philosophy/seneca/page.md
 
             if (category && !categories[category]) {
                 categories[category] = {
