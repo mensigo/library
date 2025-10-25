@@ -77,8 +77,12 @@
 
         <!-- Основной контент -->
         <main class="content">
-            {{ content | safe }}
+            {% block content %}
+                {{ content | safe }}
+            {% endblock %}
         </main>
+
+        {% block footer %}{% endblock %}
     </div>
 
     <script src="{{ pathPrefix }}/js/scripts.js"></script>

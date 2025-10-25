@@ -1,0 +1,62 @@
+---
+layout: "base.njk"
+---
+
+{% block styles %}
+    <link rel="stylesheet" href="{{ pathPrefix }}/css/page.css">
+{% endblock %}
+
+{% block content %}
+    <div class="page-meta">
+        <!-- Дата публикации -->
+        {% if date %}
+        <div class="meta-item">
+            <span class="meta-label">Просмотр:</span>
+            <time class="meta-value" datetime="{{ date | dateToRfc3339  }}">
+                {{ date | shortDate }}
+            </time>
+        </div>
+        {% endif %}
+
+        <!-- Автор -->
+        {% if author %}
+        <div class="meta-item">
+            <span class="meta-label">Мангака:</span>
+            <span class="meta-value">{{ author }}</span>
+        </div>
+        {% endif %}
+
+        <!-- Теги -->
+        {% if tags %}
+        <div class="meta-item">
+            <span class="meta-label">Теги:</span>
+            <div class="tags">
+                {% for tag in tags %}
+                <span class="tag">{{ tag }}</span>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Оценка -->
+        {% if score %}
+        <div class="meta-item">
+            <span class="meta-label">Оценка:</span>
+            <span class="meta-value">{{ score }}</span>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Оригинальный контент -->
+    <div class="content-wrapper">
+        {{ content | safe }}
+    </div>
+
+    <!-- Дата обновления -->
+    {% if updated %}
+    <div class="page-updated">
+        <small>{{ updated | readableDate }}</small>
+    </div>
+    {% endif %}
+
+{% endblock %}

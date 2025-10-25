@@ -8,6 +8,44 @@ module.exports = function(eleventyConfig) {
     eleventyConfig.addPassthroughCopy("src/css");
     eleventyConfig.addPassthroughCopy("src/js");
 
+    // Фильтр для читаемой даты
+    eleventyConfig.addFilter("readableDate", (dateObj) => {
+        return new Date(dateObj).toLocaleDateString('ru-RU', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+    });
+
+    // Фильтр для даты в формате RFC 3339
+    eleventyConfig.addFilter("dateToRfc3339", (dateObj) => {
+        return new Date(dateObj).toISOString();
+    });
+
+    // Фильтр для короткой даты
+    eleventyConfig.addFilter("shortDate", (dateObj) => {
+        return new Date(dateObj).toLocaleDateString('ru-RU', {
+            year: 'numeric',
+            month: 'long',
+            //day: 'numeric'
+        });
+    });
+
+    // Время чтения
+    eleventyConfig.addFilter("readingTime", (text) => {
+        const wordsPerMinute = 200;
+        const wordCount = text.split(/\s+/).length;
+        return Math.ceil(wordCount / wordsPerMinute);
+    });
+
+    // Слаг для URL
+    eleventyConfig.addFilter("slug", (str) => {
+        return str
+            .toLowerCase()
+            .replace(/[^\w ]+/g, '')
+            .replace(/ +/g, '-');
+    });
+
     // Коллекция аниме
     eleventyConfig.addCollection("anime", function(collection) {
         return collection.getFilteredByGlob("src/pages/anime/*.md");

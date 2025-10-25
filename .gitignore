@@ -12,3 +12,6 @@ Gemfile.lock
 
 _site/
 node_modules/
+
+.env
+*plans*
