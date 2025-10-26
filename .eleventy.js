@@ -46,6 +46,19 @@ module.exports = function(eleventyConfig) {
             .replace(/ +/g, '-');
     });
 
+    // Разделение по сепаратору
+    eleventyConfig.addFilter('split', (str, separator) => {
+        return str.split(separator);
+    });
+
+    // Цвет оценки
+    eleventyConfig.addFilter('getScoreColor', (score) => {
+        const num = parseInt(score.split('/')[0].trim());
+        if (num >= 8) return 'high';
+        if (num >= 5) return 'medium';
+        return 'low';
+    });
+
     // Коллекция аниме
     eleventyConfig.addCollection("anime", function(collection) {
         return collection.getFilteredByGlob("src/pages/anime/*.md");

@@ -42,7 +42,11 @@ layout: "base.njk"
         {% if score %}
         <div class="meta-item">
             <span class="meta-label">Оценка:</span>
-            <span class="meta-value">{{ score }}</span>
+            <span class="score-pill score-{{ score | getScoreColor }}">
+                <span class="score-numerator">{{ score | split('/') | first | trim }}</span>
+                <span class="score-separator">/</span>
+                <span class="score-denominator">10</span>
+            </span>
         </div>
         {% endif %}
     </div>
