@@ -5,6 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ title }}</title>
 
+    {% block meta %}
+    <meta name="title" content="{{ title }}">
+    <meta property="og:site_name" content="My Site">
+    <meta property="og:description" content="My Description">
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="{{ title }}">
+    <meta property="article:author" content="lonalone">
+    <meta property="article:published_time" content="2025-11-01T00:00:00+03:00">
+    <meta property="telegram:channel" content="@lonalone1">
+    <meta property="tg:site_verification" content="g7j8/rPFXfhyrq5q0QQV7EsYWv4=">
+    {% endblock %}
+
     <!-- Предзагрузка шрифтов -->
     <link rel="dns-prefetch" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -76,11 +88,15 @@
         </nav>
 
         <!-- Основной контент -->
-        <main class="content">
-            {% block content %}
-                {{ content | safe }}
-            {% endblock %}
-        </main>
+        <div class="article">
+            <article class="article__content">
+                <main class="content">
+                    {% block content %}
+                        {{ content | safe }}
+                    {% endblock %}
+                </main>
+            </article>
+        </div>
 
         {% block footer %}{% endblock %}
     </div>
