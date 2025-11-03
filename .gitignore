@@ -9,6 +9,7 @@ Gemfile.lock
 .idea/
 
 *.log
+*.png
 
 _site/
 node_modules/

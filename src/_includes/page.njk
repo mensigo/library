@@ -2,17 +2,13 @@
 layout: "base.njk"
 ---
 
-{% block styles %}
-    <link rel="stylesheet" href="{{ pathPrefix }}/css/page.css">
-{% endblock %}
-
 {% block content %}
     <div class="page-meta">
         <!-- Дата публикации -->
         {% if date %}
         <div class="meta-item">
             <span class="meta-label">Просмотр:</span>
-            <time class="meta-value" datetime="{{ date | dateToRfc3339  }}">
+            <time class="meta-value" datetime="{{ date | dateToRfc3339 }}">
                 {{ date | shortDate }}
             </time>
         </div>
@@ -53,7 +49,11 @@ layout: "base.njk"
 
     <!-- Оригинальный контент -->
     <div class="content-wrapper">
-        {{ content | safe }}
+        <div class="article">
+            <article class="article__content">
+                {{ content | safe }}
+            </article>
+        </div>
     </div>
 
     <!-- Дата обновления -->

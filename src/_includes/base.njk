@@ -88,15 +88,15 @@
         </nav>
 
         <!-- Основной контент -->
-        <div class="article">
-            <article class="article__content">
-                <main class="content">
-                    {% block content %}
+        <main class="content">
+            {% block content %}
+                <div class="article">
+                    <article class="article__content">
                         {{ content | safe }}
-                    {% endblock %}
-                </main>
-            </article>
-        </div>
+                    </article>
+                </div>
+            {% endblock %}
+        </main>
 
         {% block footer %}{% endblock %}
     </div>
