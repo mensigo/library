@@ -4,21 +4,35 @@ layout: "base.njk"
 
 {% block content %}
     <div class="page-meta">
-        <!-- Дата публикации -->
-        {% if date %}
+        <!-- Название -->
+        {% if title %}
         <div class="meta-item">
-            <span class="meta-label">Просмотр:</span>
-            <time class="meta-value" datetime="{{ date | dateToRfc3339 }}">
-                {{ date | shortDate }}
-            </time>
+            <span class="meta-label">Тайтл:</span>
+            <span class="meta-value">{{ title }}</span>
         </div>
         {% endif %}
 
-        <!-- Автор -->
-        {% if author %}
+        <!-- Аниме статус -->
+        {% if anime_status %}
+        <div class="meta-item">
+            <span class="meta-label">Аниме:</span>
+            <span class="meta-value">{{ anime_status }}</span>
+        </div>
+        {% endif %}
+
+        <!-- Манга статус -->
+        {% if manga_status %}
+        <div class="meta-item">
+            <span class="meta-label">Манга:</span>
+            <span class="meta-value">{{ manga_status }}</span>
+        </div>
+        {% endif %}
+
+        <!-- Манга автор -->
+        {% if manga_author %}
         <div class="meta-item">
             <span class="meta-label">Мангака:</span>
-            <span class="meta-value">{{ author }}</span>
+            <span class="meta-value">{{ manga_author }}</span>
         </div>
         {% endif %}
 
@@ -45,6 +59,16 @@ layout: "base.njk"
             </span>
         </div>
         {% endif %}
+
+        <!-- Дата просмотра -->
+<!--        {% if watch_date %}-->
+<!--        <div class="meta-item">-->
+<!--            <span class="meta-label">Просмотр:</span>-->
+<!--            <time class="meta-value" datetime="{{ watch_date | dateToRfc3339 }}">-->
+<!--                <i>{{ watch_date | shortDate }}</i>-->
+<!--            </time>-->
+<!--        </div>-->
+<!--        {% endif %}-->
     </div>
 
     <!-- Оригинальный контент -->
@@ -57,9 +81,9 @@ layout: "base.njk"
     </div>
 
     <!-- Дата обновления -->
-    {% if updated %}
+    {% if upd_date %}
     <div class="page-updated">
-        <small>{{ updated | readableDate }}</small>
+        <small>{{ upd_date | readableDate }}</small>
     </div>
     {% endif %}
 

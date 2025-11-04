@@ -1,15 +1,17 @@
 ---
 layout: page.njk
 title: Созданный в бездне
-author: "Акихито Цукуси"
+anime_status: 2 сезона (+3 фильма) / ongoing / 2017 - ...
+manga_status: 14 томов / ongoing / 2012 - ...
+manga_author: Акихито Цукуси
 tags:
   - сэйнэн
   - приключения
   - фэнтези
 
-date: 2025-10-25
+watch_date: 2025-10-25
 score: 6 / 10
-updated: 2025-10-26
+upd_date: 2025-10-26
 ---
 ## Созданный в бездне
 

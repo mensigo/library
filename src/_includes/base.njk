@@ -57,7 +57,9 @@
 
             <!-- Аниме -->
             <div class="nav-section">
-                <h3>⛩️ Аниме</h3>
+                 <h3>
+                    <a href="{{ pathPrefix }}/pages/anime" class="nav-section-title">⛩️ Аниме</a>
+                </h3>
                 <ul class="nav-links">
                     {% for anime in collections.anime %}
                     <li class="{% if page.url == anime.url %}active{% endif %}">
@@ -68,23 +70,23 @@
             </div>
 
             <!-- Философия -->
-            <div class="nav-section">
-                <h3>🏛️ Философия</h3>
-                <ul class="nav-links">
-                    {% for categoryName, category in collections.philosophyCategories %}
-                    <li class="nav-category">
-                        <strong>{{ categoryName }}</strong>
-                        <ul class="nav-sublinks">
-                            {% for item in category.items %}
-                            <li class="{% if page.url == item.url %}active{% endif %}">
-                                <a href="{{ pathPrefix }}{{ item.url }}">{{ item.data.title }}</a>
-                            </li>
-                            {% endfor %}
-                        </ul>
-                    </li>
-                    {% endfor %}
-                </ul>
-            </div>
+<!--            <div class="nav-section">-->
+<!--                <h3>🏛️ Философия</h3>-->
+<!--                <ul class="nav-links">-->
+<!--                    {% for categoryName, category in collections.philosophyCategories %}-->
+<!--                    <li class="nav-category">-->
+<!--                        <strong>{{ categoryName }}</strong>-->
+<!--                        <ul class="nav-sublinks">-->
+<!--                            {% for item in category.items %}-->
+<!--                            <li class="{% if page.url == item.url %}active{% endif %}">-->
+<!--                                <a href="{{ pathPrefix }}{{ item.url }}">{{ item.data.title }}</a>-->
+<!--                            </li>-->
+<!--                            {% endfor %}-->
+<!--                        </ul>-->
+<!--                    </li>-->
+<!--                    {% endfor %}-->
+<!--                </ul>-->
+<!--            </div>-->
         </nav>
 
         <!-- Основной контент -->

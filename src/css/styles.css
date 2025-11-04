@@ -135,6 +135,20 @@ body {
     font-family: var(--font-sans);
 }
 
+.nav-section-title {
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+}
+.nav-section-title:hover,
+.nav-section-title:focus,
+.nav-section-title:active {
+    color: inherit;
+    text-decoration: none;
+    background-color: transparent;
+    outline: none;
+}
+
 .nav-links {
     list-style: none;
 }

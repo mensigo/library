@@ -61,7 +61,10 @@ module.exports = function(eleventyConfig) {
 
     // Коллекция аниме
     eleventyConfig.addCollection("anime", function(collection) {
-        return collection.getFilteredByGlob("src/pages/anime/*.md");
+        return collection.getFilteredByGlob("src/pages/anime/*.md")
+            .filter(item => {
+                return !item.inputPath.includes('index.md');
+            });
     });
 
     // Коллекция философских категорий (папки)
