@@ -12,6 +12,9 @@ tags:
 watch_date: 2025-10-25
 score: 6 / 10
 upd_date: 2025-10-26
+
+tg_desc: made-in-abyss
+tg_pub_time: 2025-10-26
 ---
 ## Созданный в бездне
 
