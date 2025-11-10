@@ -3,15 +3,12 @@ layout: "base.njk"
 ---
 
 {% block content %}
-    <div class="page-meta">
-        <!-- Название -->
-        {% if title %}
-        <div class="meta-item">
-            <span class="meta-label">Тайтл:</span>
-            <span class="meta-value">{{ title }}</span>
-        </div>
-        {% endif %}
+    <!-- Название -->
+    {% if title %}
+    <h1 class="page-title">{{ title }}</h1>
+    {% endif %}
 
+    <div class="page-meta">
         <!-- Аниме статус -->
         {% if anime_status %}
         <div class="meta-item">
@@ -48,18 +45,6 @@ layout: "base.njk"
         </div>
         {% endif %}
 
-        <!-- Оценка -->
-        {% if score %}
-        <div class="meta-item">
-            <span class="meta-label">Оценка:</span>
-            <span class="score-pill score-{{ score | getScoreColor }}">
-                <span class="score-numerator">{{ score | split('/') | first | trim }}</span>
-                <span class="score-separator">/</span>
-                <span class="score-denominator">10</span>
-            </span>
-        </div>
-        {% endif %}
-
         <!-- Дата просмотра -->
 <!--        {% if watch_date %}-->
 <!--        <div class="meta-item">-->
@@ -70,6 +55,22 @@ layout: "base.njk"
 <!--        </div>-->
 <!--        {% endif %}-->
     </div>
+
+    <!-- Оценка -->
+    {% if score %}
+    <div class="score-progress-container">
+        {% set scoreValue = score | getScoreValue %}
+        {% set scorePercent = score | getScorePercent %}
+        <div class="score-progress-bar">
+            <div class="score-progress-fill score-{{ score | getScoreColor }}" style="width: {{ scorePercent }}%"></div>
+        </div>
+        <div class="score-progress-label">
+            <span class="score-value">{{ scoreValue }}</span>
+            <span class="score-separator">/</span>
+            <span class="score-max">10</span>
+        </div>
+    </div>
+    {% endif %}
 
     <!-- Оригинальный контент -->
     <div class="content-wrapper">

@@ -357,6 +357,18 @@ body {
 
 /* page.css */
 
+/* Заголовок страницы */
+.page-title {
+    font-family: var(--font-sans);
+    font-size: 2.8rem;
+    font-weight: 600;
+    line-height: 1.2;
+    margin: 0 0 2.5rem 0;
+    color: var(--active-color);
+    letter-spacing: -0.02em;
+    text-align: center;
+}
+
 .page-meta {
     background: #f5f5f5;
     padding: 1rem;
@@ -368,12 +380,6 @@ body {
     display: flex;
     align-items: center;
     margin-bottom: 0.5rem;
-}
-
-.meta-item:has(.score-pill) {
-    //margin-top: 0.75rem;
-    //padding-top: 0.2rem;
-    //border-top: 1px solid #e0e0e0; /* опциональная разделительная линия */
 }
 
 .meta-label {
@@ -411,54 +417,74 @@ body {
     font-style: italic;
 }
 
-/* score - базовые стили */
-.score-pill {
-    display: inline-flex;
-    align-items: center;
-    padding: 0.01rem 0.75rem;
-    border-radius: 7px;
+/* Прогресс-бар оценки */
+.score-progress-container {
+    margin: 2rem 0;
+    max-width: 400px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.score-progress-bar {
+    width: 100%;
+    height: 6px;
+    background: #e0e0e0;
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 0.5rem;
+}
+
+.score-progress-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.3s ease;
+}
+
+.score-progress-fill.score-high {
+    background: #4caf50;
+}
+
+.score-progress-fill.score-medium {
+    background: #757575;
+}
+
+.score-progress-fill.score-low {
+    background: #e53e3e;
+}
+
+.score-progress-label {
+    text-align: center;
+    font-family: var(--font-sans);
     font-size: 0.9rem;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
     gap: 0.2rem;
-    border: 1px solid;
 }
 
-.score-numerator {
-    //font-weight: 600;
-    font-size: 0.85rem;
+.score-progress-label .score-value {
+    font-weight: 500;
+    color: var(--text-primary);
 }
 
-.score-separator {
-    //font-weight: 400;
+.score-progress-label .score-separator {
+    color: var(--text-secondary);
 }
 
-.score-denominator {
-    font-size: 0.85rem;
+.score-progress-label .score-max {
+    color: var(--text-secondary);
 }
 
-/* score - цветовые схемы */
-.score-high { /* 8-10 */
-    color: #1a531b;
-    background: #e8f5e8;
-    border-color: #c8e6c9;
-}
-.score-high .score-numerator { color: #1b5e20; }
-.score-high .score-separator { color: #4caf50; }
-.score-high .score-denominator { color: #66bb6a; }
+/* Мобильная адаптация для заголовка и прогресс-бара */
+@media (max-width: 768px) {
+    .page-title {
+        font-size: 2.2rem;
+        margin-bottom: 2rem;
+    }
 
-.score-medium { /* 5-7 */
-    color: #424242;
-    background: #eeeeee;
-    border-color: #e0e0e0;
+    .score-progress-container {
+        max-width: 100%;
+        margin: 1.5rem 0;
+    }
 }
-.score-medium .score-numerator { color: #212121; }
-.score-medium .score-separator { color: #757575; }
-.score-medium .score-denominator { color: #9e9e9e; }
-
-.score-low { /* 1-4 */
-    color: #8b1a1a;
-    background: #fde8e8;
-    border-color: #f5c6c6;
-}
-.score-low .score-numerator { color: #c53030; }
-.score-low .score-separator { color: #e53e3e; }
-.score-low .score-denominator { color: #fc8888; }

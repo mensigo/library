@@ -59,6 +59,17 @@ module.exports = function(eleventyConfig) {
         return 'low';
     });
 
+    // Числовое значение оценки
+    eleventyConfig.addFilter('getScoreValue', (score) => {
+        return parseInt(score.split('/')[0].trim());
+    });
+
+    // Процент оценки
+    eleventyConfig.addFilter('getScorePercent', (score) => {
+        const num = parseInt(score.split('/')[0].trim());
+        return (num / 10) * 100;
+    });
+
     // Коллекция аниме
     eleventyConfig.addCollection("anime", function(collection) {
         return collection.getFilteredByGlob("src/pages/anime/*.md")
