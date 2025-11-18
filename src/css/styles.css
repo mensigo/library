@@ -415,74 +415,122 @@ body {
     font-style: italic;
 }
 
-/* Прогресс-бар оценки */
-.score-progress-container {
-    margin: 2rem 0;
-    max-width: 400px;
-    margin-left: auto;
-    margin-right: auto;
+/* Готические звезды оценки */
+.score-stars-container {
+    margin: 2.5rem 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
 }
 
-.score-progress-bar {
-    width: 100%;
-    height: 6px;
-    background: #e0e0e0;
-    border-radius: 3px;
-    overflow: hidden;
-    margin-bottom: 0.5rem;
+.stars-wrapper {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
 }
 
-.score-progress-fill {
-    height: 100%;
-    border-radius: 3px;
-    transition: width 0.3s ease;
-}
-
-.score-progress-fill.score-high {
-    background: #4caf50;
-}
-
-.score-progress-fill.score-medium {
-    background: #757575;
-}
-
-.score-progress-fill.score-low {
-    background: #e53e3e;
-}
-
-.score-progress-label {
-    text-align: center;
-    font-family: var(--font-sans);
-    font-size: 0.9rem;
-    color: var(--text-secondary);
+.star-container {
+    width: 32px;
+    height: 32px;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 0.2rem;
+    transition: transform 0.3s ease;
 }
 
-.score-progress-label .score-value {
-    font-weight: 500;
-    color: var(--text-primary);
+.star-container:hover {
+    transform: scale(1.1);
 }
 
-.score-progress-label .score-separator {
-    color: var(--text-secondary);
+.star-svg {
+    width: 100%;
+    height: 100%;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
 }
 
-.score-progress-label .score-max {
-    color: var(--text-secondary);
+.star-path {
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    transform-origin: center;
 }
 
-/* Мобильная адаптация для заголовка и прогресс-бара */
+.star-path.star-filled {
+    animation: starFill 0.6s ease-out forwards;
+}
+
+.star-gloss {
+    pointer-events: none;
+    mix-blend-mode: overlay;
+}
+
+.star-path.star-empty {
+    opacity: 0.4;
+}
+
+@keyframes starFill {
+    0% {
+        transform: scale(0) rotate(0deg);
+        opacity: 0;
+    }
+    50% {
+        transform: scale(1.3) rotate(180deg);
+    }
+    100% {
+        transform: scale(1) rotate(360deg);
+        opacity: 1;
+    }
+}
+
+/* Добавляем задержку для каждой звезды для эффекта каскада */
+.star-container:nth-child(1) .star-path.star-filled {
+    animation-delay: 0s;
+}
+
+.star-container:nth-child(2) .star-path.star-filled {
+    animation-delay: 0.1s;
+}
+
+.star-container:nth-child(3) .star-path.star-filled {
+    animation-delay: 0.2s;
+}
+
+.star-container:nth-child(4) .star-path.star-filled {
+    animation-delay: 0.3s;
+}
+
+.star-container:nth-child(5) .star-path.star-filled {
+    animation-delay: 0.4s;
+}
+
+.star-container:nth-child(6) .star-path.star-filled {
+    animation-delay: 0.5s;
+}
+
+.star-container:nth-child(7) .star-path.star-filled {
+    animation-delay: 0.6s;
+}
+
+
+/* Мобильная адаптация для заголовка и звезд */
 @media (max-width: 768px) {
     .page-title {
         font-size: 2.2rem;
         margin-bottom: 2rem;
     }
 
-    .score-progress-container {
-        max-width: 100%;
-        margin: 1.5rem 0;
+    .score-stars-container {
+        margin: 2rem 0;
+    }
+
+    .star-container {
+        width: 28px;
+        height: 28px;
+    }
+
+    .stars-wrapper {
+        gap: 0.3rem;
+        padding: 0.5rem;
     }
 }

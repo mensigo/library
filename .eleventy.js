@@ -51,6 +51,15 @@ module.exports = function(eleventyConfig) {
         return str.split(separator);
     });
 
+    // Создание массива чисел от 0 до N-1
+    eleventyConfig.addFilter('range', (n) => {
+        const arr = [];
+        for (let i = 0; i < n; i++) {
+            arr.push(i);
+        }
+        return arr;
+    });
+
     // Цвет оценки
     eleventyConfig.addFilter('getScoreColor', (score) => {
         const num = parseInt(score.split('/')[0].trim());
@@ -68,6 +77,12 @@ module.exports = function(eleventyConfig) {
     eleventyConfig.addFilter('getScorePercent', (score) => {
         const num = parseInt(score.split('/')[0].trim());
         return (num / 10) * 100;
+    });
+
+    // Количество заполненных звезд (из 7)
+    eleventyConfig.addFilter('getFilledStars', (score) => {
+        const num = parseFloat(score.split('/')[0].trim());
+        return Math.round((num / 10) * 7);
     });
 
     // Коллекция аниме

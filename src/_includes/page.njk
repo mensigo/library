@@ -58,16 +58,45 @@ layout: "base.njk"
 
     <!-- Оценка -->
     {% if score %}
-    <div class="score-progress-container">
+    <div class="score-stars-container">
         {% set scoreValue = score | getScoreValue %}
+        {% set filledStars = score | getFilledStars %}
         {% set scorePercent = score | getScorePercent %}
-        <div class="score-progress-bar">
-            <div class="score-progress-fill score-{{ score | getScoreColor }}" style="width: {{ scorePercent }}%"></div>
-        </div>
-        <div class="score-progress-label">
-            <span class="score-value">{{ scoreValue }}</span>
-            <span class="score-separator">/</span>
-            <span class="score-max">10</span>
+        <div class="stars-wrapper">
+            {% set starRange = 7 | range %}
+            {% for i in starRange %}
+            <div class="star-container">
+                <svg class="star-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="starGradient{{ i }}" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#e8e8e8;stop-opacity:1" />
+                            <stop offset="25%" style="stop-color:#d0d0d0;stop-opacity:1" />
+                            <stop offset="50%" style="stop-color:#a0a0a0;stop-opacity:1" />
+                            <stop offset="75%" style="stop-color:#909090;stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:#707070;stop-opacity:1" />
+                        </linearGradient>
+                        <linearGradient id="starGloss{{ i }}" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" style="stop-color:#ffffff;stop-opacity:0.4" />
+                            <stop offset="30%" style="stop-color:#ffffff;stop-opacity:0.2" />
+                            <stop offset="60%" style="stop-color:#ffffff;stop-opacity:0" />
+                            <stop offset="100%" style="stop-color:#000000;stop-opacity:0.1" />
+                        </linearGradient>
+                    </defs>
+                    <path class="star-path {% if i < filledStars %}star-filled{% else %}star-empty{% endif %}" 
+                          d="M50 5 L61 35 L95 35 L68 55 L79 90 L50 70 L21 90 L32 55 L5 35 L39 35 Z" 
+                          fill="{% if i < filledStars %}url(#starGradient{{ i }}){% else %}#e0e0e0{% endif %}"
+                          stroke="{% if i < filledStars %}#b0b0b0{% else %}#d0d0d0{% endif %}"
+                          stroke-width="{% if i < filledStars %}1.2{% else %}1.5{% endif %}"
+                          opacity="{% if i < filledStars %}0.85{% else %}0.4{% endif %}"/>
+                    {% if i < filledStars %}
+                    <path class="star-gloss" 
+                          d="M50 5 L61 35 L95 35 L68 55 L79 90 L50 70 L21 90 L32 55 L5 35 L39 35 Z" 
+                          fill="url(#starGloss{{ i }})"
+                          opacity="0.9"/>
+                    {% endif %}
+                </svg>
+            </div>
+            {% endfor %}
         </div>
     </div>
     {% endif %}
