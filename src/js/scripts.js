@@ -1,4 +1,7 @@
 document.addEventListener('DOMContentLoaded', function() {
+    // Инициализация темы
+    initTheme();
+    
     const menuToggle = document.getElementById('menuToggle');
     const sidebar = document.getElementById('sidebar');
     const overlay = document.getElementById('sidebarOverlay');
@@ -90,3 +93,41 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 });
+
+// Функции для работы с темой
+function initTheme() {
+    const themeToggle = document.getElementById('themeToggle');
+    const savedTheme = localStorage.getItem('theme');
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    
+    // Определяем начальную тему
+    let initialTheme = savedTheme || (prefersDark ? 'dark' : 'light');
+    
+    // Применяем тему
+    applyTheme(initialTheme);
+    
+    // Обработчик клика на переключатель
+    themeToggle.addEventListener('click', function() {
+        const currentThemeAttr = document.documentElement.getAttribute('data-theme');
+        // Если атрибут не установлен, определяем по системным настройкам
+        const currentTheme = currentThemeAttr || (prefersDark ? 'dark' : 'light');
+        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        applyTheme(newTheme);
+        localStorage.setItem('theme', newTheme);
+    });
+    
+    // Слушаем изменения системной темы (только если пользователь не выбрал тему вручную)
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(e) {
+        if (!localStorage.getItem('theme')) {
+            applyTheme(e.matches ? 'dark' : 'light');
+        }
+    });
+}
+
+function applyTheme(theme) {
+    if (theme === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+    } else {
+        document.documentElement.setAttribute('data-theme', 'light');
+    }
+}
