@@ -36,4 +36,57 @@ document.addEventListener('DOMContentLoaded', function() {
             body.classList.remove('menu-open');
         }
     });
+
+    // Древовидная навигация - сворачивание/разворачивание
+    const collapsibleItems = document.querySelectorAll('.tree-item-self.mod-collapsible');
+    
+    collapsibleItems.forEach(item => {
+        item.addEventListener('click', function(e) {
+            // Если клик по ссылке, не сворачиваем
+            if (e.target.tagName === 'A' || e.target.closest('a')) {
+                // Но если клик по иконке, все равно сворачиваем
+                if (!e.target.closest('.tree-item-icon')) {
+                    return;
+                }
+            }
+
+            const icon = this.querySelector('.tree-item-icon');
+            const children = this.nextElementSibling;
+            
+            if (children && children.classList.contains('tree-item-children')) {
+                const isCollapsed = children.classList.contains('is-collapsed');
+                
+                if (isCollapsed) {
+                    children.classList.remove('is-collapsed');
+                    if (icon) icon.classList.remove('is-collapsed');
+                } else {
+                    children.classList.add('is-collapsed');
+                    if (icon) icon.classList.add('is-collapsed');
+                }
+                
+                // Предотвращаем переход по ссылке, если клик был по иконке или области элемента
+                if (e.target.closest('.tree-item-icon') || !e.target.closest('a')) {
+                    e.preventDefault();
+                }
+            }
+        });
+    });
+
+    // Автоматически разворачиваем родительские элементы активной страницы
+    const activeItem = document.querySelector('.tree-item-self.mod-active');
+    if (activeItem) {
+        let current = activeItem.parentElement;
+        while (current) {
+            const children = current.querySelector('.tree-item-children');
+            const icon = current.querySelector('.tree-item-icon');
+            if (children && children.classList.contains('is-collapsed')) {
+                children.classList.remove('is-collapsed');
+                if (icon) icon.classList.remove('is-collapsed');
+            }
+            current = current.parentElement;
+            if (!current || !current.classList.contains('tree-item')) {
+                break;
+            }
+        }
+    }
 });

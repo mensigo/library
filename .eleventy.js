@@ -85,6 +85,12 @@ module.exports = function(eleventyConfig) {
         return Math.round((num / 10) * 7);
     });
 
+    // Проверка, начинается ли строка с префикса
+    eleventyConfig.addFilter('startsWith', (str, prefix) => {
+        if (!str || !prefix) return false;
+        return str.startsWith(prefix);
+    });
+
     // Коллекция аниме
     eleventyConfig.addCollection("anime", function(collection) {
         return collection.getFilteredByGlob("src/pages/anime/*.md")
