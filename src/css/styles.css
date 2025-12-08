@@ -781,6 +781,49 @@ body {
     line-height: 1.5;
 }
 
+/* Сортировка таблиц */
+.content table th.sortable {
+    cursor: pointer;
+    user-select: none;
+    position: relative;
+    transition: color 0.2s ease;
+}
+
+.content table th.sortable:hover {
+    color: var(--accent-color);
+}
+
+.content table th.sortable::after {
+    content: '';
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 0;
+    height: 0;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-bottom: 4px solid var(--text-secondary);
+    opacity: 0.5;
+    transition: all 0.2s ease;
+}
+
+.content table th.sortable.sort-asc::after {
+    border-bottom: 4px solid var(--accent-color);
+    border-top: none;
+}
+
+.content table th.sortable.sort-desc::after {
+    border-top: 4px solid var(--accent-color);
+    border-bottom: none;
+    top: 60%;
+}
+
+.content table th.sortable.sort-asc:hover::after,
+.content table th.sortable.sort-desc:hover::after {
+    opacity: 1;
+}
+
 /* Мобильная адаптация для таблиц */
 @media (max-width: 768px) {
     .content table {

@@ -120,6 +120,41 @@ module.exports = function(eleventyConfig) {
         return categories;
     });
 
+    // Shortcode для сортируемых таблиц
+    eleventyConfig.addPairedShortcode("sortableTable", function(content) {
+        // Парсим markdown таблицу
+        const lines = content.trim().split('\n');
+
+        // Первая строка - заголовки
+        const headers = lines[0].split('|').slice(1, -1).map(h => h.trim());
+
+        // Вторая строка - разделитель (пропускаем)
+
+        // Остальные строки - данные
+        const rows = lines.slice(2).map(line =>
+            line.split('|').slice(1, -1).map(cell => cell.trim())
+        );
+
+        // Генерируем HTML
+        let html = '<table>\n    <thead>\n        <tr>\n';
+        headers.forEach(header => {
+            html += `            <th class="sortable">${header}</th>\n`;
+        });
+        html += '        </tr>\n    </thead>\n    <tbody>\n';
+
+        rows.forEach(row => {
+            html += '        <tr>\n';
+            row.forEach(cell => {
+                html += `            <td>${cell}</td>\n`;
+            });
+            html += '        </tr>\n';
+        });
+
+        html += '    </tbody>\n</table>';
+
+        return html;
+    });
+
     return {
         dir: {
             input: "src",

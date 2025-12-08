@@ -1,6 +1,9 @@
 document.addEventListener('DOMContentLoaded', function() {
     // Инициализация темы
     initTheme();
+
+    // Инициализация сортировки таблиц
+    initTableSorting();
     
     const menuToggle = document.getElementById('menuToggle');
     const sidebar = document.getElementById('sidebar');
@@ -130,4 +133,52 @@ function applyTheme(theme) {
     } else {
         document.documentElement.setAttribute('data-theme', 'light');
     }
+}
+
+// Функционал сортировки таблиц
+function initTableSorting() {
+    const sortableHeaders = document.querySelectorAll('th.sortable');
+
+    sortableHeaders.forEach(header => {
+        header.addEventListener('click', function() {
+            const table = this.closest('table');
+            const tbody = table.querySelector('tbody');
+            const rows = Array.from(tbody.querySelectorAll('tr'));
+            const columnIndex = Array.from(this.parentElement.children).indexOf(this);
+            const currentSort = this.classList.contains('sort-asc') ? 'asc' : 'desc';
+
+            // Сбрасываем сортировку для всех заголовков в этой таблице
+            table.querySelectorAll('th.sortable').forEach(th => {
+                th.classList.remove('sort-asc', 'sort-desc');
+            });
+
+            // Определяем направление сортировки
+            const sortDirection = currentSort === 'asc' ? 'desc' : 'asc';
+            this.classList.add(`sort-${sortDirection}`);
+
+            // Сортируем строки
+            rows.sort((a, b) => {
+                const aValue = a.children[columnIndex].textContent.trim();
+                const bValue = b.children[columnIndex].textContent.trim();
+
+                // Проверяем, являются ли значения числами
+                const aNum = parseFloat(aValue);
+                const bNum = parseFloat(bValue);
+
+                let comparison = 0;
+                if (!isNaN(aNum) && !isNaN(bNum)) {
+                    // Сортировка чисел
+                    comparison = aNum - bNum;
+                } else {
+                    // Сортировка текста
+                    comparison = aValue.localeCompare(bValue, 'ru', { sensitivity: 'base' });
+                }
+
+                return sortDirection === 'asc' ? comparison : -comparison;
+            });
+
+            // Перестраиваем таблицу
+            rows.forEach(row => tbody.appendChild(row));
+        });
+    });
 }
