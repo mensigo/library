@@ -733,3 +733,67 @@ body {
         right: 1rem;
     }
 }
+
+/* Стили для таблиц */
+.content table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1.5rem 0;
+    font-size: 0.95rem;
+    border: 0.5px solid var(--border-color);
+}
+
+.content table thead {
+    background: transparent;
+}
+
+.content table th {
+    padding: 0.4rem 0.8rem;
+    text-align: left;
+    font-weight: 500;
+    font-size: 0.9rem;
+    font-family: var(--font-sans);
+    color: var(--text-secondary);
+}
+
+.content table tbody tr:last-child {
+    border-bottom: none;
+}
+
+.content table tbody tr:hover {
+    background-color: rgba(0, 0, 0, 0.03);
+}
+
+[data-theme="dark"] .content table tbody tr:hover {
+    background-color: rgba(255, 255, 255, 0.03);
+}
+
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .content table tbody tr:hover {
+        background-color: rgba(255, 255, 255, 0.03);
+    }
+}
+
+.content table td {
+    padding: 0.4rem 0.8rem;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+/* Мобильная адаптация для таблиц */
+@media (max-width: 768px) {
+    .content table {
+        font-size: 0.85rem;
+        margin: 1rem 0;
+        display: block;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .content table th,
+    .content table td {
+        padding: 0.3rem 0.6rem;
+        font-size: 0.85rem;
+    }
+}
