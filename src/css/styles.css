@@ -327,11 +327,20 @@ body {
 
 /* Основной контент */
 .content {
-    padding: 4rem 5rem;
-    max-width: 780px;
+    max-width: 720px;
     margin: 0 auto;
     font-family: var(--font-serif);
     transition: color 0.3s ease;
+    padding: 3rem 1.5rem;
+    
+    /* Адаптивные отступы */
+    @media (min-width: 768px) {
+        padding: 4rem 3rem;
+    }
+    
+    @media (min-width: 1200px) {
+        padding: 4rem 5rem;
+    }
 }
 
 .content h1 {
@@ -364,10 +373,11 @@ body {
 .content p {
     margin-bottom: 1.5rem;
     color: var(--text-primary);
-    font-size: 1.1rem;
-    line-height: 1.8;
-    text-align: justify;
+    font-size: 1.125rem;
+    line-height: 1.7;
     font-weight: 400;
+    text-align: left;
+    letter-spacing: 0.01em; /* микро-разрядка */
 }
 
 .content blockquote {
@@ -415,7 +425,9 @@ body {
     }
 
     .content {
-        padding: 5rem 1.8rem 2rem;
+        padding: 2rem 1rem;
+        font-size: 1.0625rem;
+        line-height: 1.75;
         width: 100%;
         max-width: none;
     }
