@@ -81,7 +81,7 @@
                         <circle cx="11" cy="11" r="8"></circle>
                         <path d="m21 21-4.35-4.35"></path>
                     </svg>
-                    <input type="text" placeholder="Search..." class="search-input" aria-label="Поиск по сайту">
+                    <input type="text" id="searchInput" placeholder="Поиск по страницам..." class="search-input" aria-label="Поиск по заголовкам страниц" role="searchbox" aria-expanded="false" aria-haspopup="listbox">
                     <span class="search-shortcut">Ctrl K</span>
                 </div>
             </div>
@@ -89,15 +89,18 @@
             <!-- Навигационное дерево -->
             <div class="nav-tree">
                 <!-- Главная страница -->
-                <div class="tree-item">
-                    <div class="tree-item-self {% if page.url == '/' %}mod-active{% endif %}">
-                        <div class="tree-item-inner">
-                            <a href="{{ pathPrefix }}/">🏠︎ Главная</a>
+                <div class="nav-section">
+                    <div class="tree-item">
+                        <div class="tree-item-self {% if page.url == '/' %}mod-active{% endif %}">
+                            <div class="tree-item-inner">
+                                <a href="{{ pathPrefix }}/">🏠︎ Главная</a>
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Аниме -->
+                <div class="nav-section">
                 {% set isAnimePage = page.url == '/pages/anime/' or (page.url | startsWith('/pages/anime/')) %}
                 <div class="tree-item">
                     <div class="tree-item-self mod-collapsible {% if isAnimePage %}is-clickable{% endif %}" data-path="anime">
@@ -122,9 +125,11 @@
                         {% endfor %}
                     </div>
                 </div>
+                </div>
 
                 <!-- Философия -->
                 {% if collections.philosophyCategories and collections.philosophyCategories | length > 0 %}
+                <div class="nav-section">
                 {% set isPhilosophyPage = page.url | startsWith('/pages/philosophy/') %}
                 <div class="tree-item">
                     <div class="tree-item-self mod-collapsible {% if isPhilosophyPage %}is-clickable{% endif %}" data-path="philosophy">
@@ -166,6 +171,7 @@
                         </div>
                         {% endfor %}
                     </div>
+                </div>
                 </div>
                 {% endif %}
             </div>

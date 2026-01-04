@@ -7,6 +7,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Инициализация TOC
     initTableOfContents();
+
+    // Инициализация поиска
+    initSearch();
     
     const menuToggle = document.getElementById('menuToggle');
     const sidebarLeft = document.getElementById('sidebarLeft');
@@ -281,7 +284,7 @@ function initTableOfContents() {
 function updateActiveTocLink() {
     const tocLinks = document.querySelectorAll('.toc-link');
     const contentArea = document.querySelector('.content-center, .content');
-    
+
     if (!contentArea || tocLinks.length === 0) {
         return;
     }
@@ -305,4 +308,215 @@ function updateActiveTocLink() {
             link.classList.add('active');
         }
     });
+}
+
+// Функционал поиска по навигации
+function initSearch() {
+    const searchInput = document.getElementById('searchInput');
+    const searchContainer = document.querySelector('.search-container');
+
+    if (!searchInput || !searchContainer) {
+        return;
+    }
+
+    // Кэш для навигационных элементов
+    let navItemsCache = null;
+
+    // Создаем контейнер для результатов поиска
+    const searchResults = document.createElement('div');
+    searchResults.className = 'search-results';
+    searchResults.style.display = 'none';
+    searchContainer.appendChild(searchResults);
+
+    // Флаг для отслеживания состояния поиска
+    let isSearchActive = false;
+
+    // Обработчик ввода в поле поиска
+    searchInput.addEventListener('input', function(e) {
+        const query = e.target.value.trim().toLowerCase();
+
+        if (query.length === 0) {
+            hideSearchResults();
+            return;
+        }
+
+        // Собираем элементы при первом поиске
+        if (!navItemsCache) {
+            navItemsCache = collectNavigationItems();
+        }
+
+        const results = filterNavigationItems(navItemsCache, query);
+        displaySearchResults(results, query);
+    });
+
+    // Обработчик фокуса на поле поиска
+    searchInput.addEventListener('focus', function() {
+        if (searchInput.value.trim().length > 0) {
+            // Собираем элементы при первом поиске
+            if (!navItemsCache) {
+                navItemsCache = collectNavigationItems();
+            }
+            const query = searchInput.value.trim().toLowerCase();
+            const results = filterNavigationItems(navItemsCache, query);
+            displaySearchResults(results, query);
+        }
+    });
+
+    // Обработчик потери фокуса
+    searchInput.addEventListener('blur', function(e) {
+        // Задержка чтобы успеть кликнуть по результатам
+        setTimeout(() => {
+            if (!searchResults.contains(document.activeElement)) {
+                hideSearchResults();
+            }
+        }, 150);
+    });
+
+    // Горячая клавиша Ctrl+K
+    document.addEventListener('keydown', function(e) {
+        if (e.ctrlKey && e.key === 'k') {
+            e.preventDefault();
+            searchInput.focus();
+            searchInput.select();
+        }
+    });
+
+    // Обработчик клавиш в поле поиска
+    searchInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            searchInput.blur();
+            hideSearchResults();
+        } else if (e.key === 'Enter') {
+            e.preventDefault();
+            const firstResult = searchResults.querySelector('.search-result-item');
+            if (firstResult) {
+                // Имитируем клик по первому результату
+                firstResult.click();
+            }
+        } else if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            const firstResult = searchResults.querySelector('.search-result-item');
+            if (firstResult) {
+                firstResult.focus();
+            }
+        }
+    });
+
+    function collectNavigationItems() {
+        const items = [];
+
+        // Собираем все ссылки из навигации
+        const navLinks = document.querySelectorAll('.sidebar-left a');
+
+        navLinks.forEach(link => {
+            const text = link.textContent.trim();
+            const href = link.getAttribute('href');
+
+            if (text && href && !href.startsWith('#') && !href.startsWith('javascript:')) {
+                items.push({
+                    text: text,
+                    href: href,
+                    element: link
+                });
+            }
+        });
+
+        return items;
+    }
+
+    function filterNavigationItems(items, query) {
+        return items.filter(item => {
+            // Удаляем эмодзи из текста для поиска
+            const cleanText = item.text.replace(/[\u{1F300}-\u{1F9FF}]/gu, '').trim().toLowerCase();
+            return cleanText.includes(query);
+        });
+    }
+
+    function displaySearchResults(results, query) {
+        searchResults.innerHTML = '';
+
+        if (results.length === 0) {
+            const noResults = document.createElement('div');
+            noResults.className = 'search-no-results';
+            noResults.textContent = 'Ничего не найдено';
+            searchResults.appendChild(noResults);
+        } else {
+            results.forEach((result, index) => {
+                const resultItem = document.createElement('a');
+                resultItem.className = 'search-result-item';
+                resultItem.href = result.href;
+                resultItem.setAttribute('tabindex', '0');
+                resultItem.setAttribute('role', 'option');
+                resultItem.setAttribute('aria-selected', 'false');
+
+                // Подсвечиваем найденный текст
+                const highlightedText = highlightMatch(result.text, query);
+                resultItem.innerHTML = highlightedText;
+
+                // Обработчик клика
+                resultItem.addEventListener('click', function(e) {
+                    hideSearchResults();
+                    searchInput.blur();
+                });
+
+                // Обработчик клавиш
+                resultItem.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        resultItem.click();
+                    } else if (e.key === 'ArrowDown') {
+                        e.preventDefault();
+                        const nextItem = resultItem.nextElementSibling;
+                        if (nextItem) {
+                            nextItem.focus();
+                        }
+                    } else if (e.key === 'ArrowUp') {
+                        e.preventDefault();
+                        const prevItem = resultItem.previousElementSibling;
+                        if (prevItem) {
+                            prevItem.focus();
+                        } else {
+                            searchInput.focus();
+                        }
+                    } else if (e.key === 'Escape') {
+                        hideSearchResults();
+                        searchInput.blur();
+                    }
+                });
+
+                searchResults.appendChild(resultItem);
+            });
+        }
+
+        searchResults.style.display = 'block';
+        searchResults.classList.add('show');
+        searchInput.setAttribute('aria-expanded', 'true');
+        searchResults.setAttribute('role', 'listbox');
+        isSearchActive = true;
+    }
+
+    function hideSearchResults() {
+        searchResults.classList.remove('show');
+        // Задержка для завершения анимации
+        setTimeout(() => {
+            searchResults.style.display = 'none';
+        }, 150);
+        searchInput.setAttribute('aria-expanded', 'false');
+        isSearchActive = false;
+    }
+
+    function highlightMatch(text, query) {
+        // Удаляем эмодзи для подсветки
+        const cleanText = text.replace(/[\u{1F300}-\u{1F9FF}]/gu, '').trim();
+        const regex = new RegExp(`(${query})`, 'gi');
+        const highlighted = cleanText.replace(regex, '<mark>$1</mark>');
+
+        // Возвращаем текст с эмодзи если он был
+        const emoji = text.match(/[\u{1F300}-\u{1F9FF}]/gu);
+        if (emoji) {
+            return emoji[0] + ' ' + highlighted;
+        }
+
+        return highlighted;
+    }
 }
