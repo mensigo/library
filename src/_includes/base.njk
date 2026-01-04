@@ -64,13 +64,26 @@
     <!-- Затемнение фона -->
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
-    <!-- Левое меню -->
-    <div class="desktop-layout">
-        <nav class="sidebar" id="sidebar">
+    <!-- Трехколоночный макет -->
+    <div class="three-column-layout">
+        <!-- Левая навигация -->
+        <nav class="sidebar-left" id="sidebarLeft">
             <!-- Заголовок сайта -->
             <div class="sidebar-header">
                 <a href="{{ pathPrefix }}/" class="site-title">Мысли и заметки</a>
                 <div class="site-subtitle">Собрание размышлений</div>
+            </div>
+
+            <!-- Поиск -->
+            <div class="search-container">
+                <div class="search-box">
+                    <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <path d="m21 21-4.35-4.35"></path>
+                    </svg>
+                    <input type="text" placeholder="Search..." class="search-input" aria-label="Поиск по сайту">
+                    <span class="search-shortcut">Ctrl K</span>
+                </div>
             </div>
 
             <!-- Навигационное дерево -->
@@ -158,14 +171,28 @@
             </div>
         </nav>
 
-        <!-- Основной контент -->
-        <main class="content">
+        <!-- Центральный контент -->
+        <main class="content-center">
             {% block content %}
                 {{ content | safe }}
             {% endblock %}
+            {% block footer %}{% endblock %}
         </main>
 
-        {% block footer %}{% endblock %}
+        <!-- Правое меню "На этой странице" -->
+        <aside class="sidebar-right" id="sidebarRight">
+            <div class="toc-header">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="3" y1="12" x2="21" y2="12"></line>
+                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                    <line x1="3" y1="18" x2="21" y2="18"></line>
+                </svg>
+                <span>На этой странице</span>
+            </div>
+            <nav class="toc-nav" id="tocNav">
+                <!-- TOC будет заполнено через JavaScript -->
+            </nav>
+        </aside>
     </div>
 
     <script src="{{ pathPrefix }}/js/scripts.js"></script>

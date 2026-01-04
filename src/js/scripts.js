@@ -4,27 +4,36 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Инициализация сортировки таблиц
     initTableSorting();
+
+    // Инициализация TOC
+    initTableOfContents();
     
     const menuToggle = document.getElementById('menuToggle');
-    const sidebar = document.getElementById('sidebar');
+    const sidebarLeft = document.getElementById('sidebarLeft');
     const overlay = document.getElementById('sidebarOverlay');
     const body = document.body;
 
     function toggleMenu() {
-        menuToggle.classList.toggle('active');
-        sidebar.classList.toggle('active');
-        overlay.classList.toggle('active');
-        body.classList.toggle('menu-open');
+        if (menuToggle && sidebarLeft) {
+            menuToggle.classList.toggle('active');
+            sidebarLeft.classList.toggle('active');
+            if (overlay) overlay.classList.toggle('active');
+            body.classList.toggle('menu-open');
+        }
     }
 
     // Клик по гамбургеру
-    menuToggle.addEventListener('click', toggleMenu);
+    if (menuToggle) {
+        menuToggle.addEventListener('click', toggleMenu);
+    }
 
     // Клик по overlay (закрытие меню)
-    overlay.addEventListener('click', toggleMenu);
+    if (overlay) {
+        overlay.addEventListener('click', toggleMenu);
+    }
 
     // Клик по ссылке в меню (закрытие на мобильных)
-    const navLinks = document.querySelectorAll('.sidebar a');
+    const navLinks = document.querySelectorAll('.sidebar-left a');
     navLinks.forEach(link => {
         link.addEventListener('click', function() {
             if (window.innerWidth <= 768) {
@@ -35,10 +44,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Закрытие меню при изменении размера окна
     window.addEventListener('resize', function() {
-        if (window.innerWidth > 768) {
-            menuToggle.classList.remove('active');
-            sidebar.classList.remove('active');
-            overlay.classList.remove('active');
+        if (window.innerWidth > 768 && sidebarLeft) {
+            if (menuToggle) menuToggle.classList.remove('active');
+            sidebarLeft.classList.remove('active');
+            if (overlay) overlay.classList.remove('active');
             body.classList.remove('menu-open');
         }
     });
@@ -180,5 +189,120 @@ function initTableSorting() {
             // Перестраиваем таблицу
             rows.forEach(row => tbody.appendChild(row));
         });
+    });
+}
+
+// Генерация Table of Contents (Оглавление)
+function initTableOfContents() {
+    const tocNav = document.getElementById('tocNav');
+    const contentArea = document.querySelector('.content-center, .content');
+    
+    if (!tocNav || !contentArea) {
+        return;
+    }
+
+    // Находим все заголовки h2, h3, h4 в контенте
+    const headings = contentArea.querySelectorAll('h2, h3, h4');
+    
+    if (headings.length === 0) {
+        // Если заголовков нет, скрываем TOC
+        const sidebarRight = document.querySelector('.sidebar-right');
+        if (sidebarRight) {
+            sidebarRight.style.display = 'none';
+        }
+        return;
+    }
+
+    // Создаем ID для заголовков, если их нет
+    headings.forEach((heading, index) => {
+        if (!heading.id) {
+            const text = heading.textContent.trim();
+            const slug = text
+                .toLowerCase()
+                .replace(/[^\wа-яё\s-]/gi, '')
+                .replace(/\s+/g, '-')
+                .replace(/-+/g, '-');
+            heading.id = slug || `heading-${index}`;
+        }
+    });
+
+    // Генерируем ссылки TOC
+    const fragment = document.createDocumentFragment();
+    headings.forEach(heading => {
+        const link = document.createElement('a');
+        link.href = `#${heading.id}`;
+        link.textContent = heading.textContent;
+        link.className = `toc-link toc-${heading.tagName.toLowerCase()}`;
+        link.setAttribute('tabindex', '0');
+        link.setAttribute('role', 'link');
+        
+        // Обработчик клика для плавной прокрутки
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            const target = document.getElementById(heading.id);
+            if (target) {
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                // Обновляем URL без перезагрузки
+                history.pushState(null, null, `#${heading.id}`);
+                updateActiveTocLink();
+            }
+        });
+
+        // Обработчик нажатия Enter для доступности
+        link.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                link.click();
+            }
+        });
+        
+        fragment.appendChild(link);
+    });
+
+    tocNav.appendChild(fragment);
+
+    // Отслеживание активного раздела при прокрутке
+    let isScrolling = false;
+    window.addEventListener('scroll', function() {
+        if (!isScrolling) {
+            window.requestAnimationFrame(function() {
+                updateActiveTocLink();
+                isScrolling = false;
+            });
+            isScrolling = true;
+        }
+    }, { passive: true });
+
+    // Инициализируем активную ссылку
+    updateActiveTocLink();
+}
+
+// Обновление активной ссылки в TOC
+function updateActiveTocLink() {
+    const tocLinks = document.querySelectorAll('.toc-link');
+    const contentArea = document.querySelector('.content-center, .content');
+    
+    if (!contentArea || tocLinks.length === 0) {
+        return;
+    }
+
+    const headings = contentArea.querySelectorAll('h2, h3, h4');
+    let activeHeading = null;
+    const scrollPosition = window.scrollY + 100; // Смещение для лучшего UX
+
+    // Находим текущий активный заголовок
+    headings.forEach(heading => {
+        const headingTop = heading.offsetTop;
+        if (scrollPosition >= headingTop) {
+            activeHeading = heading;
+        }
+    });
+
+    // Обновляем активные классы
+    tocLinks.forEach(link => {
+        link.classList.remove('active');
+        if (activeHeading && link.href.endsWith(`#${activeHeading.id}`)) {
+            link.classList.add('active');
+        }
     });
 }
