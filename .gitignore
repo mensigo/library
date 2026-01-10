@@ -10,6 +10,7 @@ Gemfile.lock
 
 *.log
 *.png
+*.py
 
 _site/
 node_modules/
@@ -18,3 +19,4 @@ node_modules/
 *plans*
 
 123_files/
+src/images/

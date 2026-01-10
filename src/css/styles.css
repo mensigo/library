@@ -1,7 +1,3 @@
-/* Импортируем красивые шрифты */
-/*@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Literata:ital,wght@0,400;0,500;1,400&display=swap');*/
-/* chosen @import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@300;400;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,500;1,8..60,400&display=swap');*/
-
 :root {
     --sidebar-bg: #fefefe;
     --border-color: #f0f0f0;
@@ -78,6 +74,108 @@ body {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Верхняя навигационная панель */
+.navbar {
+    position: fixed;
+    top: 0;
+    left: 260px; /* Начинается после левой навигации */
+    right: 0;
+    z-index: 1002; /* Над всеми элементами, включая меню */
+    background: var(--sidebar-bg);
+    border-bottom: 1px solid var(--border-color);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
+}
+
+.navbar__container {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start; /* Элементы слева */
+    max-width: 300px;
+    margin: 0;
+    padding: 0.75rem 1.5rem;
+}
+
+.navbar__section {
+    padding: 0.25rem 0.75rem;
+    margin: 0 0.125rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease;
+    user-select: none;
+}
+
+.navbar__section:hover {
+    background: var(--tag-bg);
+}
+
+.navbar__section--active {
+    background: var(--tag-bg);
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.navbar__section--active:hover {
+    background: var(--tag-bg);
+    opacity: 0.8;
+}
+
+.navbar__section span {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--text-primary);
+    transition: color 0.2s ease;
+}
+
+.navbar__section--active span {
+    color: var(--text-primary);
+}
+
+.navbar__section:hover span {
+    color: var(--hover-color);
+}
+
+.navbar__section--active:hover span {
+    color: var(--text-primary);
+}
+
+/* Скрытое состояние navbar */
+.navbar--hidden {
+    transform: translateY(-100%);
+    transition: transform 0.3s ease;
+}
+
+@media (max-width: 768px) {
+    .navbar {
+        position: relative;
+        left: 0; /* На мобильных занимает всю ширину */
+        box-shadow: none;
+        border-bottom: none;
+    }
+
+    .navbar__container {
+        padding: 0.5rem 1rem;
+        justify-content: flex-start;
+    }
+
+    .navbar__section {
+        padding: 0.2rem 0.5rem;
+        margin: 0 0.1rem;
+    }
+
+    .navbar__section span {
+        font-size: 0.85rem;
+    }
+
+    .three-column-layout {
+        padding-top: 0;
+    }
+
+    .content-center {
+        padding-top: 3rem; /* Сбрасываем дополнительный padding на мобильных */
+    }
 }
 
 /* Трехколоночный макет */
@@ -171,6 +269,7 @@ body {
     height: 100vh;
     position: sticky;
     top: 0;
+    z-index: 1003; /* Над navbar */
     overflow-y: auto;
     overflow-x: hidden;
     padding: 2rem 1.5rem;
@@ -514,7 +613,7 @@ body {
     margin: 0 auto;
     font-family: var(--font-serif);
     transition: color 0.3s ease;
-    padding: 3rem 3rem;
+    padding: 5rem 3rem 3rem;
     overflow-y: auto;
 }
 
@@ -1026,9 +1125,9 @@ body {
 /* Переключатель темы */
 .theme-toggle {
     position: fixed;
-    top: 1rem;
+    top: 0.75rem; /* Выровнено по высоте с navbar */
     right: 1rem;
-    z-index: 1001;
+    z-index: 1004; /* Над sidebar-right */
     background: var(--menu-toggle-bg);
     border: 1px solid var(--border-color);
     border-radius: 6px;

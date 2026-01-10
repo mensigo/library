@@ -1,0 +1,17 @@
+---
+alwaysApply: true
+---
+
+This is Eleventy.js project with the following structure :
+
+- src/
+    - _includes/  - .njk templates (base + inheritors)
+    - css/        - single `styles.css` containing all css
+    - js/         - single `scripts.js` containing all javascript
+    - pages/      - folders by category, each contains .md articles (pages)
+        - anime/
+        - philosophy/
+    - `index.md`    - home page
+
+- `.eleventy.js`    - eleventy thingies (collections, filters, structures etc.)
+- `package.json`    - npm config

@@ -10,6 +10,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Инициализация поиска
     initSearch();
+
+    // Инициализация скрытия navbar при прокрутке
+    initNavbarScrollHide();
     
     const menuToggle = document.getElementById('menuToggle');
     const sidebarLeft = document.getElementById('sidebarLeft');
@@ -519,4 +522,42 @@ function initSearch() {
 
         return highlighted;
     }
+}
+
+// Скрытие navbar при прокрутке вниз
+function initNavbarScrollHide() {
+    const navbar = document.querySelector('.navbar');
+    if (!navbar) return;
+
+    let lastScrollTop = 0;
+    let isScrollingDown = false;
+    let scrollThreshold = 100; // Минимальная прокрутка перед скрытием
+
+    window.addEventListener('scroll', function() {
+        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+
+        // Не скрывать если прокрутка меньше порога
+        if (scrollTop < scrollThreshold) {
+            navbar.classList.remove('navbar--hidden');
+            lastScrollTop = scrollTop;
+            return;
+        }
+
+        // Определяем направление прокрутки
+        if (scrollTop > lastScrollTop) {
+            // Прокрутка вниз - скрываем navbar
+            if (!isScrollingDown) {
+                navbar.classList.add('navbar--hidden');
+                isScrollingDown = true;
+            }
+        } else {
+            // Прокрутка вверх - показываем navbar
+            if (isScrollingDown) {
+                navbar.classList.remove('navbar--hidden');
+                isScrollingDown = false;
+            }
+        }
+
+        lastScrollTop = scrollTop;
+    }, { passive: true });
 }
