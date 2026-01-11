@@ -4,9 +4,10 @@ module.exports = function(eleventyConfig) {
         return process.env.NODE_ENV === 'production' ? '/library' : '';
     });
 
-    // Копируем статические & js файлы
+    // Копируем статические файлы
     eleventyConfig.addPassthroughCopy("src/css");
     eleventyConfig.addPassthroughCopy("src/js");
+    eleventyConfig.addPassthroughCopy("src/images");
 
     // Фильтр для читаемой даты
     eleventyConfig.addFilter("readableDate", (dateObj) => {
