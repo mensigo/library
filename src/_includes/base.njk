@@ -39,10 +39,11 @@
     <!-- Верхняя навигационная панель -->
     <nav class="navbar">
         <div class="navbar__container">
-            <div class="navbar__section navbar__section--active" data-section="library">
-                <span>📚 Library</span>
+            {% set isNotesPage = page.url | startsWith('/notes/') %}
+            <div class="navbar__section {% if not isNotesPage %}navbar__section--active{% endif %}" data-section="library">
+                <span>📚 Reviews</span>
             </div>
-            <div class="navbar__section" data-section="notes">
+            <div class="navbar__section {% if isNotesPage %}navbar__section--active{% endif %}" data-section="notes">
                 <span>📝 Notes</span>
             </div>
         </div>
@@ -116,7 +117,7 @@
 
                 <!-- Аниме -->
                 <div class="nav-section">
-                {% set isAnimePage = page.url == '/pages/anime/' or (page.url | startsWith('/pages/anime/')) %}
+                {% set isAnimePage = page.url == '/reviews/anime/' or (page.url | startsWith('/reviews/anime/')) %}
                 <div class="tree-item">
                     <div class="tree-item-self mod-collapsible {% if isAnimePage %}is-clickable{% endif %}" data-path="anime">
                         <div class="tree-item-icon collapse-icon {% if not isAnimePage %}is-collapsed{% endif %}">
@@ -125,7 +126,7 @@
                             </svg>
                         </div>
                         <div class="tree-item-inner">
-                            <a href="{{ pathPrefix }}/pages/anime">⛩️ Аниме</a>
+                            <a href="{{ pathPrefix }}/reviews/anime/">⛩️ Аниме</a>
                         </div>
                     </div>
                     <div class="tree-item-children {% if not isAnimePage %}is-collapsed{% endif %}">
@@ -145,7 +146,7 @@
                 <!-- Философия -->
                 {% if collections.philosophyCategories and collections.philosophyCategories | length > 0 %}
                 <div class="nav-section">
-                {% set isPhilosophyPage = page.url | startsWith('/pages/philosophy/') %}
+                {% set isPhilosophyPage = page.url | startsWith('/reviews/philosophy/') %}
                 <div class="tree-item">
                     <div class="tree-item-self mod-collapsible {% if isPhilosophyPage %}is-clickable{% endif %}" data-path="philosophy">
                         <div class="tree-item-icon collapse-icon {% if not isPhilosophyPage %}is-collapsed{% endif %}">
@@ -159,7 +160,7 @@
                     </div>
                     <div class="tree-item-children {% if not isPhilosophyPage %}is-collapsed{% endif %}">
                         {% for categoryName, category in collections.philosophyCategories %}
-                        {% set categoryPath = '/pages/philosophy/' + categoryName + '/' %}
+                        {% set categoryPath = '/reviews/philosophy/' + categoryName + '/' %}
                         {% set isCategoryPage = page.url | startsWith(categoryPath) %}
                         <div class="tree-item">
                             <div class="tree-item-self mod-collapsible {% if isCategoryPage %}is-clickable{% endif %}" data-path="philosophy-{{ categoryName }}">
@@ -189,7 +190,37 @@
                 </div>
                 </div>
                 {% endif %}
-            </div>
+
+                <!-- Заметки -->
+                <div class="nav-section nav-section--notes">
+                {% set isNotesPage = page.url | startsWith('/notes/') %}
+                {% set isPythonPage = page.url | startsWith('/notes/python/') %}
+                <div class="tree-item">
+                    <div class="tree-item-self mod-collapsible {% if isPythonPage %}is-clickable{% endif %}" data-path="notes-python">
+                        <div class="tree-item-icon collapse-icon {% if not isPythonPage %}is-collapsed{% endif %}">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon right-triangle">
+                                <path d="M3 8L12 17L21 8"></path>
+                            </svg>
+                        </div>
+                        <div class="tree-item-inner">
+                            <a href="{{ pathPrefix }}/notes/python/">🐍 Python</a>
+                        </div>
+                    </div>
+                    <div class="tree-item-children {% if not isPythonPage %}is-collapsed{% endif %}">
+                        {% for note in collections.notes %}
+                        {% if note.url | startsWith('/notes/python/') %}
+                        <div class="tree-item">
+                            <div class="tree-item-self {% if page.url == note.url %}mod-active{% endif %}">
+                                <div class="tree-item-inner">
+                                    <a href="{{ pathPrefix }}{{ note.url }}">{{ note.data.title }}</a>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+                </div>
         </nav>
 
         <!-- Центральный контент -->

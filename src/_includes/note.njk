@@ -1,0 +1,27 @@
+---
+layout: "base.njk"
+---
+
+{% block content %}
+    <!-- Название -->
+    {% if title %}
+    <h2 class="page-title">{{ title }}</h2>
+    {% endif %}
+
+    <!-- Оригинальный контент -->
+    <div class="content-wrapper">
+        <div class="article">
+            <article class="article__content">
+                {{ content | safe }}
+            </article>
+        </div>
+    </div>
+
+    <!-- Дата обновления -->
+    {% if upd_date %}
+    <div class="page-updated">
+        <small>{{ upd_date | readableDate }}</small>
+    </div>
+    {% endif %}
+
+{% endblock %}

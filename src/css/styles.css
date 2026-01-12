@@ -15,6 +15,8 @@
     --tag-border: #dee2e6;
     --scrollbar-thumb: rgba(0, 0, 0, 0.2);
     --scrollbar-thumb-hover: rgba(0, 0, 0, 0.3);
+    --hover-bg: rgba(0, 0, 0, 0.05);
+    --active-bg: rgba(0, 0, 0, 0.1);
     --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
     --font-serif: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
 }
@@ -36,6 +38,8 @@
     --tag-border: #3d3d3d;
     --scrollbar-thumb: rgba(255, 255, 255, 0.2);
     --scrollbar-thumb-hover: rgba(255, 255, 255, 0.3);
+    --hover-bg: rgba(255, 255, 255, 0.1);
+    --active-bg: rgba(255, 255, 255, 0.15);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -1314,4 +1318,22 @@ body {
         padding: 0.3rem 0.6rem;
         font-size: 0.85rem;
     }
+}
+
+/* Стили для переключения вкладок */
+.navbar__section {
+    transition: all 0.2s ease;
+}
+
+.navbar__section:hover {
+    background: var(--hover-bg);
+}
+
+/* Скрытие/показ секций навигации */
+.nav-section[style*="display: none"] {
+    display: none !important;
+}
+
+.nav-section--notes {
+    display: none;
 }

@@ -8,10 +8,12 @@ This is Eleventy.js project with the following structure :
     - _includes/  - .njk templates (base + inheritors)
     - css/        - single `styles.css` containing all css
     - js/         - single `scripts.js` containing all javascript
-    - pages/      - folders by category, each contains .md articles (pages)
+    - notes/      - folders by category, each contains .md pages (and maybe subcategories)
+        - python/
+    - reviews/
         - anime/
         - philosophy/
-    - `index.md`    - home page
+    - `index.md`  - home page
 
-- `.eleventy.js`    - eleventy thingies (collections, filters, structures etc.)
-- `package.json`    - npm config
+- `.eleventy.js`  - eleventy thingies (collections, filters, structures etc.)
+- `package.json`  - npm config

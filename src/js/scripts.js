@@ -13,6 +13,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Инициализация скрытия navbar при прокрутке
     initNavbarScrollHide();
+
+    // Инициализация переключения вкладок
+    initNavbarTabs();
     
     const menuToggle = document.getElementById('menuToggle');
     const sidebarLeft = document.getElementById('sidebarLeft');
@@ -109,6 +112,26 @@ document.addEventListener('DOMContentLoaded', function() {
                 break;
             }
         }
+    }
+
+    // Обработчик клика на лого
+    const logoLink = document.querySelector('.site-logo-link');
+    if (logoLink) {
+        logoLink.addEventListener('click', function(e) {
+            e.preventDefault();
+
+            const currentPath = window.location.pathname;
+            const currentHash = window.location.hash;
+
+            // Если мы уже на главной странице и нет hash, просто переходим на главную
+            if (currentPath === '/' && currentHash === '') {
+                // Уже на главной без hash, ничего не делаем
+                return;
+            }
+
+            // В остальных случаях переходим на главную с hash для принудительной активации Reviews
+            window.location.href = '/#reviews';
+        });
     }
 });
 
@@ -560,4 +583,112 @@ function initNavbarScrollHide() {
 
         lastScrollTop = scrollTop;
     }, { passive: true });
+}
+
+// Переключение вкладок в navbar
+function initNavbarTabs() {
+    const navbarSections = document.querySelectorAll('.navbar__section');
+    const sidebarLeft = document.getElementById('sidebarLeft');
+
+    if (!navbarSections.length || !sidebarLeft) return;
+
+    // Определяем активную вкладку на основе URL (приоритет над localStorage)
+    const currentPath = window.location.pathname;
+    const currentHash = window.location.hash.substring(1); // Убираем #
+
+    let activeSection;
+
+    // Приоритет: hash > URL > localStorage
+    if (currentHash === 'reviews') {
+        activeSection = 'library';
+        localStorage.setItem('activeSection', 'library');
+    } else if (currentHash === 'notes') {
+        activeSection = 'notes';
+        localStorage.setItem('activeSection', 'notes');
+    } else if (currentPath.includes('/notes/')) {
+        activeSection = 'notes';
+        localStorage.setItem('activeSection', 'notes');
+    } else if (currentPath.includes('/reviews/') || currentPath.includes('/anime/') || currentPath.includes('/philosophy/')) {
+        activeSection = 'library';
+        localStorage.setItem('activeSection', 'library');
+    } else {
+        // На главной странице или других страницах используем сохраненную настройку или по умолчанию library
+        activeSection = localStorage.getItem('activeSection') || 'library';
+    }
+
+    // Устанавливаем активную вкладку
+    setActiveSection(activeSection);
+
+    // Очищаем URL от hash, если он был обработан для переключения вкладки
+    if (currentHash === 'reviews' || currentHash === 'notes') {
+        const newUrl = window.location.pathname + (window.location.search || '');
+        window.history.replaceState({}, document.title, newUrl);
+    }
+
+    // Обработчики кликов по вкладкам
+    navbarSections.forEach(section => {
+        section.addEventListener('click', function() {
+            const sectionName = this.getAttribute('data-section');
+
+            // Проверяем, нужно ли переходить на другую страницу
+            const currentPath = window.location.pathname;
+            const isOnNotesPage = currentPath.includes('/notes/');
+            const isOnReviewsPage = currentPath.includes('/reviews/') || currentPath.includes('/anime/') || currentPath.includes('/philosophy/');
+
+            if (sectionName === 'notes' && !isOnNotesPage) {
+                // Переходим на главную страницу notes
+                window.location.href = '/notes/';
+                return;
+            } else if (sectionName === 'library' && !isOnReviewsPage && currentPath !== '/') {
+                // Переходим на главную страницу reviews (главную сайта)
+                window.location.href = '/#reviews';
+                return;
+            }
+
+            // Если уже на нужной странице, просто переключаем вкладку
+            setActiveSection(sectionName);
+            localStorage.setItem('activeSection', sectionName);
+        });
+    });
+
+    function setActiveSection(sectionName) {
+        // Обновляем активные классы в navbar
+        navbarSections.forEach(section => {
+            const sectionData = section.getAttribute('data-section');
+            if (sectionData === sectionName) {
+                section.classList.add('navbar__section--active');
+            } else {
+                section.classList.remove('navbar__section--active');
+            }
+        });
+
+        // Обновляем навигацию в sidebar
+        updateSidebarNavigation(sectionName);
+    }
+
+    function updateSidebarNavigation(sectionName) {
+        const navTree = sidebarLeft.querySelector('.nav-tree');
+
+        if (!navTree) return;
+
+        // Скрываем все секции навигации
+        const navSections = navTree.querySelectorAll('.nav-section');
+        navSections.forEach(section => {
+            section.style.display = 'none';
+        });
+
+        // Показываем соответствующую секцию
+        if (sectionName === 'library') {
+            // Показываем навигацию для reviews (аниме + философия)
+            const animeSection = navTree.querySelector('.nav-section:has([href*="anime"])');
+            const philosophySection = navTree.querySelector('.nav-section:has([href*="philosophy"])');
+
+            if (animeSection) animeSection.style.display = 'block';
+            if (philosophySection) philosophySection.style.display = 'block';
+        } else if (sectionName === 'notes') {
+            // Показываем навигацию для notes (Python)
+            const notesSection = navTree.querySelector('.nav-section--notes');
+            if (notesSection) notesSection.style.display = 'block';
+        }
+    }
 }
