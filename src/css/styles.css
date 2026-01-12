@@ -1334,6 +1334,13 @@ body {
     display: none !important;
 }
 
-.nav-section--notes {
-    display: none;
+/* Управление видимостью секций навигации */
+.nav-section--main {
+    display: block !important; /* Главная секция всегда видна */
+}
+
+.nav-section--anime,
+.nav-section--philosophy,
+.nav-section--notes-section {
+    display: none; /* По умолчанию скрываем остальные секции */
 }

@@ -671,8 +671,8 @@ function initNavbarTabs() {
 
         if (!navTree) return;
 
-        // Скрываем все секции навигации
-        const navSections = navTree.querySelectorAll('.nav-section');
+        // Скрываем все секции навигации КРОМЕ главной
+        const navSections = navTree.querySelectorAll('.nav-section:not(.nav-section--main)');
         navSections.forEach(section => {
             section.style.display = 'none';
         });
@@ -680,14 +680,14 @@ function initNavbarTabs() {
         // Показываем соответствующую секцию
         if (sectionName === 'library') {
             // Показываем навигацию для reviews (аниме + философия)
-            const animeSection = navTree.querySelector('.nav-section:has([href*="anime"])');
-            const philosophySection = navTree.querySelector('.nav-section:has([href*="philosophy"])');
+            const animeSection = navTree.querySelector('.nav-section--anime');
+            const philosophySection = navTree.querySelector('.nav-section--philosophy');
 
             if (animeSection) animeSection.style.display = 'block';
             if (philosophySection) philosophySection.style.display = 'block';
         } else if (sectionName === 'notes') {
             // Показываем навигацию для notes (Python)
-            const notesSection = navTree.querySelector('.nav-section--notes');
+            const notesSection = navTree.querySelector('.nav-section--notes-section');
             if (notesSection) notesSection.style.display = 'block';
         }
     }

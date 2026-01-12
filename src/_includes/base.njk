@@ -105,7 +105,7 @@
             <!-- Навигационное дерево -->
             <div class="nav-tree">
                 <!-- Главная страница -->
-                <div class="nav-section">
+                <div class="nav-section nav-section--main">
                     <div class="tree-item">
                         <div class="tree-item-self {% if page.url == '/' %}mod-active{% endif %}">
                             <div class="tree-item-inner">
@@ -116,7 +116,7 @@
                 </div>
 
                 <!-- Аниме -->
-                <div class="nav-section">
+                <div class="nav-section nav-section--anime">
                 {% set isAnimePage = page.url == '/reviews/anime/' or (page.url | startsWith('/reviews/anime/')) %}
                 <div class="tree-item">
                     <div class="tree-item-self mod-collapsible {% if isAnimePage %}is-clickable{% endif %}" data-path="anime">
@@ -145,7 +145,7 @@
 
                 <!-- Философия -->
                 {% if collections.philosophyCategories and collections.philosophyCategories | length > 0 %}
-                <div class="nav-section">
+                <div class="nav-section nav-section--philosophy">
                 {% set isPhilosophyPage = page.url | startsWith('/reviews/philosophy/') %}
                 <div class="tree-item">
                     <div class="tree-item-self mod-collapsible {% if isPhilosophyPage %}is-clickable{% endif %}" data-path="philosophy">
@@ -192,7 +192,7 @@
                 {% endif %}
 
                 <!-- Заметки -->
-                <div class="nav-section nav-section--notes">
+                <div class="nav-section nav-section--notes-section">
                 {% set isNotesPage = page.url | startsWith('/notes/') %}
                 {% set isPythonPage = page.url | startsWith('/notes/python/') %}
                 <div class="tree-item">
@@ -203,7 +203,7 @@
                             </svg>
                         </div>
                         <div class="tree-item-inner">
-                            <a href="{{ pathPrefix }}/notes/python/">🐍 Python</a>
+                            <span>🐍 Python</span>
                         </div>
                     </div>
                     <div class="tree-item-children {% if not isPythonPage %}is-collapsed{% endif %}">
