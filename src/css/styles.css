@@ -500,6 +500,8 @@ body {
     user-select: none;
     border-left: 3px solid transparent;
     margin-left: 0;
+    text-decoration: none;
+    color: inherit;
 }
 
 .tree-item-self:hover {
@@ -535,7 +537,7 @@ body {
     }
 }
 
-.tree-item-self.mod-active .tree-item-inner a {
+.tree-item-self.mod-active .tree-item-inner span {
     color: var(--active-color);
     font-weight: 500;
 }
@@ -574,26 +576,23 @@ body {
     display: flex;
     align-items: center;
     min-width: 0;
+    width: 100%;
 }
 
-.tree-item-inner a,
 .tree-item-inner span {
     text-decoration: none;
     color: var(--text-primary);
     font-size: 0.8125rem;
     display: block;
+    flex: 1;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     transition: color 0.15s ease;
 }
 
-.tree-item-inner a:hover {
+.tree-item-self:hover .tree-item-inner span {
     color: var(--hover-color);
-}
-
-.tree-item-inner span {
-    cursor: default;
 }
 
 .tree-item-children {
@@ -906,7 +905,6 @@ body {
         height: 14px;
     }
 
-    .tree-item-inner a,
     .tree-item-inner span {
         font-size: 0.9rem;
     }

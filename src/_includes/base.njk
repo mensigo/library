@@ -106,13 +106,21 @@
             <div class="nav-tree">
                 <!-- Главная страница -->
                 <div class="nav-section nav-section--main">
-                    <div class="tree-item">
-                        <div class="tree-item-self {% if page.url == '/' %}mod-active{% endif %}">
-                            <div class="tree-item-inner">
-                                <a href="{{ pathPrefix }}/">🏠︎ Главная</a>
-                            </div>
+                <div class="tree-item">
+                    {% if isNotesPage %}
+                    <a href="{{ pathPrefix }}/notes/" class="tree-item-self {% if page.url == '/notes/' %}mod-active{% endif %}" {% if page.url == '/notes/' %}aria-current="page"{% endif %}>
+                        <div class="tree-item-inner">
+                            <span>🏠︎ Главная (Заметки)</span>
                         </div>
-                    </div>
+                    </a>
+                    {% else %}
+                    <a href="{{ pathPrefix }}/" class="tree-item-self {% if page.url == '/' %}mod-active{% endif %}" {% if page.url == '/' %}aria-current="page"{% endif %}>
+                        <div class="tree-item-inner">
+                            <span>🏠︎ Главная</span>
+                        </div>
+                    </a>
+                    {% endif %}
+                </div>
                 </div>
 
                 <!-- Аниме -->
@@ -126,17 +134,24 @@
                             </svg>
                         </div>
                         <div class="tree-item-inner">
-                            <a href="{{ pathPrefix }}/reviews/anime/">⛩️ Аниме</a>
+                            <span>⛩️ Аниме</span>
                         </div>
                     </div>
-                    <div class="tree-item-children {% if not isAnimePage %}is-collapsed{% endif %}">
+                        <div class="tree-item-children {% if not isAnimePage %}is-collapsed{% endif %}">
+                        <div class="tree-item">
+                            <a href="{{ pathPrefix }}/reviews/anime/" class="tree-item-self {% if page.url == '/reviews/anime/' %}mod-active{% endif %}" {% if page.url == '/reviews/anime/' %}aria-current="page"{% endif %}>
+                                <div class="tree-item-inner">
+                                    <span>⭐ Интро</span>
+                                </div>
+                            </a>
+                        </div>
                         {% for anime in collections.anime %}
                         <div class="tree-item">
-                            <div class="tree-item-self {% if page.url == anime.url %}mod-active{% endif %}">
+                            <a href="{{ pathPrefix }}{{ anime.url }}" class="tree-item-self {% if page.url == anime.url %}mod-active{% endif %}" {% if page.url == anime.url %}aria-current="page"{% endif %}>
                                 <div class="tree-item-inner">
-                                    <a href="{{ pathPrefix }}{{ anime.url }}">{{ anime.data.title }}</a>
+                                    <span>{{ anime.data.title }}</span>
                                 </div>
-                            </div>
+                            </a>
                         </div>
                         {% endfor %}
                     </div>
@@ -176,11 +191,11 @@
                             <div class="tree-item-children {% if not isCategoryPage %}is-collapsed{% endif %}">
                                 {% for item in category.items %}
                                 <div class="tree-item">
-                                    <div class="tree-item-self {% if page.url == item.url %}mod-active{% endif %}">
+                                    <a href="{{ pathPrefix }}{{ item.url }}" class="tree-item-self {% if page.url == item.url %}mod-active{% endif %}" {% if page.url == item.url %}aria-current="page"{% endif %}>
                                         <div class="tree-item-inner">
-                                            <a href="{{ pathPrefix }}{{ item.url }}">{{ item.data.title }}</a>
+                                            <span>{{ item.data.title }}</span>
                                         </div>
-                                    </div>
+                                    </a>
                                 </div>
                                 {% endfor %}
                             </div>
@@ -210,11 +225,11 @@
                         {% for note in collections.notes %}
                         {% if note.url | startsWith('/notes/python/') %}
                         <div class="tree-item">
-                            <div class="tree-item-self {% if page.url == note.url %}mod-active{% endif %}">
+                            <a href="{{ pathPrefix }}{{ note.url }}" class="tree-item-self {% if page.url == note.url %}mod-active{% endif %}" {% if page.url == note.url %}aria-current="page"{% endif %}>
                                 <div class="tree-item-inner">
-                                    <a href="{{ pathPrefix }}{{ note.url }}">{{ note.data.title }}</a>
+                                    <span>{{ note.data.title }}</span>
                                 </div>
-                            </div>
+                            </a>
                         </div>
                         {% endif %}
                         {% endfor %}

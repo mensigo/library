@@ -12,6 +12,6 @@ layout: base.njk
 ### 🐍 Python
 Заметки по программированию на Python.
 
-- [Перейти к Python](/notes/python/)
+- [Перейти к Python]({{ pathPrefix }}/notes/python/)
 
 <!-- Здесь можно добавить другие категории заметок в будущем -->
