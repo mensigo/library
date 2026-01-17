@@ -107,9 +107,13 @@
                 <!-- Главная страница -->
                 <div class="nav-section nav-section--main">
                     <div class="tree-item">
-                        <div class="tree-item-self {% if page.url == '/' %}mod-active{% endif %}">
+                        <div class="tree-item-self {% if (not isNotesPage and page.url == '/') or (isNotesPage and page.url == '/notes/') %}mod-active{% endif %}">
                             <div class="tree-item-inner">
+                                {% if isNotesPage %}
+                                <a href="{{ pathPrefix }}/notes/">🏠︎ Главная (Заметки)</a>
+                                {% else %}
                                 <a href="{{ pathPrefix }}/">🏠︎ Главная</a>
+                                {% endif %}
                             </div>
                         </div>
                     </div>
@@ -126,10 +130,17 @@
                             </svg>
                         </div>
                         <div class="tree-item-inner">
-                            <a href="{{ pathPrefix }}/reviews/anime/">⛩️ Аниме</a>
+                            <span>⛩️ Аниме</span>
                         </div>
                     </div>
                     <div class="tree-item-children {% if not isAnimePage %}is-collapsed{% endif %}">
+                        <div class="tree-item">
+                            <div class="tree-item-self {% if page.url == '/reviews/anime/' %}mod-active{% endif %}">
+                                <div class="tree-item-inner">
+                                    <a href="{{ pathPrefix }}/reviews/anime/">⭐ Интро</a>
+                                </div>
+                            </div>
+                        </div>
                         {% for anime in collections.anime %}
                         <div class="tree-item">
                             <div class="tree-item-self {% if page.url == anime.url %}mod-active{% endif %}">
