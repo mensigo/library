@@ -1,4 +1,5 @@
 document.addEventListener('DOMContentLoaded', function() {
+    const pathPrefix = window.APP_PATH_PREFIX || '';
     // Инициализация темы
     initTheme();
 
@@ -15,7 +16,7 @@ document.addEventListener('DOMContentLoaded', function() {
     initNavbarScrollHide();
 
     // Инициализация переключения вкладок
-    initNavbarTabs();
+    initNavbarTabs(pathPrefix);
     
     const menuToggle = document.getElementById('menuToggle');
     const sidebarLeft = document.getElementById('sidebarLeft');
@@ -130,7 +131,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             // В остальных случаях переходим на главную с hash для принудительной активации Reviews
-            window.location.href = '/#reviews';
+            window.location.href = `${pathPrefix}/#reviews`;
         });
     }
 });
@@ -586,7 +587,7 @@ function initNavbarScrollHide() {
 }
 
 // Переключение вкладок в navbar
-function initNavbarTabs() {
+function initNavbarTabs(pathPrefix = '') {
     const navbarSections = document.querySelectorAll('.navbar__section');
     const sidebarLeft = document.getElementById('sidebarLeft');
 
@@ -637,11 +638,11 @@ function initNavbarTabs() {
 
             if (sectionName === 'notes' && !isOnNotesPage) {
                 // Переходим на главную страницу notes
-                window.location.href = '/notes/';
+                window.location.href = `${pathPrefix}/notes/`;
                 return;
             } else if (sectionName === 'library' && !isOnReviewsPage && currentPath !== '/') {
                 // Переходим на главную страницу reviews (главную сайта)
-                window.location.href = '/#reviews';
+                window.location.href = `${pathPrefix}/#reviews`;
                 return;
             }
 

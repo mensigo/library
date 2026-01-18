@@ -262,6 +262,9 @@
         </aside>
     </div>
 
+    <script>
+        window.APP_PATH_PREFIX = "{{ pathPrefix }}";
+    </script>
     <script src="{{ pathPrefix }}/js/scripts.js"></script>
     {% block scripts %}{% endblock %}
 </body>
