@@ -2,13 +2,45 @@
 title: WIP Assert
 layout: note.njk
 
-upd_date: 2026-01-11
+upd_date: 2026-02-04
 
 tg_desc: python-assert
-tg_pub_time: 2026-01-11
+tg_pub_time: 2026-02-04
 ---
 ## Assert
 
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec tristique arcu sed suscipit tempor. Vestibulum maximus arcu mi, nec efficitur tortor egestas sit amet. Nunc augue arcu, fermentum pulvinar nisi sit amet, placerat dapibus mi. Aenean accumsan, mauris ut hendrerit gravida, quam massa tincidunt eros, ut tincidunt augue dolor eu nisi. Vestibulum quis pulvinar nisi. Praesent imperdiet, magna a posuere consequat, mauris felis cursus ante, non lacinia enim orci sed dolor. Proin fermentum ut lacus in posuere. Vivamus enim neque, consectetur in metus non, pulvinar elementum magna. Nullam eget tortor quis magna fringilla dictum. In turpis lectus, auctor ut ligula eu, bibendum pharetra dolor. Interdum et malesuada fames ac ante ipsum primis in faucibus. Cras facilisis ultrices hendrerit.
+Окей, есть такая инструкция `assert` для проверки выражения на истинность: если проверка накрылась, бросается `AssertionError` + печатается кастомное сообщение (если указано).
 
-Integer condimentum finibus augue, convallis mollis sem varius eget. Pellentesque efficitur laoreet eleifend. Maecenas bibendum commodo ullamcorper. Nam posuere orci condimentum ligula imperdiet imperdiet. Nulla eget sodales ipsum. Morbi quis felis at mauris molestie tincidunt. Morbi blandit massa vel diam facilisis, in consectetur mauris lobortis. Etiam a eros nec ligula fermentum scelerisque. Vivamus dolor velit, volutpat in nisi at, blandit accumsan eros. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. In justo ligula, pharetra nec quam at, tincidunt mollis mi. Vestibulum urna elit, tempus eget porttitor sed, tincidunt ut lorem.
+
+### Моменты
+
+#### 1. Assert можно **полностью отключить**
+
+Это самая важная особенность. При запуске python скрипта с флагом `-O` (optimize) или под PYTHONOPTIMIZE=1 (непустым) все assert-ы удаляются из кода.
+
+Когда Python интерпретирует код с `-O`, он компилирует файл и сохраняет `.pyc` файл без assert-ов. Это ускоряет выполнение, так как код просто пропускается.
+
+Поэтому `assert` НЕ должен использоваться для проверки пользовательского ввода или критичных ошибок - только для отладки и тестирования.
+
+
+#### 2. Assert на уровне тестирования
+
+В юнит-тестах (pytest, unittest) `assert` используется довольно активно:
+
+```python
+def test_math():
+    assert 1 + 1 == 2
+    assert len([1, 2, 3]) == 3
+```
+
+Pytest даже показывает информативные сообщения об ошибках при падении assert-ов.
+
+
+### Когда использовать assert
+
+- ✅ **Во время разработки** - для быстрых проверок логики
+- ✅ **В тестах** - часто в pytest
+- ✅ **"Никогда не должно произойти"** - в качестве страховки в коде
+- ❌ **Для валидации пользовательского ввода**
+- ❌ **Для обработки ошибок в production** - лучше использовать `raise Exception`
+- ❌ **Вместо if-условий в критичной логике**
