@@ -1,3 +1,53 @@
+// ========================================
+// Утилитарные функции (используются в логике и тестах)
+// ========================================
+
+function applyTheme(theme) {
+    if (theme === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+    } else {
+        document.documentElement.setAttribute('data-theme', 'light');
+    }
+}
+
+function highlightMatch(text, query) {
+    if (!query) return text;
+    const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+    return text.replace(regex, '<mark>$1</mark>');
+}
+
+function generateSlug(text) {
+    return text
+        .toLowerCase()
+        .replace(/[^\wа-яё\s-]/gi, '')
+        .replace(/\s+/g, '-')
+        .replace(/-+/g, '-');
+}
+
+function compareValues(aValue, bValue) {
+    const aNum = parseFloat(aValue);
+    const bNum = parseFloat(bValue);
+
+    if (!isNaN(aNum) && !isNaN(bNum)) {
+        return aNum - bNum;
+    }
+    return aValue.localeCompare(bValue, 'ru', { sensitivity: 'base' });
+}
+
+// Экспорт для тестирования (только в Node.js окружении)
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = {
+        applyTheme,
+        highlightMatch,
+        generateSlug,
+        compareValues
+    };
+}
+
+// ========================================
+// Основная логика приложения
+// ========================================
+
 document.addEventListener('DOMContentLoaded', function() {
     const pathPrefix = window.APP_PATH_PREFIX || '';
     // Инициализация темы
@@ -166,14 +216,6 @@ function initTheme() {
     });
 }
 
-function applyTheme(theme) {
-    if (theme === 'dark') {
-        document.documentElement.setAttribute('data-theme', 'dark');
-    } else {
-        document.documentElement.setAttribute('data-theme', 'light');
-    }
-}
-
 // Функционал сортировки таблиц
 function initTableSorting() {
     const sortableHeaders = document.querySelectorAll('th.sortable');
@@ -199,20 +241,7 @@ function initTableSorting() {
             rows.sort((a, b) => {
                 const aValue = a.children[columnIndex].textContent.trim();
                 const bValue = b.children[columnIndex].textContent.trim();
-
-                // Проверяем, являются ли значения числами
-                const aNum = parseFloat(aValue);
-                const bNum = parseFloat(bValue);
-
-                let comparison = 0;
-                if (!isNaN(aNum) && !isNaN(bNum)) {
-                    // Сортировка чисел
-                    comparison = aNum - bNum;
-                } else {
-                    // Сортировка текста
-                    comparison = aValue.localeCompare(bValue, 'ru', { sensitivity: 'base' });
-                }
-
+                const comparison = compareValues(aValue, bValue);
                 return sortDirection === 'asc' ? comparison : -comparison;
             });
 
@@ -247,11 +276,7 @@ function initTableOfContents() {
     headings.forEach((heading, index) => {
         if (!heading.id) {
             const text = heading.textContent.trim();
-            const slug = text
-                .toLowerCase()
-                .replace(/[^\wа-яё\s-]/gi, '')
-                .replace(/\s+/g, '-')
-                .replace(/-+/g, '-');
+            const slug = generateSlug(text);
             heading.id = slug || `heading-${index}`;
         }
     });
@@ -337,17 +362,19 @@ function updateActiveTocLink() {
     });
 }
 
-// Функционал поиска по навигации
+// Функционал поиска по всем страницам (Fuse.js)
 function initSearch() {
     const searchInput = document.getElementById('searchInput');
     const searchContainer = document.querySelector('.search-container');
+    const pathPrefix = window.APP_PATH_PREFIX || '';
 
     if (!searchInput || !searchContainer) {
         return;
     }
 
-    // Кэш для навигационных элементов
-    let navItemsCache = null;
+    // Кэш для индекса поиска
+    let fuse = null;
+    let searchIndexLoaded = false;
 
     // Создаем контейнер для результатов поиска
     const searchResults = document.createElement('div');
@@ -355,37 +382,58 @@ function initSearch() {
     searchResults.style.display = 'none';
     searchContainer.appendChild(searchResults);
 
-    // Флаг для отслеживания состояния поиска
-    let isSearchActive = false;
+    // Загрузить индекс при первом взаимодействии
+    function loadSearchIndex() {
+        if (searchIndexLoaded) return Promise.resolve();
+
+        return fetch(`${pathPrefix}/search-index.json`)
+            .then(response => response.json())
+            .then(data => {
+                console.log('Search index loaded:', data.length, 'items');
+                // Инициализируем Fuse.js с индексом
+                fuse = new Fuse(data, {
+                    keys: [
+                        { name: 'title', weight: 2 },
+                        { name: 'content', weight: 1 }
+                    ],
+                    threshold: 0.3,  // Разумный порог для точности
+                    minMatchCharLength: 2,  // Минимум 2 символа для совпадения
+                    includeScore: true,
+                    ignoreLocation: true,
+                    distance: 100  // Умеренное расстояние для fuzzy matching
+                });
+                searchIndexLoaded = true;
+                console.log('Fuse.js initialized');
+            })
+            .catch(error => {
+                console.error('Ошибка загрузки индекса поиска:', error);
+            });
+    }
 
     // Обработчик ввода в поле поиска
     searchInput.addEventListener('input', function(e) {
-        const query = e.target.value.trim().toLowerCase();
+        const query = e.target.value.trim();
 
-        if (query.length === 0) {
+        if (query.length < 3) {
             hideSearchResults();
             return;
         }
 
-        // Собираем элементы при первом поиске
-        if (!navItemsCache) {
-            navItemsCache = collectNavigationItems();
-        }
-
-        const results = filterNavigationItems(navItemsCache, query);
-        displaySearchResults(results, query);
+        loadSearchIndex().then(() => {
+            const results = fuse.search(query).slice(0, 10); // Ограничиваем до 10 результатов
+            console.log('Search query:', query, 'Results found:', results.length);
+            displaySearchResults(results, query);
+        });
     });
 
     // Обработчик фокуса на поле поиска
     searchInput.addEventListener('focus', function() {
-        if (searchInput.value.trim().length > 0) {
-            // Собираем элементы при первом поиске
-            if (!navItemsCache) {
-                navItemsCache = collectNavigationItems();
-            }
-            const query = searchInput.value.trim().toLowerCase();
-            const results = filterNavigationItems(navItemsCache, query);
-            displaySearchResults(results, query);
+        if (searchInput.value.trim().length >= 3) {
+            loadSearchIndex().then(() => {
+                const query = searchInput.value.trim();
+                const results = fuse.search(query).slice(0, 10);
+                displaySearchResults(results, query);
+            });
         }
     });
 
@@ -417,7 +465,6 @@ function initSearch() {
             e.preventDefault();
             const firstResult = searchResults.querySelector('.search-result-item');
             if (firstResult) {
-                // Имитируем клик по первому результату
                 firstResult.click();
             }
         } else if (e.key === 'ArrowDown') {
@@ -429,36 +476,6 @@ function initSearch() {
         }
     });
 
-    function collectNavigationItems() {
-        const items = [];
-
-        // Собираем все ссылки из навигации
-        const navLinks = document.querySelectorAll('.sidebar-left a');
-
-        navLinks.forEach(link => {
-            const text = link.textContent.trim();
-            const href = link.getAttribute('href');
-
-            if (text && href && !href.startsWith('#') && !href.startsWith('javascript:')) {
-                items.push({
-                    text: text,
-                    href: href,
-                    element: link
-                });
-            }
-        });
-
-        return items;
-    }
-
-    function filterNavigationItems(items, query) {
-        return items.filter(item => {
-            // Удаляем эмодзи из текста для поиска
-            const cleanText = item.text.replace(/[\u{1F300}-\u{1F9FF}]/gu, '').trim().toLowerCase();
-            return cleanText.includes(query);
-        });
-    }
-
     function displaySearchResults(results, query) {
         searchResults.innerHTML = '';
 
@@ -468,17 +485,24 @@ function initSearch() {
             noResults.textContent = 'Ничего не найдено';
             searchResults.appendChild(noResults);
         } else {
-            results.forEach((result, index) => {
+            results.forEach((result) => {
+                const item = result.item;
                 const resultItem = document.createElement('a');
                 resultItem.className = 'search-result-item';
-                resultItem.href = result.href;
+                resultItem.href = pathPrefix + item.url;
                 resultItem.setAttribute('tabindex', '0');
                 resultItem.setAttribute('role', 'option');
                 resultItem.setAttribute('aria-selected', 'false');
 
-                // Подсвечиваем найденный текст
-                const highlightedText = highlightMatch(result.text, query);
-                resultItem.innerHTML = highlightedText;
+                // Подсвечиваем найденный текст в заголовке
+                const highlightedTitle = highlightMatch(item.title, query);
+
+                // Показываем фрагмент контента с контекстом
+                const contextHtml = `<div class="search-result-item__title">${highlightedTitle}</div>`;
+                const contentPreview = item.content.substring(0, 100);
+                const highlightedContent = contentPreview ? `<div class="search-result-item__preview">${contentPreview}...</div>` : '';
+
+                resultItem.innerHTML = contextHtml + highlightedContent;
 
                 // Обработчик клика
                 resultItem.addEventListener('click', function(e) {
@@ -519,7 +543,6 @@ function initSearch() {
         searchResults.classList.add('show');
         searchInput.setAttribute('aria-expanded', 'true');
         searchResults.setAttribute('role', 'listbox');
-        isSearchActive = true;
     }
 
     function hideSearchResults() {
@@ -529,22 +552,6 @@ function initSearch() {
             searchResults.style.display = 'none';
         }, 150);
         searchInput.setAttribute('aria-expanded', 'false');
-        isSearchActive = false;
-    }
-
-    function highlightMatch(text, query) {
-        // Удаляем эмодзи для подсветки
-        const cleanText = text.replace(/[\u{1F300}-\u{1F9FF}]/gu, '').trim();
-        const regex = new RegExp(`(${query})`, 'gi');
-        const highlighted = cleanText.replace(regex, '<mark>$1</mark>');
-
-        // Возвращаем текст с эмодзи если он был
-        const emoji = text.match(/[\u{1F300}-\u{1F9FF}]/gu);
-        if (emoji) {
-            return emoji[0] + ' ' + highlighted;
-        }
-
-        return highlighted;
     }
 }
 

@@ -265,6 +265,8 @@
     <script>
         window.APP_PATH_PREFIX = "{{ pathPrefix }}";
     </script>
+    <!-- Fuse.js для полнотекстового поиска -->
+    <script src="https://cdn.jsdelivr.net/npm/fuse.js@7.0.0/dist/fuse.min.js"></script>
     <script src="{{ pathPrefix }}/js/scripts.js"></script>
     {% block scripts %}{% endblock %}
 </body>

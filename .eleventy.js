@@ -161,6 +161,62 @@ module.exports = function(eleventyConfig) {
         return html;
     });
 
+    // Генерация поискового индекса
+    eleventyConfig.addCollection("searchIndex", function(collection) {
+        const searchIndex = [];
+
+        collection.getAll().forEach(item => {
+            // Пропускаем служебные файлы и drafts
+            if (item.data.draft === true || !item.inputPath.includes('src')) {
+                return;
+            }
+
+            // Пропускаем файлы без title или не markdown
+            if (!item.data.title) {
+                return;
+            }
+
+            // Извлекаем текст из контента
+            let content = item.template.frontMatter.content || '';
+            // Удаляем markdown синтаксис для индекса
+            content = content
+                .replace(/#{1,6} /g, '') // Удаляем заголовки
+                .replace(/\[([^\]]+)\]\([^\)]+\)/g, '$1') // Ссылки
+                .replace(/\*\*([^\*]+)\*\*/g, '$1') // Bold
+                .replace(/\*([^\*]+)\*/g, '$1') // Italic
+                .replace(/`([^`]+)`/g, '$1') // Inline code
+                .replace(/```[\s\S]*?```/g, '') // Code blocks
+                .trim();
+
+            // Ограничиваем размер контента для индекса (первые 500 слов)
+            const words = content.split(/\s+/);
+            content = words.slice(0, 500).join(' ');
+
+            // Определяем раздел
+            const url = item.url;
+            let section = 'other';
+            if (url.includes('/notes/')) section = 'notes';
+            else if (url.includes('/reviews/anime/')) section = 'anime';
+            else if (url.includes('/reviews/philosophy/')) section = 'philosophy';
+            else if (url === '/' || url === '/reviews/' || url === '/notes/') section = 'main';
+
+            searchIndex.push({
+                id: url,
+                title: item.data.title,
+                url: url,
+                content: content,
+                section: section
+            });
+        });
+
+        return searchIndex;
+    });
+
+    // Passthrough copy для индекса (будет создан как JSON файл)
+    eleventyConfig.addNunjucksAsyncFilter("createSearchIndex", async function(searchData) {
+        return JSON.stringify(searchData);
+    });
+
     return {
         dir: {
             input: "src",
