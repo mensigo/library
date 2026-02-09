@@ -123,7 +123,10 @@ module.exports = function(eleventyConfig) {
 
     // Коллекция заметок (notes)
     eleventyConfig.addCollection("notes", function(collection) {
-        return collection.getFilteredByGlob("src/notes/**/*.md");
+        return collection.getFilteredByGlob("src/notes/**/*.md")
+            .filter(item => {
+                return !item.inputPath.includes('index.md');
+            });
     });
 
     // Shortcode для сортируемых таблиц

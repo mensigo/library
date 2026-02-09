@@ -48,8 +48,9 @@ if (typeof module !== 'undefined' && module.exports) {
 // Основная логика приложения
 // ========================================
 
+const appPathPrefix = window.APP_PATH_PREFIX || '';
+
 document.addEventListener('DOMContentLoaded', function() {
-    const pathPrefix = window.APP_PATH_PREFIX || '';
     // Инициализация темы
     initTheme();
 
@@ -66,7 +67,7 @@ document.addEventListener('DOMContentLoaded', function() {
     initNavbarScrollHide();
 
     // Инициализация переключения вкладок
-    initNavbarTabs(pathPrefix);
+    initNavbarTabs(appPathPrefix);
     
     const menuToggle = document.getElementById('menuToggle');
     const sidebarLeft = document.getElementById('sidebarLeft');
@@ -181,7 +182,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             // В остальных случаях переходим на главную с hash для принудительной активации Reviews
-            window.location.href = `${pathPrefix}/#reviews`;
+            window.location.href = `${appPathPrefix}/#reviews`;
         });
     }
 });
@@ -366,7 +367,6 @@ function updateActiveTocLink() {
 function initSearch() {
     const searchInput = document.getElementById('searchInput');
     const searchContainer = document.querySelector('.search-container');
-    const pathPrefix = window.APP_PATH_PREFIX || '';
 
     if (!searchInput || !searchContainer) {
         return;
@@ -386,7 +386,7 @@ function initSearch() {
     function loadSearchIndex() {
         if (searchIndexLoaded) return Promise.resolve();
 
-        return fetch(`${pathPrefix}/search-index.json`)
+        return fetch(`${appPathPrefix}/search-index.json`)
             .then(response => response.json())
             .then(data => {
                 console.log('Search index loaded:', data.length, 'items');
@@ -489,7 +489,7 @@ function initSearch() {
                 const item = result.item;
                 const resultItem = document.createElement('a');
                 resultItem.className = 'search-result-item';
-                resultItem.href = pathPrefix + item.url;
+                resultItem.href = appPathPrefix + item.url;
                 resultItem.setAttribute('tabindex', '0');
                 resultItem.setAttribute('role', 'option');
                 resultItem.setAttribute('aria-selected', 'false');
@@ -594,9 +594,10 @@ function initNavbarScrollHide() {
 }
 
 // Переключение вкладок в navbar
-function initNavbarTabs(pathPrefix = '') {
+function initNavbarTabs(pathPrefix = appPathPrefix) {
     const navbarSections = document.querySelectorAll('.navbar__section');
     const sidebarLeft = document.getElementById('sidebarLeft');
+    const basePrefix = pathPrefix || appPathPrefix || '';
 
     if (!navbarSections.length || !sidebarLeft) return;
 
@@ -616,7 +617,7 @@ function initNavbarTabs(pathPrefix = '') {
     } else if (currentPath.includes('/notes/')) {
         activeSection = 'notes';
         localStorage.setItem('activeSection', 'notes');
-    } else if (currentPath.includes('/reviews/') || currentPath.includes('/anime/') || currentPath.includes('/philosophy/')) {
+    } else if (currentPath.includes('/reviews/')) {
         activeSection = 'library';
         localStorage.setItem('activeSection', 'library');
     } else {
@@ -645,11 +646,11 @@ function initNavbarTabs(pathPrefix = '') {
 
             if (sectionName === 'notes' && !isOnNotesPage) {
                 // Переходим на главную страницу notes
-                window.location.href = `${pathPrefix}/notes/`;
+                window.location.href = `${basePrefix}/notes/`;
                 return;
             } else if (sectionName === 'library' && !isOnReviewsPage && currentPath !== '/') {
                 // Переходим на главную страницу reviews (главную сайта)
-                window.location.href = `${pathPrefix}/#reviews`;
+                window.location.href = `${basePrefix}/#reviews`;
                 return;
             }
 

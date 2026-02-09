@@ -137,7 +137,7 @@
                             <span>⛩️ Аниме</span>
                         </div>
                     </div>
-                        <div class="tree-item-children {% if not isAnimePage %}is-collapsed{% endif %}">
+                    <div class="tree-item-children {% if not isAnimePage %}is-collapsed{% endif %}">
                         <div class="tree-item">
                             <a href="{{ pathPrefix }}/reviews/anime/" class="tree-item-self {% if page.url == '/reviews/anime/' %}mod-active{% endif %}" {% if page.url == '/reviews/anime/' %}aria-current="page"{% endif %}>
                                 <div class="tree-item-inner">
@@ -236,6 +236,7 @@
                     </div>
                 </div>
                 </div>
+            </div>
         </nav>
 
         <!-- Центральный контент -->
@@ -264,6 +265,7 @@
 
     <script>
         window.APP_PATH_PREFIX = "{{ pathPrefix }}";
+        window.pathPrefix = window.APP_PATH_PREFIX;
     </script>
     <!-- Fuse.js для полнотекстового поиска -->
     <script src="https://cdn.jsdelivr.net/npm/fuse.js@7.0.0/dist/fuse.min.js"></script>
