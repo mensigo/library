@@ -24,6 +24,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 
     <link rel="stylesheet" href="{{ pathPrefix }}/css/styles.css">
+    <link rel="preload" as="image" href="{{ pathPrefix }}/images/logo.png" fetchpriority="high">
     {% block styles %}{% endblock %}
     <script>
         // Применяем тему до загрузки страницы, чтобы избежать мигания
@@ -84,7 +85,7 @@
             <!-- Заголовок сайта -->
             <div class="sidebar-header">
                 <a href="{{ pathPrefix }}/" class="site-logo-link">
-                    <img src="{{ pathPrefix }}/images/logo.png" alt="Logo" class="site-logo">
+                    <img src="{{ pathPrefix }}/images/logo.png" alt="Logo" class="site-logo" width="176" height="176" loading="eager" fetchpriority="high">
                 </a>
                 <a href="{{ pathPrefix }}/" class="site-title">Мысли и заметки</a>
                 <div class="site-subtitle">Собрание размышлений</div>
@@ -103,7 +104,7 @@
             </div>
 
             <!-- Навигационное дерево -->
-            <div class="nav-tree">
+            <div class="nav-tree nav-tree--loading">
                 <!-- Главная страница -->
                 <div class="nav-section nav-section--main">
                 <div class="tree-item">

@@ -598,6 +598,7 @@ function initNavbarTabs(pathPrefix = appPathPrefix) {
     const navbarSections = document.querySelectorAll('.navbar__section');
     const sidebarLeft = document.getElementById('sidebarLeft');
     const basePrefix = pathPrefix || appPathPrefix || '';
+    const navTree = sidebarLeft ? sidebarLeft.querySelector('.nav-tree') : null;
 
     if (!navbarSections.length || !sidebarLeft) return;
 
@@ -627,6 +628,11 @@ function initNavbarTabs(pathPrefix = appPathPrefix) {
 
     // Устанавливаем активную вкладку
     setActiveSection(activeSection);
+
+    // Снимаем состояние загрузки навигации, когда видимость настроена
+    if (navTree) {
+        navTree.classList.remove('nav-tree--loading');
+    }
 
     // Очищаем URL от hash, если он был обработан для переключения вкладки
     if (currentHash === 'reviews' || currentHash === 'notes') {
@@ -676,8 +682,6 @@ function initNavbarTabs(pathPrefix = appPathPrefix) {
     }
 
     function updateSidebarNavigation(sectionName) {
-        const navTree = sidebarLeft.querySelector('.nav-tree');
-
         if (!navTree) return;
 
         // Скрываем все секции навигации КРОМЕ главной

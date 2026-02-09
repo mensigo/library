@@ -316,9 +316,20 @@ body {
 
 .site-logo {
     display: block;
+    width: 95px;
     max-width: 95px;
     height: auto;
+    aspect-ratio: 1 / 1;
+    object-fit: contain;
+    background: var(--card-bg);
     opacity: 0.9;
+}
+
+@media (max-width: 480px) {
+    .site-logo {
+        width: 72px;
+        max-width: 72px;
+    }
 }
 
 /* Поиск */
@@ -1342,6 +1353,12 @@ body {
 
 .navbar__section:hover {
     background: var(--hover-bg);
+}
+
+/* Предотвращаем FOUC навигации до инициализации JS */
+.nav-tree.nav-tree--loading {
+    opacity: 0;
+    visibility: hidden;
 }
 
 /* Скрытие/показ секций навигации */
