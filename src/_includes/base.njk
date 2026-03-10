@@ -1,3 +1,4 @@
+{% set isNotesPage = page.url | startsWith('/notes/') %}
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -21,7 +22,7 @@
     <link rel="dns-prefetch" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Ysabeau+Infant:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <link rel="stylesheet" href="{{ pathPrefix }}/css/styles.css">
     <link rel="preload" as="image" href="{{ pathPrefix }}/images/logo.png" fetchpriority="high">
@@ -40,7 +41,6 @@
     <!-- Верхняя навигационная панель -->
     <nav class="navbar">
         <div class="navbar__container">
-            {% set isNotesPage = page.url | startsWith('/notes/') %}
             <div class="navbar__section {% if not isNotesPage %}navbar__section--active{% endif %}" data-section="library">
                 <span>📚 Reviews</span>
             </div>
