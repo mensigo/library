@@ -1,3 +1,21 @@
+@font-face {
+    font-family: 'Ysabeau Infant';
+    src: url('../fonts/YsabeauInfant-VariableFont_wght.woff2') format('woff2-variations'),
+         url('../fonts/YsabeauInfant-VariableFont_wght.woff2') format('woff2');
+    font-weight: 100 900;
+    font-style: normal;
+    font-display: optional;
+}
+
+@font-face {
+    font-family: 'Ysabeau Infant';
+    src: url('../fonts/YsabeauInfant-Italic-VariableFont_wght.woff2') format('woff2-variations'),
+         url('../fonts/YsabeauInfant-Italic-VariableFont_wght.woff2') format('woff2');
+    font-weight: 100 900;
+    font-style: italic;
+    font-display: optional;
+}
+
 :root {
     --sidebar-bg: #fefefe;
     --border-color: #f0f0f0;
