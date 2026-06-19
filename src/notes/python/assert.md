@@ -6,12 +6,24 @@ upd_date: 2026-03-17
 
 tg_desc: python-assert
 tg_pub_time: 2026-03-17
+pageClass: note-image-simple
 ---
+
+<figure class="note-media note-media--full">
+  <div class="note-media__image-wrapper">
+    <img
+      class="note-media__image"
+      src="{{ pathPrefix }}/images/notes/assert/dark.png"
+      alt="assert vibes, just relax"
+      loading="lazy"
+      decoding="async"
+    >
+  </div>
+</figure>
 
 ## Интро
 
 Есть такая инструкция **assert** для проверки выражения на истинность: если проверка накрылась, возникает AssertionError + выводится кастомное сообщение (если указано).
-
 
 ## Моменты
 

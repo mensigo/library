@@ -789,6 +789,54 @@ body {
     padding: 0;
 }
 
+/* Note media (images/figures) */
+.note-media {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin: 2rem 0;
+}
+
+.note-media__image-wrapper {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 5px;
+    border: 0.1px solid var(--border-color);
+    border-radius: 12px;
+    background: var(--page-meta-bg);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+}
+
+.note-media__image {
+    display: block;
+    width: 100%;
+    max-width: 720px;
+    height: auto;
+    border-radius: 8px;
+    object-fit: contain;
+}
+
+.note-media__caption {
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+    text-align: center;
+}
+
+.note-media--full .note-media__image {
+    max-width: 100%;
+}
+
+.note-image-simple .note-media__image-wrapper {
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+.note-image-simple .note-media--full .note-media__image {
+    max-width: 500px;
+}
+
 /* TOC (Table of Contents) - Правое меню */
 .toc-header {
     display: flex;
