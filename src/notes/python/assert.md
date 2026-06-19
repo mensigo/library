@@ -13,7 +13,7 @@ pageClass: note-image-simple
   <div class="note-media__image-wrapper">
     <img
       class="note-media__image"
-      src="{{ pathPrefix }}/images/notes/assert/dark.png"
+      src="{{ pathPrefix }}/images/notes/assert/snake-dark-500.png"
       alt="assert vibes, just relax"
       loading="lazy"
       decoding="async"
