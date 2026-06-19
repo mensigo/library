@@ -31,9 +31,9 @@ jobs:
 
       - name: Sync images
         run: |
-          rm -rf src/images
-          mkdir -p src/images
-          rsync -a images_repo/src/images/ src/images/
+          rm -rf src/images/notes src/images/reviews
+          mkdir -p src/images/notes src/images/reviews
+          rsync -a --delete --exclude 'logo.png' images_repo/src/images/ src/images/
 
       - name: Setup Node
         uses: actions/setup-node@v4
