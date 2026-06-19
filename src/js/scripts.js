@@ -8,6 +8,20 @@ function applyTheme(theme) {
     } else {
         document.documentElement.setAttribute('data-theme', 'light');
     }
+    updateThemeImages(theme);
+}
+
+function updateThemeImages(theme) {
+    if (typeof document === 'undefined') {
+        return;
+    }
+    const images = document.querySelectorAll('[data-image-light][data-image-dark]');
+    images.forEach(img => {
+        const target = theme === 'dark' ? img.dataset.imageDark : img.dataset.imageLight;
+        if (target && img.getAttribute('src') !== target) {
+            img.setAttribute('src', target);
+        }
+    });
 }
 
 function highlightMatch(text, query) {

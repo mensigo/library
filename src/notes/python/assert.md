@@ -13,6 +13,8 @@ pageClass: note-image-simple
   <div class="note-media__image-wrapper">
     <img
       class="note-media__image"
+      data-image-dark="{{ pathPrefix }}/images/notes/assert/snake-dark-500.png"
+      data-image-light="{{ pathPrefix }}/images/notes/assert/snake-light-500.png"
       src="{{ pathPrefix }}/images/notes/assert/snake-dark-500.png"
       alt="assert vibes, just relax"
       loading="lazy"
