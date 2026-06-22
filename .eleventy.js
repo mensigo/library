@@ -103,12 +103,18 @@ module.exports = function(eleventyConfig) {
         return collection.getFilteredByGlob("src/reviews/anime/*.md")
             .filter(item => {
                 return !item.inputPath.includes('index.md');
+            })
+            .sort((a, b) => {
+                const titleA = (a.data.title || '').toString();
+                const titleB = (b.data.title || '').toString();
+                return titleA.localeCompare(titleB, 'ru', { sensitivity: 'base' });
             });
     });
 
     // Коллекция философских категорий (папки)
     eleventyConfig.addCollection("philosophyCategories", function(collection) {
         const philosophyItems = collection.getFilteredByGlob("src/reviews/philosophy/**/*.md");
+        const categoryNames = new Set();
         const categories = {};
 
         philosophyItems.forEach(item => {
@@ -116,13 +122,25 @@ module.exports = function(eleventyConfig) {
             const pathParts = item.filePathStem.split('/');
             const category = pathParts[3];  // src/reviews/philosophy/seneca/page.md
 
-            if (category && !categories[category]) {
-                categories[category] = {
-                    name: category,
-                    items: philosophyItems.filter(i => i.filePathStem.includes(`/reviews/philosophy/${category}/`))
-                };
+            if (category) {
+                categoryNames.add(category);
             }
         });
+
+        Array.from(categoryNames)
+            .sort((a, b) => a.localeCompare(b, 'ru', { sensitivity: 'base' }))
+            .forEach(category => {
+                categories[category] = {
+                    name: category,
+                    items: philosophyItems
+                        .filter(i => i.filePathStem.includes(`/reviews/philosophy/${category}/`))
+                        .sort((a, b) => {
+                            const titleA = (a.data.title || '').toString();
+                            const titleB = (b.data.title || '').toString();
+                            return titleA.localeCompare(titleB, 'ru', { sensitivity: 'base' });
+                        })
+                };
+            });
 
         return categories;
     });
@@ -132,6 +150,19 @@ module.exports = function(eleventyConfig) {
         return collection.getFilteredByGlob("src/notes/**/*.md")
             .filter(item => {
                 return !item.inputPath.includes('index.md');
+            });
+    });
+
+    // Коллекция Python-заметок, отсортированная по title
+    eleventyConfig.addCollection("pythonNotes", function(collection) {
+        return collection.getFilteredByGlob("src/notes/python/*.md")
+            .filter(item => {
+                return !item.inputPath.includes('index.md');
+            })
+            .sort((a, b) => {
+                const titleA = (a.data.title || '').toString();
+                const titleB = (b.data.title || '').toString();
+                return titleA.localeCompare(titleB, 'ru', { sensitivity: 'base' });
             });
     });
 

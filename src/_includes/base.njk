@@ -221,8 +221,7 @@
                         </div>
                     </div>
                     <div class="tree-item-children {% if not isPythonPage %}is-collapsed{% endif %}">
-                        {% for note in collections.notes %}
-                        {% if note.url | startsWith('/notes/python/') %}
+                        {% for note in collections.pythonNotes %}
                         <div class="tree-item">
                             <a href="{{ pathPrefix }}{{ note.url }}" class="tree-item-self {% if page.url == note.url %}mod-active{% endif %}" {% if page.url == note.url %}aria-current="page"{% endif %}>
                                 <div class="tree-item-inner">
@@ -230,7 +229,6 @@
                                 </div>
                             </a>
                         </div>
-                        {% endif %}
                         {% endfor %}
                     </div>
                 </div>
