@@ -234,6 +234,22 @@
                 </div>
                 </div>
             </div>
+
+            <!-- Черновики -->
+            {% if collections.drafts and collections.drafts | length > 0 %}
+            <div class="sidebar-drafts">
+                <div class="sidebar-drafts-label">Черновики</div>
+                {% for draft in collections.drafts %}
+                <div class="tree-item">
+                    <a href="{{ pathPrefix }}{{ draft.url }}" class="tree-item-self {% if page.url == draft.url %}mod-active{% endif %}" {% if page.url == draft.url %}aria-current="page"{% endif %}>
+                        <div class="tree-item-inner">
+                            <span>{{ draft.data.title }}</span>
+                        </div>
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
         </nav>
 
         <!-- Центральный контент -->

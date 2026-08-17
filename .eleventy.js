@@ -102,7 +102,7 @@ module.exports = function(eleventyConfig) {
     eleventyConfig.addCollection("anime", function(collection) {
         return collection.getFilteredByGlob("src/reviews/anime/*.md")
             .filter(item => {
-                return !item.inputPath.includes('index.md');
+                return !item.inputPath.includes('index.md') && item.data.draft !== true;
             })
             .sort((a, b) => {
                 const titleA = (a.data.title || '').toString();
@@ -118,6 +118,10 @@ module.exports = function(eleventyConfig) {
         const categories = {};
 
         philosophyItems.forEach(item => {
+            if (item.data.draft === true) {
+                return;
+            }
+
             // Получаем категорию из пути (например: "seneca")
             const pathParts = item.filePathStem.split('/');
             const category = pathParts[3];  // src/reviews/philosophy/seneca/page.md
@@ -149,7 +153,7 @@ module.exports = function(eleventyConfig) {
     eleventyConfig.addCollection("notes", function(collection) {
         return collection.getFilteredByGlob("src/notes/**/*.md")
             .filter(item => {
-                return !item.inputPath.includes('index.md');
+                return !item.inputPath.includes('index.md') && item.data.draft !== true;
             });
     });
 
@@ -157,12 +161,48 @@ module.exports = function(eleventyConfig) {
     eleventyConfig.addCollection("pythonNotes", function(collection) {
         return collection.getFilteredByGlob("src/notes/python/*.md")
             .filter(item => {
-                return !item.inputPath.includes('index.md');
+                return !item.inputPath.includes('index.md') && item.data.draft !== true;
             })
             .sort((a, b) => {
                 const titleA = (a.data.title || '').toString();
                 const titleB = (b.data.title || '').toString();
                 return titleA.localeCompare(titleB, 'ru', { sensitivity: 'base' });
+            });
+    });
+
+    // Коллекция черновиков (draft: true)
+    eleventyConfig.addCollection("drafts", function(collection) {
+        return collection.getAll()
+            .filter(item => item.data.draft === true && item.data.title)
+            .sort((a, b) => {
+                const titleA = (a.data.title || '').toString();
+                const titleB = (b.data.title || '').toString();
+                return titleA.localeCompare(titleB, 'ru', { sensitivity: 'base' });
+            });
+    });
+
+    // Метка раздела (папки) для элемента последних обновлений
+    function getCategoryLabel(item) {
+        const url = item.url;
+        if (url.startsWith('/reviews/anime/')) return 'Аниме';
+        if (url.startsWith('/reviews/philosophy/')) {
+            const category = url.split('/').filter(Boolean)[2];
+            return category ? category.charAt(0).toUpperCase() + category.slice(1) : 'Философия';
+        }
+        if (url.startsWith('/notes/python/')) return 'Python';
+        if (url.startsWith('/notes/')) return 'Заметки';
+        if (url.startsWith('/drafts/')) return 'Черновики';
+        return '';
+    }
+
+    // Коллекция последних обновлений (по upd_date, включая черновики)
+    eleventyConfig.addCollection("recentUpdates", function(collection) {
+        return collection.getAll()
+            .filter(item => item.data.upd_date)
+            .sort((a, b) => new Date(b.data.upd_date) - new Date(a.data.upd_date))
+            .map(item => {
+                item.data.categoryLabel = getCategoryLabel(item);
+                return item;
             });
     });
 
