@@ -21,6 +21,21 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Checkout images repo
+        uses: actions/checkout@v4
+        with:
+          repository: mensigo/library_static
+          path: images_repo
+          fetch-depth: 1
+          ssh-key: ${{ secrets.IMAGES_SSH_KEY }}
+
+      - name: Sync images
+        run: |
+          rm -rf src/images/notes src/images/reviews
+          mkdir -p src/images/notes src/images/reviews
+          rsync -a --delete --exclude 'logo.png' images_repo/src/images/ src/images/
+          rm -rf images_repo
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:

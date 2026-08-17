@@ -1,12 +1,19 @@
+const syntaxHighlight = require("@11ty/eleventy-plugin-syntaxhighlight");
+
 module.exports = function(eleventyConfig) {
     // Добавляем глобальные данные
     eleventyConfig.addGlobalData("pathPrefix", () => {
         return process.env.NODE_ENV === 'production' ? '/library' : '';
     });
 
-    // Копируем статические & js файлы
+    // Подсветка синтаксиса в fenced code blocks
+    eleventyConfig.addPlugin(syntaxHighlight);
+
+    // Копируем статические файлы
     eleventyConfig.addPassthroughCopy("src/css");
     eleventyConfig.addPassthroughCopy("src/js");
+    eleventyConfig.addPassthroughCopy("src/images");
+    eleventyConfig.addPassthroughCopy("src/fonts");
 
     // Фильтр для читаемой даты
     eleventyConfig.addFilter("readableDate", (dateObj) => {
@@ -93,31 +100,110 @@ module.exports = function(eleventyConfig) {
 
     // Коллекция аниме
     eleventyConfig.addCollection("anime", function(collection) {
-        return collection.getFilteredByGlob("src/pages/anime/*.md")
+        return collection.getFilteredByGlob("src/reviews/anime/*.md")
             .filter(item => {
-                return !item.inputPath.includes('index.md');
+                return !item.inputPath.includes('index.md') && item.data.draft !== true;
+            })
+            .sort((a, b) => {
+                const titleA = (a.data.title || '').toString();
+                const titleB = (b.data.title || '').toString();
+                return titleA.localeCompare(titleB, 'ru', { sensitivity: 'base' });
             });
     });
 
     // Коллекция философских категорий (папки)
     eleventyConfig.addCollection("philosophyCategories", function(collection) {
-        const philosophyItems = collection.getFilteredByGlob("src/pages/philosophy/**/*.md");
+        const philosophyItems = collection.getFilteredByGlob("src/reviews/philosophy/**/*.md");
+        const categoryNames = new Set();
         const categories = {};
 
         philosophyItems.forEach(item => {
+            if (item.data.draft === true) {
+                return;
+            }
+
             // Получаем категорию из пути (например: "seneca")
             const pathParts = item.filePathStem.split('/');
-            const category = pathParts[3];  // src/pages/philosophy/seneca/page.md
+            const category = pathParts[3];  // src/reviews/philosophy/seneca/page.md
 
-            if (category && !categories[category]) {
-                categories[category] = {
-                    name: category,
-                    items: philosophyItems.filter(i => i.filePathStem.includes(`/philosophy/${category}/`))
-                };
+            if (category) {
+                categoryNames.add(category);
             }
         });
 
+        Array.from(categoryNames)
+            .sort((a, b) => a.localeCompare(b, 'ru', { sensitivity: 'base' }))
+            .forEach(category => {
+                categories[category] = {
+                    name: category,
+                    items: philosophyItems
+                        .filter(i => i.filePathStem.includes(`/reviews/philosophy/${category}/`))
+                        .sort((a, b) => {
+                            const titleA = (a.data.title || '').toString();
+                            const titleB = (b.data.title || '').toString();
+                            return titleA.localeCompare(titleB, 'ru', { sensitivity: 'base' });
+                        })
+                };
+            });
+
         return categories;
+    });
+
+    // Коллекция заметок (notes)
+    eleventyConfig.addCollection("notes", function(collection) {
+        return collection.getFilteredByGlob("src/notes/**/*.md")
+            .filter(item => {
+                return !item.inputPath.includes('index.md') && item.data.draft !== true;
+            });
+    });
+
+    // Коллекция Python-заметок, отсортированная по title
+    eleventyConfig.addCollection("pythonNotes", function(collection) {
+        return collection.getFilteredByGlob("src/notes/python/*.md")
+            .filter(item => {
+                return !item.inputPath.includes('index.md') && item.data.draft !== true;
+            })
+            .sort((a, b) => {
+                const titleA = (a.data.title || '').toString();
+                const titleB = (b.data.title || '').toString();
+                return titleA.localeCompare(titleB, 'ru', { sensitivity: 'base' });
+            });
+    });
+
+    // Коллекция черновиков (draft: true)
+    eleventyConfig.addCollection("drafts", function(collection) {
+        return collection.getAll()
+            .filter(item => item.data.draft === true && item.data.title)
+            .sort((a, b) => {
+                const titleA = (a.data.title || '').toString();
+                const titleB = (b.data.title || '').toString();
+                return titleA.localeCompare(titleB, 'ru', { sensitivity: 'base' });
+            });
+    });
+
+    // Метка раздела (папки) для элемента последних обновлений
+    function getCategoryLabel(item) {
+        const url = item.url;
+        if (url.startsWith('/reviews/anime/')) return 'Аниме';
+        if (url.startsWith('/reviews/philosophy/')) {
+            const category = url.split('/').filter(Boolean)[2];
+            return category ? category.charAt(0).toUpperCase() + category.slice(1) : 'Философия';
+        }
+        if (url.startsWith('/notes/python/')) return 'Python';
+        if (url.startsWith('/notes/')) return 'Заметки';
+        if (url.startsWith('/drafts/')) return 'Черновики';
+        return '';
+    }
+
+    // Коллекция последних обновлений (по upd_date, включая черновики)
+    eleventyConfig.addCollection("recentUpdates", function(collection) {
+        return collection.getAll()
+            .filter(item => item.data.upd_date)
+            .sort((a, b) => new Date(b.data.upd_date) - new Date(a.data.upd_date))
+            .map(item => {
+                item.data.categoryLabel = getCategoryLabel(item);
+                return item;
+            });
     });
 
     // Shortcode для сортируемых таблиц
@@ -153,6 +239,62 @@ module.exports = function(eleventyConfig) {
         html += '    </tbody>\n</table>';
 
         return html;
+    });
+
+    // Генерация поискового индекса
+    eleventyConfig.addCollection("searchIndex", function(collection) {
+        const searchIndex = [];
+
+        collection.getAll().forEach(item => {
+            // Пропускаем служебные файлы и drafts
+            if (item.data.draft === true || !item.inputPath.includes('src')) {
+                return;
+            }
+
+            // Пропускаем файлы без title или не markdown
+            if (!item.data.title) {
+                return;
+            }
+
+            // Извлекаем текст из контента
+            let content = item.template.frontMatter.content || '';
+            // Удаляем markdown синтаксис для индекса
+            content = content
+                .replace(/#{1,6} /g, '') // Удаляем заголовки
+                .replace(/\[([^\]]+)\]\([^\)]+\)/g, '$1') // Ссылки
+                .replace(/\*\*([^\*]+)\*\*/g, '$1') // Bold
+                .replace(/\*([^\*]+)\*/g, '$1') // Italic
+                .replace(/`([^`]+)`/g, '$1') // Inline code
+                .replace(/```[\s\S]*?```/g, '') // Code blocks
+                .trim();
+
+            // Ограничиваем размер контента для индекса (первые 500 слов)
+            const words = content.split(/\s+/);
+            content = words.slice(0, 500).join(' ');
+
+            // Определяем раздел
+            const url = item.url;
+            let section = 'other';
+            if (url.includes('/notes/')) section = 'notes';
+            else if (url.includes('/reviews/anime/')) section = 'anime';
+            else if (url.includes('/reviews/philosophy/')) section = 'philosophy';
+            else if (url === '/' || url === '/reviews/' || url === '/notes/') section = 'main';
+
+            searchIndex.push({
+                id: url,
+                title: item.data.title,
+                url: url,
+                content: content,
+                section: section
+            });
+        });
+
+        return searchIndex;
+    });
+
+    // Passthrough copy для индекса (будет создан как JSON файл)
+    eleventyConfig.addNunjucksAsyncFilter("createSearchIndex", async function(searchData) {
+        return JSON.stringify(searchData);
     });
 
     return {

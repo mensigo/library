@@ -4,10 +4,20 @@
   "scripts": {
     "build": "eleventy",
     "dev": "eleventy --serve --watch",
-    "start": "eleventy --serve"
+    "start": "eleventy --serve",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "test:links": "jest test/links.test.js --no-coverage",
+    "build:check": "npm run build && npm run test:links"
   },
   "devDependencies": {
-    "@11ty/eleventy": "^2.0.1"
+    "@11ty/eleventy": "^2.0.1",
+    "@11ty/eleventy-plugin-syntaxhighlight": "^5.0.2",
+    "@babel/preset-env": "^7.29.0",
+    "babel-jest": "^30.2.0",
+    "jest": "^30.2.0",
+    "jest-environment-jsdom": "^30.2.0"
   },
   "description": "small personal library (anime, books, etc)",
   "main": ".eleventy.js",

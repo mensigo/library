@@ -1,3 +1,4 @@
+{% set isNotesPage = page.url | startsWith('/notes/') %}
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -18,12 +19,11 @@
     {% endblock %}
 
     <!-- Предзагрузка шрифтов -->
-    <link rel="dns-prefetch" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="preload" href="{{ pathPrefix }}/fonts/YsabeauInfant-VariableFont_wght.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="{{ pathPrefix }}/fonts/YsabeauInfant-Italic-VariableFont_wght.woff2" as="font" type="font/woff2" crossorigin>
 
     <link rel="stylesheet" href="{{ pathPrefix }}/css/styles.css">
+    <link rel="preload" as="image" href="{{ pathPrefix }}/images/logo.png" fetchpriority="high">
     {% block styles %}{% endblock %}
     <script>
         // Применяем тему до загрузки страницы, чтобы избежать мигания
@@ -35,7 +35,19 @@
         })();
     </script>
 </head>
-<body class="cyrillic-optimized">
+<body class="cyrillic-optimized {{ pageClass | default('') }}">
+    <!-- Верхняя навигационная панель -->
+    <nav class="navbar">
+        <div class="navbar__container">
+            <div class="navbar__section {% if not isNotesPage %}navbar__section--active{% endif %}" data-section="library">
+                <span>📚 Reviews</span>
+            </div>
+            <div class="navbar__section {% if isNotesPage %}navbar__section--active{% endif %}" data-section="notes">
+                <span>📝 Notes</span>
+            </div>
+        </div>
+    </nav>
+
     <!-- Кнопка гамбургер-меню -->
     <button class="menu-toggle" id="menuToggle" aria-label="Открыть меню">
         <span></span>
@@ -70,6 +82,9 @@
         <nav class="sidebar-left" id="sidebarLeft">
             <!-- Заголовок сайта -->
             <div class="sidebar-header">
+                <a href="{{ pathPrefix }}/" class="site-logo-link">
+                    <img src="{{ pathPrefix }}/images/logo.png" alt="Logo" class="site-logo" width="176" height="176" loading="eager" fetchpriority="high">
+                </a>
                 <a href="{{ pathPrefix }}/" class="site-title">Мысли и заметки</a>
                 <div class="site-subtitle">Собрание размышлений</div>
             </div>
@@ -81,27 +96,35 @@
                         <circle cx="11" cy="11" r="8"></circle>
                         <path d="m21 21-4.35-4.35"></path>
                     </svg>
-                    <input type="text" id="searchInput" placeholder="Поиск по страницам..." class="search-input" aria-label="Поиск по заголовкам страниц" role="searchbox" aria-expanded="false" aria-haspopup="listbox">
+                    <input type="text" id="searchInput" placeholder="Поиск..." class="search-input" aria-label="Поиск по заголовкам страниц" role="searchbox" aria-expanded="false" aria-haspopup="listbox">
                     <span class="search-shortcut">Ctrl K</span>
                 </div>
             </div>
 
             <!-- Навигационное дерево -->
-            <div class="nav-tree">
+            <div class="nav-tree nav-tree--loading">
                 <!-- Главная страница -->
-                <div class="nav-section">
-                    <div class="tree-item">
-                        <div class="tree-item-self {% if page.url == '/' %}mod-active{% endif %}">
-                            <div class="tree-item-inner">
-                                <a href="{{ pathPrefix }}/">🏠︎ Главная</a>
-                            </div>
+                <div class="nav-section nav-section--main">
+                <div class="tree-item">
+                    {% if isNotesPage %}
+                    <a href="{{ pathPrefix }}/notes/" class="tree-item-self {% if page.url == '/notes/' %}mod-active{% endif %}" {% if page.url == '/notes/' %}aria-current="page"{% endif %}>
+                        <div class="tree-item-inner">
+                            <span>🏠︎ Главная (Заметки)</span>
                         </div>
-                    </div>
+                    </a>
+                    {% else %}
+                    <a href="{{ pathPrefix }}/" class="tree-item-self {% if page.url == '/' %}mod-active{% endif %}" {% if page.url == '/' %}aria-current="page"{% endif %}>
+                        <div class="tree-item-inner">
+                            <span>🏠︎ Главная</span>
+                        </div>
+                    </a>
+                    {% endif %}
+                </div>
                 </div>
 
                 <!-- Аниме -->
-                <div class="nav-section">
-                {% set isAnimePage = page.url == '/pages/anime/' or (page.url | startsWith('/pages/anime/')) %}
+                <div class="nav-section nav-section--anime">
+                {% set isAnimePage = page.url == '/reviews/anime/' or (page.url | startsWith('/reviews/anime/')) %}
                 <div class="tree-item">
                     <div class="tree-item-self mod-collapsible {% if isAnimePage %}is-clickable{% endif %}" data-path="anime">
                         <div class="tree-item-icon collapse-icon {% if not isAnimePage %}is-collapsed{% endif %}">
@@ -110,17 +133,24 @@
                             </svg>
                         </div>
                         <div class="tree-item-inner">
-                            <a href="{{ pathPrefix }}/pages/anime">⛩️ Аниме</a>
+                            <span>⛩️ Аниме</span>
                         </div>
                     </div>
                     <div class="tree-item-children {% if not isAnimePage %}is-collapsed{% endif %}">
+                        <div class="tree-item">
+                            <a href="{{ pathPrefix }}/reviews/anime/" class="tree-item-self {% if page.url == '/reviews/anime/' %}mod-active{% endif %}" {% if page.url == '/reviews/anime/' %}aria-current="page"{% endif %}>
+                                <div class="tree-item-inner">
+                                    <span>⭐ Интро</span>
+                                </div>
+                            </a>
+                        </div>
                         {% for anime in collections.anime %}
                         <div class="tree-item">
-                            <div class="tree-item-self {% if page.url == anime.url %}mod-active{% endif %}">
+                            <a href="{{ pathPrefix }}{{ anime.url }}" class="tree-item-self {% if page.url == anime.url %}mod-active{% endif %}" {% if page.url == anime.url %}aria-current="page"{% endif %}>
                                 <div class="tree-item-inner">
-                                    <a href="{{ pathPrefix }}{{ anime.url }}">{{ anime.data.title }}</a>
+                                    <span>{{ anime.data.title }}</span>
                                 </div>
-                            </div>
+                            </a>
                         </div>
                         {% endfor %}
                     </div>
@@ -129,8 +159,8 @@
 
                 <!-- Философия -->
                 {% if collections.philosophyCategories and collections.philosophyCategories | length > 0 %}
-                <div class="nav-section">
-                {% set isPhilosophyPage = page.url | startsWith('/pages/philosophy/') %}
+                <div class="nav-section nav-section--philosophy">
+                {% set isPhilosophyPage = page.url | startsWith('/reviews/philosophy/') %}
                 <div class="tree-item">
                     <div class="tree-item-self mod-collapsible {% if isPhilosophyPage %}is-clickable{% endif %}" data-path="philosophy">
                         <div class="tree-item-icon collapse-icon {% if not isPhilosophyPage %}is-collapsed{% endif %}">
@@ -144,7 +174,7 @@
                     </div>
                     <div class="tree-item-children {% if not isPhilosophyPage %}is-collapsed{% endif %}">
                         {% for categoryName, category in collections.philosophyCategories %}
-                        {% set categoryPath = '/pages/philosophy/' + categoryName + '/' %}
+                        {% set categoryPath = '/reviews/philosophy/' + categoryName + '/' %}
                         {% set isCategoryPage = page.url | startsWith(categoryPath) %}
                         <div class="tree-item">
                             <div class="tree-item-self mod-collapsible {% if isCategoryPage %}is-clickable{% endif %}" data-path="philosophy-{{ categoryName }}">
@@ -160,11 +190,11 @@
                             <div class="tree-item-children {% if not isCategoryPage %}is-collapsed{% endif %}">
                                 {% for item in category.items %}
                                 <div class="tree-item">
-                                    <div class="tree-item-self {% if page.url == item.url %}mod-active{% endif %}">
+                                    <a href="{{ pathPrefix }}{{ item.url }}" class="tree-item-self {% if page.url == item.url %}mod-active{% endif %}" {% if page.url == item.url %}aria-current="page"{% endif %}>
                                         <div class="tree-item-inner">
-                                            <a href="{{ pathPrefix }}{{ item.url }}">{{ item.data.title }}</a>
+                                            <span>{{ item.data.title }}</span>
                                         </div>
-                                    </div>
+                                    </a>
                                 </div>
                                 {% endfor %}
                             </div>
@@ -174,7 +204,52 @@
                 </div>
                 </div>
                 {% endif %}
+
+                <!-- Заметки -->
+                <div class="nav-section nav-section--notes-section">
+                {% set isNotesPage = page.url | startsWith('/notes/') %}
+                {% set isPythonPage = page.url | startsWith('/notes/python/') %}
+                <div class="tree-item">
+                    <div class="tree-item-self mod-collapsible {% if isPythonPage %}is-clickable{% endif %}" data-path="notes-python">
+                        <div class="tree-item-icon collapse-icon {% if not isPythonPage %}is-collapsed{% endif %}">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon right-triangle">
+                                <path d="M3 8L12 17L21 8"></path>
+                            </svg>
+                        </div>
+                        <div class="tree-item-inner">
+                            <span>🐍 Python</span>
+                        </div>
+                    </div>
+                    <div class="tree-item-children {% if not isPythonPage %}is-collapsed{% endif %}">
+                        {% for note in collections.pythonNotes %}
+                        <div class="tree-item">
+                            <a href="{{ pathPrefix }}{{ note.url }}" class="tree-item-self {% if page.url == note.url %}mod-active{% endif %}" {% if page.url == note.url %}aria-current="page"{% endif %}>
+                                <div class="tree-item-inner">
+                                    <span>{{ note.data.title }}</span>
+                                </div>
+                            </a>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                </div>
             </div>
+
+            <!-- Черновики -->
+            {% if collections.drafts and collections.drafts | length > 0 %}
+            <div class="sidebar-drafts">
+                <div class="sidebar-drafts-label">Черновики</div>
+                {% for draft in collections.drafts %}
+                <div class="tree-item">
+                    <a href="{{ pathPrefix }}{{ draft.url }}" class="tree-item-self {% if page.url == draft.url %}mod-active{% endif %}" {% if page.url == draft.url %}aria-current="page"{% endif %}>
+                        <div class="tree-item-inner">
+                            <span>{{ draft.data.title }}</span>
+                        </div>
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
         </nav>
 
         <!-- Центральный контент -->
@@ -201,6 +276,12 @@
         </aside>
     </div>
 
+    <script>
+        window.APP_PATH_PREFIX = "{{ pathPrefix }}";
+        window.pathPrefix = window.APP_PATH_PREFIX;
+    </script>
+    <!-- Fuse.js для полнотекстового поиска -->
+    <script src="https://cdn.jsdelivr.net/npm/fuse.js@7.0.0/dist/fuse.min.js"></script>
     <script src="{{ pathPrefix }}/js/scripts.js"></script>
     {% block scripts %}{% endblock %}
 </body>
