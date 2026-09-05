@@ -1,0 +1,711 @@
+<!doctype html>
+<html lang="ru" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>__slots__ — Python · Библиотека</title>
+<meta name="description" content="Как __slots__ меняет способ хранения атрибутов в CPython, сколько это экономит и чего стоит.">
+<link rel="stylesheet" href="notes.css">
+<script>
+/* Тему ставим до первой отрисовки, иначе на темной системе мигает белым. */
+try {
+  var t = localStorage.getItem("pitch-notes-theme")
+       || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  document.documentElement.setAttribute("data-theme", t);
+} catch (e) {}
+</script>
+</head>
+<body>
+
+<a class="skip-link" href="#main">К содержанию</a>
+
+<!-- ===================================================================
+     TOPBAR — единственный постоянно видимый элемент интерфейса.
+     Слева гамбургер (навигация ушла в off-canvas даже на десктопе),
+     справа переключатели оглавления и темы.
+     =================================================================== -->
+<header class="topbar">
+  <button class="iconbtn" id="menu-toggle" type="button" aria-expanded="false" aria-controls="drawer" aria-label="Открыть навигацию">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" aria-hidden="true">
+      <path d="M4 7h16M4 12h16M4 17h10"/>
+    </svg>
+  </button>
+
+  <nav class="topbar__crumbs" aria-label="Хлебные крошки">
+    <a href="#">Заметки</a>
+    <span class="sep" aria-hidden="true">/</span>
+    <a href="#">Python</a>
+    <span class="sep" aria-hidden="true">/</span>
+    <span class="cur" aria-current="page">__slots__</span>
+  </nav>
+
+  <span class="topbar__spacer"></span>
+
+  <div class="topbar__actions">
+    <button class="iconbtn" id="rail-toggle" type="button" aria-expanded="true" aria-controls="rail" aria-label="Показать или скрыть оглавление">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" aria-hidden="true">
+        <path d="M4 6h9M4 12h9M4 18h6"/><path d="M17 5v14" opacity=".45"/><path d="M20 5v14" opacity=".45"/>
+      </svg>
+    </button>
+    <button class="iconbtn" id="cfg-toggle" type="button" aria-expanded="false" aria-haspopup="true" aria-controls="cfg" aria-label="Настройки">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2Z"/>
+        <circle cx="12" cy="12" r="3"/>
+      </svg>
+    </button>
+  </div>
+
+  <div class="progress" id="progress" aria-hidden="true"></div>
+</header>
+
+<!-- Меню настроек: тема и палитра. Раскрывается из шестерёнки в topbar. -->
+<div class="cfg" id="cfg" role="dialog" aria-label="Настройки" hidden>
+
+  <div class="cfg__group">
+    <span class="cfg__label">Тема</span>
+    <div class="seg" role="group" aria-label="Тема оформления">
+      <button class="seg__btn" type="button" data-theme-set="light" aria-pressed="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="4"/>
+          <path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6 7 7M17 17l1.4 1.4M18.4 5.6 17 7M7 17l-1.4 1.4"/>
+        </svg>
+        Светлая
+      </button>
+      <button class="seg__btn" type="button" data-theme-set="dark" aria-pressed="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" aria-hidden="true">
+          <path d="M20.5 14.6A8.5 8.5 0 0 1 9.4 3.5a8.5 8.5 0 1 0 11.1 11.1Z"/>
+        </svg>
+        Тёмная
+      </button>
+    </div>
+  </div>
+
+  <div class="cfg__sep"></div>
+
+  <div class="cfg__group">
+    <span class="cfg__label">Палитра</span>
+    <button class="cfg__pick" id="pal-toggle" type="button" aria-expanded="false" aria-controls="pal-list">
+      <i class="cfg__dot" id="pal-dot"></i>
+      <span class="cfg__pick-name" id="pal-name">Teal</span>
+      <svg class="cfg__chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" aria-hidden="true">
+        <path d="m6 9 6 6 6-6"/>
+      </svg>
+    </button>
+    <div class="cfg__list" id="pal-list" role="listbox" aria-label="Палитра акцента" hidden></div>
+  </div>
+
+</div>
+
+<div class="scrim" id="scrim"></div>
+
+<!-- =================================================================== -->
+<!--  DRAWER — навигация по библиотеке                                   -->
+<!-- =================================================================== -->
+<aside class="drawer" id="drawer" tabindex="-1" aria-label="Навигация по заметкам">
+  <div class="drawer__head">
+    <a class="drawer__brand" href="#">
+      <span class="drawer__mark" aria-hidden="true">.py</span>
+      <span>
+        <span class="drawer__name">Библиотека</span>
+        <span class="drawer__sub">заметки и обзоры</span>
+      </span>
+    </a>
+    <span class="topbar__spacer"></span>
+    <button class="iconbtn" id="drawer-close" type="button" aria-label="Закрыть навигацию">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" aria-hidden="true">
+        <path d="m6 6 12 12M18 6 6 18"/>
+      </svg>
+    </button>
+  </div>
+
+  <div class="drawer__search">
+    <label class="field">
+      <span class="u-sr">Поиск по заметкам</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" aria-hidden="true">
+        <circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>
+      </svg>
+      <input id="nav-filter" type="text" placeholder="Найти заметку…" autocomplete="off" spellcheck="false">
+      <kbd>/</kbd>
+    </label>
+  </div>
+
+  <nav class="drawer__body">
+    <div class="navgroup">
+      <div class="navgroup__title">Python</div>
+      <a class="navlink" href="#"><span class="dot"></span>Assert</a>
+      <a class="navlink" href="#"><span class="dot"></span>Classmethod / Staticmethod</a>
+      <a class="navlink" href="#"><span class="dot"></span>Disassemble</a>
+      <a class="navlink" href="#"><span class="dot"></span>Property</a>
+      <a class="navlink" href="#" aria-current="page"><span class="dot"></span><code>__slots__</code></a>
+    </div>
+    <div class="navgroup">
+      <div class="navgroup__title">Черновики</div>
+      <a class="navlink" href="#"><span class="dot"></span>Unlimited ints</a>
+      <a class="navlink" href="#"><span class="dot"></span>draft_1</a>
+      <a class="navlink" href="#"><span class="dot"></span>draft_2</a>
+      <a class="navlink" href="#"><span class="dot"></span>draft_3</a>
+    </div>
+    <div class="navgroup">
+      <div class="navgroup__title">Обзоры</div>
+      <a class="navlink" href="#"><span class="dot"></span>Made in Abyss</a>
+      <a class="navlink" href="#"><span class="dot"></span>Platinum End</a>
+      <a class="navlink" href="#"><span class="dot"></span>Сенека · Письма к Луцилию</a>
+    </div>
+    <p class="nav-empty" id="nav-empty" hidden>Ничего не нашлось.</p>
+  </nav>
+</aside>
+
+<!-- =================================================================== -->
+<div class="shell" id="shell">
+<main class="doc" id="main">
+<div class="doc__inner">
+
+  <!-- ------------------------------------------------------------ hero -->
+  <header class="hero">
+    <div class="hero__tags">
+      <span class="chip chip--acc">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+        Python
+      </span>
+      <span class="chip">CPython</span>
+      <span class="chip">Память</span>
+      <span class="chip">Модель данных</span>
+    </div>
+
+    <h1><span class="u-dim">__</span>slots<span class="u-dim">__</span></h1>
+
+    <p class="hero__lede">
+      Механизм, который снимает с экземпляра словарь атрибутов и раскладывает поля
+      по фиксированным ячейкам. Экономия видна там, где объектов миллионы —
+      и почти незаметна там, где их сотни.
+    </p>
+
+    <div class="hero__meta">
+      <span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>
+        <time datetime="2026-06-22">22 июня 2026</time>
+      </span>
+      <span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+        6 мин чтения
+      </span>
+      <span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" aria-hidden="true"><path d="M4 19V5a2 2 0 0 1 2-2h11l3 3v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2Z"/><path d="M8 9h8M8 13h8M8 17h5"/></svg>
+        5 разделов
+      </span>
+    </div>
+  </header>
+
+  <!-- ----------------------------------------------------------- TL;DR -->
+  <section class="tldr" aria-label="Кратко">
+    <h2>Кратко</h2>
+    <ul>
+      <li><b>Что делает.</b> Заменяет <code>__dict__</code> экземпляра фиксированным набором ячеек, объявленных в классе.</li>
+      <li><b>Что дает.</b> Меньше памяти на экземпляр; иногда чуть более быстрый доступ к атрибутам.</li>
+      <li><b>Чем платим.</b> Нельзя добавлять незаявленные атрибуты, weakref нужно просить явно, наследование усложняется.</li>
+      <li><b>Когда брать.</b> Когда однотипных объектов миллионы и профиль показал, что память уходит именно туда.</li>
+    </ul>
+  </section>
+
+  <article class="prose">
+
+  <!-- =============================================================== 01 -->
+  <h2 id="idea"><span class="num">01</span> Где живут атрибуты<a class="anchor" href="#idea" aria-label="Ссылка на раздел">#</a></h2>
+
+  <p>
+    По умолчанию каждый<a class="fnref" href="#fn-1" id="fnref-1">1</a> экземпляр держит свои атрибуты
+    в <code>__dict__</code> — обычном словаре, который висит на объекте отдельным указателем.
+  </p>
+
+  <div class="code">
+    <div class="code__bar">
+      <span class="code__dots" aria-hidden="true"><i></i><i></i><i></i></span>
+      <span class="code__name">plain_user.py</span>
+      <span class="code__lang">python</span>
+      <button class="copy" type="button">
+        <svg class="ico-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
+        <svg class="ico-done" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" aria-hidden="true"><path d="m5 13 4 4L19 7"/></svg>
+        <span class="copy__label">Копировать</span>
+      </button>
+    </div>
+<pre><code><span class="t-k">class</span> <span class="t-f">User</span>:
+    <span class="t-k">def</span> <span class="t-f">__init__</span>(<span class="t-sf">self</span>, name, age):
+        <span class="t-sf">self</span>.name = name
+        <span class="t-sf">self</span>.age = age
+
+<span class="t-f">User</span>(<span class="t-s">"Alice"</span>, <span class="t-n">20</span>).<span class="t-d">__dict__</span></code></pre>
+    <div class="code__out"><b>out</b><span>{'name': 'Alice', 'age': 20}</span></div>
+  </div>
+
+  <p>
+    Это удобно: атрибуты можно добавлять на ходу, объект легко сериализовать и осмотреть в отладчике.
+    Но словарь — это хеш-таблица, а хеш-таблица всегда держит запас пустых ячеек. Пока объектов сотни,
+    накладные расходы не видны. Когда их миллионы — видны только они.
+  </p>
+
+  <figure class="fig">
+    <div class="fig__frame">
+      <svg viewBox="0 0 620 268" role="img" aria-labelledby="fig1-t">
+        <title id="fig1-t">Слева экземпляр со ссылкой на отдельный словарь атрибутов, справа экземпляр с полями, уложенными прямо в объект</title>
+        <g font-size="10.5">
+          <!-- ---------------- левая панель ---------------- -->
+          <text class="d-dim" x="10" y="14" letter-spacing="1.4">БЕЗ __SLOTS__</text>
+
+          <rect class="d-fill d-line" x="10" y="30" width="126" height="104" rx="6" stroke-width="1"/>
+          <text class="d-txt" x="22" y="49" font-size="11">User obj</text>
+          <line class="d-line" x1="10" y1="58" x2="136" y2="58" stroke-width="1"/>
+          <text class="d-dim" x="22" y="77">PyObject_HEAD</text>
+          <text class="d-acc" x="22" y="97">__dict__  *</text>
+          <text class="d-dim" x="22" y="117">__weakref__ *</text>
+
+          <path class="d-acc-s" d="M140 92 H172" stroke-width="1.4" fill="none" marker-end="url(#ar)"/>
+
+          <rect class="d-fill-2 d-line" x="182" y="30" width="112" height="150" rx="6" stroke-width="1"/>
+          <text class="d-txt" x="192" y="49" font-size="11">dict</text>
+          <line class="d-line" x1="182" y1="58" x2="294" y2="58" stroke-width="1"/>
+          <rect class="d-acc-bg" x="192" y="66" width="92" height="15" rx="3"/>
+          <text class="d-acc" x="197" y="77" font-size="9.5">'name' → …</text>
+          <rect class="d-fill d-line" x="192" y="85" width="92" height="15" rx="3" stroke-width=".8" stroke-dasharray="2 2"/>
+          <rect class="d-acc-bg" x="192" y="104" width="92" height="15" rx="3"/>
+          <text class="d-acc" x="197" y="115" font-size="9.5">'age' → …</text>
+          <rect class="d-fill d-line" x="192" y="123" width="92" height="15" rx="3" stroke-width=".8" stroke-dasharray="2 2"/>
+          <rect class="d-fill d-line" x="192" y="142" width="92" height="15" rx="3" stroke-width=".8" stroke-dasharray="2 2"/>
+          <text class="d-dim" x="192" y="171" font-size="9">запас пустых ячеек</text>
+
+          <text class="d-dim" x="10" y="205" font-size="9.5">объект + отдельный словарь</text>
+          <text class="d-dim" x="10" y="221" font-size="9.5">на каждый экземпляр</text>
+
+          <!-- разделитель -->
+          <line class="d-line" x1="312" y1="24" x2="312" y2="236" stroke-width="1" stroke-dasharray="3 4"/>
+
+          <!-- ---------------- правая панель ---------------- -->
+          <text class="d-dim" x="330" y="14" letter-spacing="1.4">С __SLOTS__</text>
+
+          <rect class="d-fill d-line" x="330" y="30" width="150" height="124" rx="6" stroke-width="1"/>
+          <text class="d-txt" x="342" y="49" font-size="11">User obj</text>
+          <line class="d-line" x1="330" y1="58" x2="480" y2="58" stroke-width="1"/>
+          <text class="d-dim" x="342" y="77">PyObject_HEAD</text>
+          <rect class="d-acc-bg" x="338" y="85" width="134" height="17" rx="3"/>
+          <text class="d-acc" x="344" y="97" font-size="9.5">[0] 'Alice'</text>
+          <rect class="d-acc-bg" x="338" y="108" width="134" height="17" rx="3"/>
+          <text class="d-acc" x="344" y="120" font-size="9.5">[1] 20</text>
+          <text class="d-dim" x="342" y="143" font-size="9">нет __dict__</text>
+
+          <rect class="d-fill-2 d-line" x="504" y="46" width="106" height="80" rx="6" stroke-width="1" stroke-dasharray="3 3"/>
+          <text class="d-txt" x="514" y="65" font-size="10.5">class User</text>
+          <line class="d-line" x1="504" y1="73" x2="610" y2="73" stroke-width="1"/>
+          <text class="d-dim" x="514" y="90" font-size="9">name → [0]</text>
+          <text class="d-dim" x="514" y="106" font-size="9">age  → [1]</text>
+          <text class="d-dim" x="514" y="120" font-size="8.5">дескрипторы</text>
+
+          <path class="d-line" d="M504 90 H484" stroke-width="1" fill="none" stroke-dasharray="2 2"/>
+          <path class="d-line" d="M504 106 H484" stroke-width="1" fill="none" stroke-dasharray="2 2"/>
+
+          <text class="d-dim" x="330" y="205" font-size="9.5">поля лежат внутри самого объекта,</text>
+          <text class="d-dim" x="330" y="221" font-size="9.5">имена — один раз в классе</text>
+        </g>
+        <defs>
+          <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+            <path d="M0 0 L10 5 L0 10 z" class="d-acc"/>
+          </marker>
+        </defs>
+      </svg>
+    </div>
+    <figcaption><b>Схема</b><span>Словарь на экземпляр против ячеек в самом объекте. Имена атрибутов при <code>__slots__</code> хранятся один раз — в классе, в виде дескрипторов.</span></figcaption>
+  </figure>
+
+  <!-- =============================================================== 02 -->
+  <h2 id="how"><span class="num">02</span> Как это выглядит в коде<a class="anchor" href="#how" aria-label="Ссылка на раздел">#</a></h2>
+
+  <p>
+    Решение — объявить в теле класса атрибут <code>__slots__</code> с коллекцией имен
+    (обычно кортеж или список<a class="fnref" href="#fn-2" id="fnref-2">2</a>):
+  </p>
+
+  <div class="split">
+    <div class="code">
+      <div class="code__bar">
+        <span class="code__dots" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="code__name">было</span>
+        <button class="copy" type="button">
+          <svg class="ico-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
+          <svg class="ico-done" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" aria-hidden="true"><path d="m5 13 4 4L19 7"/></svg>
+          <span class="copy__label">Копировать</span>
+        </button>
+      </div>
+<pre><code><span class="t-k">class</span> <span class="t-f">User</span>:
+
+    <span class="t-k">def</span> <span class="t-f">__init__</span>(<span class="t-sf">self</span>, name, age):
+        <span class="t-sf">self</span>.name = name
+        <span class="t-sf">self</span>.age = age</code></pre>
+    </div>
+
+    <div class="code">
+      <div class="code__bar">
+        <span class="code__dots" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="code__name">стало</span>
+        <button class="copy" type="button">
+          <svg class="ico-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
+          <svg class="ico-done" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" aria-hidden="true"><path d="m5 13 4 4L19 7"/></svg>
+          <span class="copy__label">Копировать</span>
+        </button>
+      </div>
+<pre><code><span class="t-k">class</span> <span class="t-f">User</span>:
+    <span class="hl"><span class="t-d">__slots__</span> = (<span class="t-s">"name"</span>, <span class="t-s">"age"</span>)</span>
+    <span class="t-k">def</span> <span class="t-f">__init__</span>(<span class="t-sf">self</span>, name, age):
+        <span class="t-sf">self</span>.name = name
+        <span class="t-sf">self</span>.age = age</code></pre>
+    </div>
+  </div>
+
+  <p>
+    Снаружи ничего не изменилось: <code>user.name</code> и <code>user.age</code> читаются и пишутся как прежде.
+    Изменился способ хранения — вместо записи в словарь это теперь дескриптор, который кладет значение
+    в конкретную ячейку экземпляра.
+  </p>
+
+  <div class="callout callout--tip">
+    <span class="callout__ico" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.5 10.9c.4.3.5.8.5 1.1h6c0-.3.1-.8.5-1.1A6 6 0 0 0 12 3Z"/></svg>
+    </span>
+    <div>
+      <b>Проверьте на своих данных</b>
+      <p>
+        Цифры экономии сильно зависят от версии CPython, числа полей и того, что лежит внутри.
+        Полезнее один раз замерить свой класс, чем опираться на чужие числа.
+      </p>
+    </div>
+  </div>
+
+  <div class="code">
+    <div class="code__bar">
+      <span class="code__dots" aria-hidden="true"><i></i><i></i><i></i></span>
+      <span class="code__name">measure.py</span>
+      <span class="code__lang">python</span>
+      <button class="copy" type="button">
+        <svg class="ico-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
+        <svg class="ico-done" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" aria-hidden="true"><path d="m5 13 4 4L19 7"/></svg>
+        <span class="copy__label">Копировать</span>
+      </button>
+    </div>
+<pre><code><span class="t-k">import</span> tracemalloc
+
+<span class="t-k">def</span> <span class="t-f">measure</span>(cls, n=<span class="t-n">200_000</span>):
+    tracemalloc.<span class="t-f">start</span>()
+    items = [<span class="t-f">cls</span>(<span class="t-s">"Alice"</span>, <span class="t-n">20</span>) <span class="t-k">for</span> _ <span class="t-k">in</span> <span class="t-f">range</span>(n)]
+    peak = tracemalloc.<span class="t-f">get_traced_memory</span>()[<span class="t-n">1</span>]
+    tracemalloc.<span class="t-f">stop</span>()
+    <span class="t-k">return</span> peak / n   <span class="t-c"># байт на экземпляр</span>
+
+<span class="t-f">print</span>(<span class="t-f">measure</span>(User), <span class="t-f">measure</span>(SlottedUser))</code></pre>
+    <div class="code__out"><b>идея</b><span>сравнивать не абсолютные числа, а отношение между двумя своими классами</span></div>
+  </div>
+
+  <figure class="fig">
+    <div class="fig__frame">
+      <svg viewBox="0 0 620 152" role="img" aria-labelledby="fig2-t">
+        <title id="fig2-t">Столбчатое сравнение памяти на экземпляр: вариант со словарем заметно выше варианта со слотами</title>
+        <g font-size="10.5">
+          <text class="d-dim" x="10" y="14" letter-spacing="1.4">ПАМЯТЬ НА ЭКЗЕМПЛЯР · ПОРЯДОК ВЕЛИЧИН</text>
+
+          <text class="d-txt" x="10" y="50" font-size="11">__dict__</text>
+          <rect class="d-fill-2 d-line" x="118" y="36" width="420" height="22" rx="4" stroke-width="1"/>
+          <rect class="d-warn" x="118" y="36" width="420" height="22" rx="4" opacity=".22"/>
+          <rect class="d-warn" x="118" y="36" width="3" height="22"/>
+          <text class="d-warn" x="548" y="51" font-size="11">×1.0</text>
+
+          <text class="d-txt" x="10" y="96" font-size="11">__slots__</text>
+          <rect class="d-fill-2 d-line" x="118" y="82" width="420" height="22" rx="4" stroke-width="1"/>
+          <rect class="d-acc-bg" x="118" y="82" width="152" height="22" rx="4"/>
+          <rect class="d-acc" x="118" y="82" width="152" height="22" rx="4" opacity=".28"/>
+          <rect class="d-acc" x="118" y="82" width="3" height="22"/>
+          <text class="d-acc" x="548" y="97" font-size="11">≈ ×0.35</text>
+
+          <line class="d-line" x1="118" y1="118" x2="538" y2="118" stroke-width="1"/>
+          <text class="d-dim" x="118" y="136" font-size="9">класс из двух полей · CPython 3.12 · x86-64 · замер через tracemalloc</text>
+        </g>
+      </svg>
+    </div>
+    <figcaption><b>Замер</b><span>Иллюстративное отношение для класса из двух полей. У класса с двадцатью полями или с key-sharing-словарями картина будет другой — поэтому в фигуре отношение, а не мегабайты.</span></figcaption>
+  </figure>
+
+  <!-- =============================================================== 03 -->
+  <h2 id="tradeoffs"><span class="num">03</span> За что платим<a class="anchor" href="#tradeoffs" aria-label="Ссылка на раздел">#</a></h2>
+
+  <h3 id="attrs">Новые атрибуты<a class="anchor" href="#attrs" aria-label="Ссылка на раздел">#</a></h3>
+
+  <p>
+    Присвоить экземпляру поле, которого нет в <code>__slots__</code>, больше нельзя —
+    прилетит <code>AttributeError</code>. Это ровно та динамика, которую мы обменяли на память.
+  </p>
+
+  <div class="code">
+    <div class="code__bar">
+      <span class="code__dots" aria-hidden="true"><i></i><i></i><i></i></span>
+      <span class="code__name">strict.py</span>
+      <span class="code__lang">python</span>
+      <button class="copy" type="button">
+        <svg class="ico-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
+        <svg class="ico-done" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" aria-hidden="true"><path d="m5 13 4 4L19 7"/></svg>
+        <span class="copy__label">Копировать</span>
+      </button>
+    </div>
+<pre><code>user = <span class="t-f">User</span>(<span class="t-s">"Alice"</span>, <span class="t-n">20</span>)
+user.name = <span class="t-s">"Bob"</span>        <span class="t-c"># ок, имя объявлено</span>
+<span class="er">user.email = <span class="t-s">"a@b.c"</span>     <span class="t-c"># AttributeError</span></span>
+
+<span class="t-c"># если поля все-таки нужно добавлять — просим словарь обратно:</span>
+<span class="t-k">class</span> <span class="t-f">User</span>:
+    <span class="t-d">__slots__</span> = (<span class="t-s">"name"</span>, <span class="t-s">"age"</span>, <span class="t-s">"__dict__"</span>)</code></pre>
+    <div class="code__out"><b>но</b><span>с <code>__dict__</code> в слотах экономия во многом теряется — это осознанный компромисс, а не «лучшее из двух»</span></div>
+  </div>
+
+  <h3 id="weakref">Weak references<a class="anchor" href="#weakref" aria-label="Ссылка на раздел">#</a></h3>
+
+  <p>
+    Слот <code>__weakref__</code> тоже нужно запрашивать явно, иначе <code>weakref.ref(obj)</code>
+    поднимет <code>TypeError</code>.
+  </p>
+
+  <div class="callout callout--warn">
+    <span class="callout__ico" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M12 4.5 21 19H3l9-14.5Z"/><path d="M12 10v4M12 17h.01"/></svg>
+    </span>
+    <div>
+      <b>Ломается тише, чем кажется</b>
+      <p>
+        На weak refs держатся кэши, observer-механизмы и часть библиотек — так они не удерживают объект
+        от сборки. Без <code>__weakref__</code> такой объект просто нельзя туда положить,
+        и узнаете вы об этом из чужого стека вызовов.
+      </p>
+    </div>
+  </div>
+
+  <div class="code">
+    <div class="code__bar">
+      <span class="code__dots" aria-hidden="true"><i></i><i></i><i></i></span>
+      <span class="code__name">weak.py</span>
+      <span class="code__lang">python</span>
+      <button class="copy" type="button">
+        <svg class="ico-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
+        <svg class="ico-done" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" aria-hidden="true"><path d="m5 13 4 4L19 7"/></svg>
+        <span class="copy__label">Копировать</span>
+      </button>
+    </div>
+<pre><code><span class="t-k">import</span> weakref
+
+<span class="t-k">class</span> <span class="t-f">Node</span>:
+    <span class="hl"><span class="t-d">__slots__</span> = (<span class="t-s">"value"</span>, <span class="t-s">"__weakref__"</span>)</span>
+    <span class="t-k">def</span> <span class="t-f">__init__</span>(<span class="t-sf">self</span>, value):
+        <span class="t-sf">self</span>.value = value
+
+weakref.<span class="t-f">ref</span>(<span class="t-f">Node</span>(<span class="t-n">1</span>))   <span class="t-c"># теперь работает</span></code></pre>
+  </div>
+
+  <h3 id="inherit">Наследование<a class="anchor" href="#inherit" aria-label="Ссылка на раздел">#</a></h3>
+
+  <p>
+    Самое неприятное место. Слоты не наследуются как «сумма» автоматически: их поведение зависит
+    от того, что объявлено у каждого класса в цепочке. Достаточно одного наследника без
+    <code>__slots__</code> — и словарь возвращается всем его экземплярам.
+  </p>
+
+  <figure class="fig">
+    <div class="fig__frame">
+      <svg viewBox="0 0 620 210" role="img" aria-labelledby="fig3-t">
+        <title id="fig3-t">Базовый класс со слотами и два наследника: с пустыми слотами словарь не появляется, без объявления слотов появляется</title>
+        <g font-size="10.5">
+          <rect class="d-fill d-line" x="228" y="14" width="164" height="52" rx="8" stroke-width="1"/>
+          <text class="d-txt" x="242" y="34" font-size="11">Base</text>
+          <text class="d-acc" x="242" y="52" font-size="9.5">__slots__ = ("a",)</text>
+
+          <path class="d-line" d="M290 66 V92 H150 V116" stroke-width="1" fill="none"/>
+          <path class="d-line" d="M330 66 V92 H470 V116" stroke-width="1" fill="none"/>
+
+          <rect class="d-fill d-line" x="58" y="116" width="184" height="72" rx="8" stroke-width="1"/>
+          <text class="d-txt" x="72" y="136" font-size="11">ChildA</text>
+          <text class="d-acc" x="72" y="154" font-size="9.5">__slots__ = ()</text>
+          <text class="d-acc" x="72" y="174" font-size="9.5">✓ __dict__ по-прежнему нет</text>
+
+          <rect class="d-fill d-line" x="378" y="116" width="184" height="72" rx="8" stroke-width="1" stroke-dasharray="4 3"/>
+          <text class="d-txt" x="392" y="136" font-size="11">ChildB</text>
+          <text class="d-dim" x="392" y="154" font-size="9.5">(слоты не объявлены)</text>
+          <text class="d-warn" x="392" y="174" font-size="9.5">✗ __dict__ вернулся</text>
+        </g>
+      </svg>
+    </div>
+    <figcaption><b>Схема</b><span>Пустой кортеж <code>__slots__ = ()</code> у наследника — способ сказать «своих полей не добавляю», не возвращая словарь.</span></figcaption>
+  </figure>
+
+  <div class="tablewrap">
+    <table class="tbl">
+      <thead>
+        <tr><th>Ситуация</th><th>Что получаем</th><th>Экономия</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Класс со <code>__slots__</code>, базовый — <code>object</code></td><td>только ячейки</td><td class="ok">полная</td></tr>
+        <tr><td>Наследник объявил <code>__slots__ = ()</code></td><td>ячейки родителя</td><td class="ok">полная</td></tr>
+        <tr><td>Наследник объявил свои слоты</td><td>ячейки родителя + свои</td><td class="ok">полная</td></tr>
+        <tr><td>Наследник не объявил ничего</td><td>ячейки + <code>__dict__</code></td><td class="no">потеряна</td></tr>
+        <tr><td>Одно имя объявлено дважды в цепочке</td><td>дублирующая ячейка</td><td class="no">частично теряется</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout callout--stop">
+    <span class="callout__ico" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="m9 9 6 6M15 9l-6 6"/></svg>
+    </span>
+    <div>
+      <b>Множественное наследование</b>
+      <p>
+        Два родителя, у каждого непустые <code>__slots__</code> — и класс просто не создастся:
+        <code>TypeError: multiple bases have instance lay-out conflict</code>.
+        Непустые слоты плохо сочетаются с миксинами.
+      </p>
+    </div>
+  </div>
+
+  <!-- =============================================================== 04 -->
+  <h2 id="when"><span class="num">04</span> Когда это оправдано<a class="anchor" href="#when" aria-label="Ссылка на раздел">#</a></h2>
+
+  <div class="verdict">
+    <div class="verdict__col verdict--yes">
+      <h4>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg>
+        Стоит брать
+      </h4>
+      <ul>
+        <li>Миллионы однотипных объектов: точки, события, строки лога, узлы дерева.</li>
+        <li>Профилировщик показал, что память уходит именно в экземпляры.</li>
+        <li>Набор полей стабилен и известен заранее.</li>
+        <li>Хочется, чтобы опечатка в имени поля падала, а не создавала мусорный атрибут.</li>
+      </ul>
+    </div>
+    <div class="verdict__col verdict--no">
+      <h4>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m9 9 6 6M15 9l-6 6"/></svg>
+        Не стоит
+      </h4>
+      <ul>
+        <li>Объектов десятки или сотни — выигрыш утонет в шуме.</li>
+        <li>Классу нужны миксины с собственными слотами.</li>
+        <li>Код или библиотеки дописывают атрибуты снаружи.</li>
+        <li>Ставить «на всякий случай», без замера до и после.</li>
+      </ul>
+    </div>
+  </div>
+
+  <p>
+    Отдельно про скорость: доступ к полю через слот часто чуть быстрее словарного, но выигрыш
+    легко оказывается нулевым<a class="fnref" href="#fn-3" id="fnref-3">3</a>. Оптимизировать ради него в отрыве
+    от памяти смысла нет.
+  </p>
+
+  <!-- =============================================================== 05 -->
+  <h2 id="finale"><span class="num">05</span> Вывод<a class="anchor" href="#finale" aria-label="Ссылка на раздел">#</a></h2>
+
+  <div class="finale">
+    <h2>Итог</h2>
+    <p>
+      <code>__slots__</code> — не стилевое улучшение и не «правильный способ писать классы».
+      Это точечный обмен гибкости на память.
+    </p>
+    <p>
+      Есть миллионы одинаковых экземпляров, съедающих доступную память — берите.
+      Нет замера, показывающего проблему — не берите.
+    </p>
+  </div>
+
+  <hr class="rule">
+
+  <!-- ------------------------------------------------------------ сноски -->
+  <section class="notes-block" aria-labelledby="fn-h">
+    <h2 id="fn-h">Сноски</h2>
+    <ol>
+      <li id="fn-1">
+        Ладно, не каждый: многие built-in и extension types обычного instance <code>__dict__</code>
+        не имеют вовсе — <code>tuple</code>, <code>int</code>, часть типов из C-расширений.
+        Здесь речь про экземпляры обычных пользовательских классов без <code>__slots__</code>.
+        <a class="back" href="#fnref-1" aria-label="Вернуться к тексту">↩</a>
+      </li>
+      <li id="fn-2">
+        Допустима и просто строка, если имя одно: <code>__slots__ = "name"</code>.
+        <a class="back" href="#fnref-2" aria-label="Вернуться к тексту">↩</a>
+      </li>
+      <li id="fn-3">
+        Зависит от версии Python и профиля нагрузки. В горячем цикле разница иногда видна,
+        в обычном коде — почти никогда.
+        <a class="back" href="#fnref-3" aria-label="Вернуться к тексту">↩</a>
+      </li>
+    </ol>
+  </section>
+
+  </article>
+
+  <!-- --------------------------------------------------------- пагинация -->
+  <nav class="pager" aria-label="Соседние заметки">
+    <a href="#">
+      <span class="l">← предыдущая</span>
+      <span class="t">Property</span>
+    </a>
+    <a href="#" class="next">
+      <span class="l">следующая →</span>
+      <span class="t">Disassemble</span>
+    </a>
+  </nav>
+
+  <footer class="doc__foot">
+    <span>Обновлено 22.06.2026</span>
+    <span>·</span>
+    <a href="#">Python</a>
+    <span class="topbar__spacer"></span>
+    <a href="#idea">↑ наверх</a>
+  </footer>
+
+</div>
+</main>
+
+<!-- =================================================================== -->
+<!--  RAIL — оглавление                                                  -->
+<!-- =================================================================== -->
+<aside class="rail" id="rail" aria-label="Содержание страницы">
+  <div class="rail__head">
+    <h2 class="rail__title">На этой странице</h2>
+    <button class="iconbtn rail__close" id="rail-close" type="button" aria-label="Закрыть оглавление">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" aria-hidden="true">
+        <path d="m6 6 12 12M18 6 6 18"/>
+      </svg>
+    </button>
+  </div>
+  <nav class="toc">
+    <a href="#idea">Где живут атрибуты</a>
+    <a href="#how">Как это выглядит в коде</a>
+    <a href="#tradeoffs">За что платим</a>
+    <a href="#attrs" class="lvl-3">Новые атрибуты</a>
+    <a href="#weakref" class="lvl-3">Weak references</a>
+    <a href="#inherit" class="lvl-3">Наследование</a>
+    <a href="#when">Когда это оправдано</a>
+    <a href="#finale">Вывод</a>
+  </nav>
+
+  <div class="railcard">
+    <h4>Справка</h4>
+    <dl>
+      <dt>Версия</dt><dd>CPython 3.12</dd>
+      <dt>Ввели в</dt><dd>Python 2.2</dd>
+      <dt>PEP</dt><dd>—</dd>
+      <dt>Смежное</dt><dd>dataclass</dd>
+    </dl>
+  </div>
+</aside>
+
+</div><!-- /shell -->
+
+<button class="totop" id="to-top" type="button" aria-label="Наверх">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" aria-hidden="true"><path d="M12 19V5M6 11l6-6 6 6"/></svg>
+</button>
+
+<script src="notes.js"></script>
+</body>
+</html>
