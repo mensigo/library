@@ -1,4 +1,72 @@
 const syntaxHighlight = require("@11ty/eleventy-plugin-syntaxhighlight");
+const markdownItAnchor = require("markdown-it-anchor");
+const markdownItAttrs = require("markdown-it-attrs");
+const markdownItContainer = require("markdown-it-container");
+
+// Тот же алгоритм, что и generateSlug в src/js/scripts.js: якоря,
+// сгенерированные на сборке, должны совпадать с теми, что ищет TOC в браузере.
+function generateSlug(text) {
+    return text
+        .toLowerCase()
+        .replace(/[^\wа-яё\s-]/gi, '')
+        .replace(/\s+/g, '-')
+        .replace(/-+/g, '-');
+}
+
+// Метка раздела (папки) по URL страницы.
+function sectionLabel(url) {
+    if (!url) return '';
+    if (url.startsWith('/reviews/anime/')) return 'Аниме';
+    if (url.startsWith('/reviews/philosophy/')) {
+        const category = url.split('/').filter(Boolean)[2];
+        return category ? category.charAt(0).toUpperCase() + category.slice(1) : 'Философия';
+    }
+    if (url.startsWith('/notes/python/')) return 'Python';
+    if (url.startsWith('/notes/')) return 'Заметки';
+    if (url.startsWith('/drafts/')) return 'Черновики';
+    return '';
+}
+
+// Иконки callout'ов. Ключ контейнера → подпись по умолчанию + SVG.
+const CALLOUTS = {
+    note: {
+        modifier: '',
+        title: 'Заметка',
+        icon: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>'
+    },
+    tip: {
+        modifier: 'callout--tip',
+        title: 'Совет',
+        icon: '<path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.5 10.9c.3.3.5.7.5 1.1h6c0-.4.2-.8.5-1.1A6 6 0 0 0 12 3Z"/>'
+    },
+    warn: {
+        modifier: 'callout--warn',
+        title: 'Осторожно',
+        icon: '<path d="M10.3 3.9 1.9 18a2 2 0 0 0 1.7 3h16.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4M12 17h.01"/>'
+    },
+    stop: {
+        modifier: 'callout--stop',
+        title: 'Грабли',
+        icon: '<circle cx="12" cy="12" r="9"/><path d="m15 9-6 6M9 9l6 6"/>'
+    }
+};
+
+function calloutPlugin(md, name) {
+    const spec = CALLOUTS[name];
+    md.use(markdownItContainer, name, {
+        render(tokens, idx) {
+            if (tokens[idx].nesting !== 1) return '</div></div>\n';
+            const custom = tokens[idx].info.trim().slice(name.length).trim();
+            const title = custom || spec.title;
+            return '<div class="callout' + (spec.modifier ? ' ' + spec.modifier : '') + '">'
+                + '<div class="callout__ico">'
+                + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" '
+                + 'stroke-linejoin="round" aria-hidden="true">' + spec.icon + '</svg>'
+                + '</div>'
+                + '<div class="callout__body"><b>' + md.utils.escapeHtml(title) + '</b>\n';
+        }
+    });
+}
 
 module.exports = function(eleventyConfig) {
     // Добавляем глобальные данные
@@ -6,8 +74,98 @@ module.exports = function(eleventyConfig) {
         return process.env.NODE_ENV === 'production' ? '/library' : '';
     });
 
-    // Подсветка синтаксиса в fenced code blocks
+    // Подсветка синтаксиса в fenced code blocks.
+    // Плагин вешает highlighter через addMarkdownHighlighter, поэтому ниже
+    // библиотеку markdown-it мы дополняем (amendLibrary), а не заменяем.
     eleventyConfig.addPlugin(syntaxHighlight);
+
+    eleventyConfig.amendLibrary("md", (md) => {
+        md.use(markdownItAttrs);
+
+        md.use(markdownItAnchor, {
+            slugify: generateSlug,
+            tabIndex: false,
+            permalink: markdownItAnchor.permalink.linkInsideHeader({
+                symbol: '#',
+                class: 'anchor',
+                placement: 'after',
+                ariaHidden: false,
+                renderAttrs: () => ({ 'aria-label': 'Ссылка на раздел' })
+            })
+        });
+
+        Object.keys(CALLOUTS).forEach(name => calloutPlugin(md, name));
+
+        // ::: out — блок вывода, приклеенный к предыдущему код-блоку.
+        md.use(markdownItContainer, 'out', {
+            render(tokens, idx) {
+                if (tokens[idx].nesting !== 1) return '</div>\n';
+                const label = tokens[idx].info.trim().slice(3).trim() || 'вывод';
+                return '<div class="code__out"><b>' + md.utils.escapeHtml(label) + '</b>\n';
+            }
+        });
+
+        // Код-блок получает шапку: точки, имя файла, бейдж языка, кнопку копирования.
+        // Инфо-строка: ```python/3,5-7 slots.py
+        //   первый токен целиком уходит в highlighter (язык + номера строк),
+        //   остаток — имя файла.
+        const defaultFence = md.renderer.rules.fence;
+        md.renderer.rules.fence = function (tokens, idx, options, env, self) {
+            const body = defaultFence(tokens, idx, options, env, self);
+            const info = (tokens[idx].info || '').trim();
+            if (!info) return body;
+
+            const parts = info.split(/\s+/);
+            const lang = parts.shift().split('/')[0];
+            const name = parts.join(' ');
+
+            return '<div class="code">'
+                + '<div class="code__bar">'
+                + '<span class="code__dots" aria-hidden="true"><i></i><i></i><i></i></span>'
+                + (name ? '<span class="code__name">' + md.utils.escapeHtml(name) + '</span>' : '')
+                + '<span class="code__lang">' + md.utils.escapeHtml(lang) + '</span>'
+                + '<button class="copy" type="button">'
+                + '<svg class="ico-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>'
+                + '<svg class="ico-done" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" aria-hidden="true"><path d="m5 13 4 4L19 7"/></svg>'
+                + '<span class="copy__label">Копировать</span>'
+                + '</button>'
+                + '</div>'
+                + body
+                + '</div>\n';
+        };
+
+        // Таблицы всегда живут в скроллящейся обёртке.
+        md.renderer.rules.table_open = function () {
+            return '<div class="tablewrap"><table class="tbl">\n';
+        };
+        md.renderer.rules.table_close = function () {
+            return '</table></div>\n';
+        };
+
+        // Абзац из одной картинки превращается в figure: подпись берётся из title.
+        //   ![alt](/images/x.png "подпись")
+        function loneImage(tokens, openIdx) {
+            const inline = tokens[openIdx + 1];
+            if (!tokens[openIdx] || tokens[openIdx].type !== 'paragraph_open') return null;
+            if (!inline || inline.type !== 'inline' || !inline.children) return null;
+            const kids = inline.children.filter(t => !(t.type === 'text' && !t.content.trim()));
+            if (kids.length !== 1 || kids[0].type !== 'image') return null;
+            return kids[0];
+        }
+
+        md.renderer.rules.paragraph_open = function (tokens, idx, options, env, self) {
+            if (loneImage(tokens, idx)) return '<figure class="fig"><div class="fig__frame">';
+            return self.renderToken(tokens, idx, options);
+        };
+        md.renderer.rules.paragraph_close = function (tokens, idx, options, env, self) {
+            const image = loneImage(tokens, idx - 2);
+            if (!image) return self.renderToken(tokens, idx, options);
+            const caption = image.attrGet('title');
+            return '</div>'
+                + (caption ? '<figcaption>' + md.utils.escapeHtml(caption) + '</figcaption>' : '')
+                + '</figure>\n';
+        };
+    });
 
     // Копируем статические файлы
     eleventyConfig.addPassthroughCopy("src/css");
@@ -29,50 +187,26 @@ module.exports = function(eleventyConfig) {
         return new Date(dateObj).toISOString();
     });
 
-    // Фильтр для короткой даты
-    eleventyConfig.addFilter("shortDate", (dateObj) => {
-        return new Date(dateObj).toLocaleDateString('ru-RU', {
-            year: 'numeric',
-            month: 'long',
-            //day: 'numeric'
-        });
-    });
-
-    // Время чтения
-    eleventyConfig.addFilter("readingTime", (text) => {
+    // Время чтения (по уже отрендеренному HTML)
+    eleventyConfig.addFilter("readingTime", (content) => {
         const wordsPerMinute = 200;
-        const wordCount = text.split(/\s+/).length;
-        return Math.ceil(wordCount / wordsPerMinute);
+        const text = String(content).replace(/<[^>]+>/g, ' ');
+        const wordCount = text.split(/\s+/).filter(Boolean).length;
+        return Math.max(1, Math.ceil(wordCount / wordsPerMinute));
     });
 
-    // Слаг для URL
-    eleventyConfig.addFilter("slug", (str) => {
-        return str
-            .toLowerCase()
-            .replace(/[^\w ]+/g, '')
-            .replace(/ +/g, '-');
+    // Количество разделов верхнего уровня (h2) в отрендеренном HTML
+    eleventyConfig.addFilter("headingCount", (content) => {
+        return (String(content).match(/<h2[\s>]/g) || []).length;
     });
 
-    // Разделение по сепаратору
-    eleventyConfig.addFilter('split', (str, separator) => {
-        return str.split(separator);
-    });
-
-    // Создание массива чисел от 0 до N-1
-    eleventyConfig.addFilter('range', (n) => {
-        const arr = [];
-        for (let i = 0; i < n; i++) {
-            arr.push(i);
-        }
-        return arr;
-    });
-
-    // Цвет оценки
-    eleventyConfig.addFilter('getScoreColor', (score) => {
-        const num = parseInt(score.split('/')[0].trim());
-        if (num >= 8) return 'high';
-        if (num >= 5) return 'medium';
-        return 'low';
+    // Русское склонение по числу: 1 раздел, 2 раздела, 5 разделов
+    eleventyConfig.addFilter("plural", (n, one, few, many) => {
+        const mod10 = n % 10;
+        const mod100 = n % 100;
+        if (mod10 === 1 && mod100 !== 11) return one;
+        if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return few;
+        return many;
     });
 
     // Числовое значение оценки
@@ -80,23 +214,14 @@ module.exports = function(eleventyConfig) {
         return parseInt(score.split('/')[0].trim());
     });
 
-    // Процент оценки
-    eleventyConfig.addFilter('getScorePercent', (score) => {
-        const num = parseInt(score.split('/')[0].trim());
-        return (num / 10) * 100;
-    });
-
-    // Количество заполненных звезд (из 7)
-    eleventyConfig.addFilter('getFilledStars', (score) => {
-        const num = parseFloat(score.split('/')[0].trim());
-        return Math.round((num / 10) * 7);
-    });
-
     // Проверка, начинается ли строка с префикса
     eleventyConfig.addFilter('startsWith', (str, prefix) => {
         if (!str || !prefix) return false;
         return str.startsWith(prefix);
     });
+
+    // Метка раздела — для крошек в topbar и для списка последних обновлений
+    eleventyConfig.addFilter('sectionLabel', sectionLabel);
 
     // Коллекция аниме
     eleventyConfig.addCollection("anime", function(collection) {
@@ -181,27 +306,13 @@ module.exports = function(eleventyConfig) {
             });
     });
 
-    // Метка раздела (папки) для элемента последних обновлений
-    function getCategoryLabel(item) {
-        const url = item.url;
-        if (url.startsWith('/reviews/anime/')) return 'Аниме';
-        if (url.startsWith('/reviews/philosophy/')) {
-            const category = url.split('/').filter(Boolean)[2];
-            return category ? category.charAt(0).toUpperCase() + category.slice(1) : 'Философия';
-        }
-        if (url.startsWith('/notes/python/')) return 'Python';
-        if (url.startsWith('/notes/')) return 'Заметки';
-        if (url.startsWith('/drafts/')) return 'Черновики';
-        return '';
-    }
-
     // Коллекция последних обновлений (по upd_date, включая черновики)
     eleventyConfig.addCollection("recentUpdates", function(collection) {
         return collection.getAll()
             .filter(item => item.data.upd_date)
             .sort((a, b) => new Date(b.data.upd_date) - new Date(a.data.upd_date))
             .map(item => {
-                item.data.categoryLabel = getCategoryLabel(item);
+                item.data.categoryLabel = sectionLabel(item.url);
                 return item;
             });
     });
@@ -221,8 +332,8 @@ module.exports = function(eleventyConfig) {
             line.split('|').slice(1, -1).map(cell => cell.trim())
         );
 
-        // Генерируем HTML
-        let html = '<table>\n    <thead>\n        <tr>\n';
+        // Генерируем HTML в той же обёртке, что и обычные markdown-таблицы
+        let html = '<div class="tablewrap"><table class="tbl">\n    <thead>\n        <tr>\n';
         headers.forEach(header => {
             html += `            <th class="sortable">${header}</th>\n`;
         });
@@ -236,7 +347,7 @@ module.exports = function(eleventyConfig) {
             html += '        </tr>\n';
         });
 
-        html += '    </tbody>\n</table>';
+        html += '    </tbody>\n</table></div>';
 
         return html;
     });
@@ -290,11 +401,6 @@ module.exports = function(eleventyConfig) {
         });
 
         return searchIndex;
-    });
-
-    // Passthrough copy для индекса (будет создан как JSON файл)
-    eleventyConfig.addNunjucksAsyncFilter("createSearchIndex", async function(searchData) {
-        return JSON.stringify(searchData);
     });
 
     return {

@@ -2,26 +2,59 @@
 layout: "base.njk"
 ---
 
-{% block content %}
-    <!-- Название -->
-    {% if title %}
-    <h2 class="page-title">{{ title }}</h2>
-    {% endif %}
-
-    <!-- Оригинальный контент -->
-    <div class="content-wrapper">
-        <div class="article">
-            <article class="article__content">
-                {{ content | safe }}
-            </article>
-        </div>
-    </div>
-
-    <!-- Дата обновления -->
-    {% if upd_date %}
-    <div class="page-updated">
-        <small>{{ upd_date | readableDate }}</small>
+<header class="hero">
+    {% if tags %}
+    <div class="hero__tags">
+        {% for tag in tags %}
+        <span class="chip{% if loop.first %} chip--acc{% endif %}">{{ tag }}</span>
+        {% endfor %}
     </div>
     {% endif %}
 
-{% endblock %}
+    <h1>{{ title }}</h1>
+
+    {% if lede %}
+    <p class="hero__lede">{{ lede }}</p>
+    {% endif %}
+
+    <div class="hero__meta">
+        {% if upd_date %}
+        <span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>
+            <time datetime="{{ upd_date | dateToRfc3339 }}">{{ upd_date | readableDate }}</time>
+        </span>
+        {% endif %}
+        <span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+            {{ content | readingTime }} мин чтения
+        </span>
+        {% set sections = content | headingCount %}
+        {% if sections %}
+        <span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" aria-hidden="true"><path d="M4 19V5a2 2 0 0 1 2-2h11l3 3v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2Z"/><path d="M8 9h8M8 13h8M8 17h5"/></svg>
+            {{ sections }} {{ sections | plural('раздел', 'раздела', 'разделов') }}
+        </span>
+        {% endif %}
+    </div>
+</header>
+
+{% if tldr %}
+<section class="tldr" aria-label="Кратко">
+    <h2>Кратко</h2>
+    <ul>
+        {% for point in tldr %}
+        <li>{{ point | safe }}</li>
+        {% endfor %}
+    </ul>
+</section>
+{% endif %}
+
+<article class="prose">
+    {{ content | safe }}
+</article>
+
+{% if upd_date %}
+<div class="doc__foot">
+    <span>Обновлено {{ upd_date | readableDate }}</span>
+</div>
+{% endif %}

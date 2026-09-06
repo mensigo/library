@@ -17,7 +17,11 @@
     "@babel/preset-env": "^7.29.0",
     "babel-jest": "^30.2.0",
     "jest": "^30.2.0",
-    "jest-environment-jsdom": "^30.2.0"
+    "jest-environment-jsdom": "^30.2.0",
+    "markdown-it": "^15.0.1",
+    "markdown-it-anchor": "^10.0.0",
+    "markdown-it-attrs": "^5.0.1",
+    "markdown-it-container": "^4.0.0"
   },
   "description": "small personal library (anime, books, etc)",
   "main": ".eleventy.js",
