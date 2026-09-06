@@ -1,0 +1,23 @@
+<figure class="fig">
+  <div class="fig__frame">
+    <svg viewBox="0 0 620 210" role="img" aria-labelledby="fig3-t">
+      <title id="fig3-t">Базовый класс со слотами и два наследника: с пустыми слотами словарь не появляется, без объявления слотов появляется</title>
+      <g font-size="10.5">
+        <rect class="d-fill d-line" x="228" y="14" width="164" height="52" rx="8" stroke-width="1"/>
+        <text class="d-txt" x="242" y="34" font-size="11">Base</text>
+        <text class="d-acc" x="242" y="52" font-size="9.5">__slots__ = ("a",)</text>
+        <path class="d-line" d="M290 66 V92 H150 V116" stroke-width="1" fill="none"/>
+        <path class="d-line" d="M330 66 V92 H470 V116" stroke-width="1" fill="none"/>
+        <rect class="d-fill d-line" x="58" y="116" width="184" height="72" rx="8" stroke-width="1"/>
+        <text class="d-txt" x="72" y="136" font-size="11">ChildA</text>
+        <text class="d-acc" x="72" y="154" font-size="9.5">__slots__ = ()</text>
+        <text class="d-acc" x="72" y="174" font-size="9.5">✓ __dict__ по-прежнему нет</text>
+        <rect class="d-fill d-line" x="378" y="116" width="184" height="72" rx="8" stroke-width="1" stroke-dasharray="4 3"/>
+        <text class="d-txt" x="392" y="136" font-size="11">ChildB</text>
+        <text class="d-dim" x="392" y="154" font-size="9.5">(слоты не объявлены)</text>
+        <text class="d-warn" x="392" y="174" font-size="9.5">✗ __dict__ вернулся</text>
+      </g>
+    </svg>
+  </div>
+  <figcaption><b>Схема</b><span>Пустой кортеж <code>__slots__ = ()</code> у наследника — способ сказать «своих полей не добавляю», не возвращая словарь.</span></figcaption>
+</figure>

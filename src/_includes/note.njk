@@ -11,7 +11,8 @@ layout: "base.njk"
     </div>
     {% endif %}
 
-    <h1>{{ title }}</h1>
+    {# titleHtml — когда в заголовке нужна разметка (например, приглушённые дандеры). #}
+    <h1>{% if titleHtml %}{{ titleHtml | safe }}{% else %}{{ title }}{% endif %}</h1>
 
     {% if lede %}
     <p class="hero__lede">{{ lede }}</p>
@@ -53,8 +54,30 @@ layout: "base.njk"
     {{ content | safe }}
 </article>
 
-{% if upd_date %}
-<div class="doc__foot">
-    <span>Обновлено {{ upd_date | readableDate }}</span>
-</div>
+{% set near = collections.notes | neighbours(page.url) %}
+{% if near.prev or near.next %}
+<nav class="pager" aria-label="Соседние заметки">
+    {% if near.prev %}
+    <a href="{{ pathPrefix }}{{ near.prev.url }}">
+        <span class="l">← предыдущая</span>
+        <span class="t">{{ near.prev.data.title }}</span>
+    </a>
+    {% endif %}
+    {% if near.next %}
+    <a href="{{ pathPrefix }}{{ near.next.url }}" class="next">
+        <span class="l">следующая →</span>
+        <span class="t">{{ near.next.data.title }}</span>
+    </a>
+    {% endif %}
+</nav>
 {% endif %}
+
+<footer class="doc__foot">
+    {% if upd_date %}
+    <span>Обновлено {{ upd_date | readableDate }}</span>
+    <span>·</span>
+    {% endif %}
+    <span>{{ page.url | sectionLabel }}</span>
+    <span class="topbar__spacer"></span>
+    <a href="#main">↑ наверх</a>
+</footer>

@@ -245,7 +245,8 @@ function initTableOfContents() {
     const article = document.querySelector('.prose');
     if (!toc || !article) return;
 
-    const headings = article.querySelectorAll('h2, h3, h4');
+    // .u-kicker — служебные заголовки блоков («Итог», «Сноски»): в оглавление не идут.
+    const headings = article.querySelectorAll('h2:not(.u-kicker), h3:not(.u-kicker), h4:not(.u-kicker)');
     if (!headings.length) return;
 
     const fragment = document.createDocumentFragment();

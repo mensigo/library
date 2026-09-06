@@ -2,6 +2,7 @@ const syntaxHighlight = require("@11ty/eleventy-plugin-syntaxhighlight");
 const markdownItAnchor = require("markdown-it-anchor");
 const markdownItAttrs = require("markdown-it-attrs");
 const markdownItContainer = require("markdown-it-container");
+const markdownItFootnote = require("markdown-it-footnote");
 
 // Тот же алгоритм, что и generateSlug в src/js/scripts.js: якоря,
 // сгенерированные на сборке, должны совпадать с теми, что ищет TOC в браузере.
@@ -68,6 +69,62 @@ function calloutPlugin(md, name) {
     });
 }
 
+
+// ::: split — два блока рядом (обычно «было / стало»).
+// ::: verdict — две колонки «стоит / не стоит», внутри ::: yes и ::: no.
+// ::: finale — итоговый блок в конце заметки; заголовок берётся из инфо-строки.
+const VERDICT = {
+    yes: {
+        modifier: 'verdict--yes',
+        title: 'Стоит брать',
+        icon: '<circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/>'
+    },
+    no: {
+        modifier: 'verdict--no',
+        title: 'Не стоит',
+        icon: '<circle cx="12" cy="12" r="9"/><path d="m9 9 6 6M15 9l-6 6"/>'
+    }
+};
+
+function verdictPlugin(md, name) {
+    const spec = VERDICT[name];
+    md.use(markdownItContainer, name, {
+        render(tokens, idx) {
+            if (tokens[idx].nesting !== 1) return '</div>\n';
+            const custom = tokens[idx].info.trim().slice(name.length).trim();
+            const title = custom || spec.title;
+            return '<div class="verdict__col ' + spec.modifier + '">'
+                + '<h4><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" '
+                + 'stroke-linecap="round" aria-hidden="true">' + spec.icon + '</svg>'
+                + md.utils.escapeHtml(title) + '</h4>\n';
+        }
+    });
+}
+
+// Сноски: markdown-it-footnote умеет разбирать [^1], но рисует свою разметку —
+// переопределяем рендер под .fnref / .notes-block из дизайн-системы.
+function footnoteMarkup(md) {
+    md.use(markdownItFootnote);
+
+    md.renderer.rules.footnote_ref = (tokens, idx, options, env, slf) => {
+        const id = slf.rules.footnote_anchor_name(tokens, idx, options, env, slf);
+        const caption = slf.rules.footnote_caption(tokens, idx, options, env, slf).replace(/[[\]]/g, '');
+        return '<a class="fnref" href="#fn' + id + '" id="fnref' + id + '">' + caption + '</a>';
+    };
+    md.renderer.rules.footnote_block_open = () => '<section class="notes-block" aria-labelledby="fn-h">'
+        + '<h2 class="u-kicker" id="fn-h">Сноски</h2><ol>\n';
+    md.renderer.rules.footnote_block_close = () => '</ol></section>\n';
+    md.renderer.rules.footnote_open = (tokens, idx, options, env, slf) => {
+        const id = slf.rules.footnote_anchor_name(tokens, idx, options, env, slf);
+        return '<li id="fn' + id + '">';
+    };
+    md.renderer.rules.footnote_close = () => '</li>\n';
+    md.renderer.rules.footnote_anchor = (tokens, idx, options, env, slf) => {
+        const id = slf.rules.footnote_anchor_name(tokens, idx, options, env, slf);
+        return ' <a class="back" href="#fnref' + id + '" aria-label="Вернуться к тексту">\u21a9</a>';
+    };
+}
+
 module.exports = function(eleventyConfig) {
     // Добавляем глобальные данные
     eleventyConfig.addGlobalData("pathPrefix", () => {
@@ -80,7 +137,9 @@ module.exports = function(eleventyConfig) {
     eleventyConfig.addPlugin(syntaxHighlight);
 
     eleventyConfig.amendLibrary("md", (md) => {
-        md.use(markdownItAttrs);
+        // Разделитель {: … } вместо { … }: иначе словари и JSON в блоках вывода
+        // markdown-it-attrs принимает за список атрибутов и вырезает.
+        md.use(markdownItAttrs, { leftDelimiter: '{:', rightDelimiter: '}' });
 
         md.use(markdownItAnchor, {
             slugify: generateSlug,
@@ -95,6 +154,26 @@ module.exports = function(eleventyConfig) {
         });
 
         Object.keys(CALLOUTS).forEach(name => calloutPlugin(md, name));
+
+        footnoteMarkup(md);
+
+        // Простые обёртки-контейнеры.
+        md.use(markdownItContainer, 'split', {
+            render: (tokens, idx) => tokens[idx].nesting === 1 ? '<div class="split">\n' : '</div>\n'
+        });
+        md.use(markdownItContainer, 'verdict', {
+            render: (tokens, idx) => tokens[idx].nesting === 1 ? '<div class="verdict">\n' : '</div>\n'
+        });
+        Object.keys(VERDICT).forEach(name => verdictPlugin(md, name));
+
+        md.use(markdownItContainer, 'finale', {
+            render(tokens, idx) {
+                if (tokens[idx].nesting !== 1) return '</div>\n';
+                const title = tokens[idx].info.trim().slice('finale'.length).trim() || 'Итог';
+                return '<div class="finale"><h2 class="u-kicker">'
+                    + md.utils.escapeHtml(title) + '</h2>\n';
+            }
+        });
 
         // ::: out — блок вывода, приклеенный к предыдущему код-блоку.
         md.use(markdownItContainer, 'out', {
@@ -160,9 +239,18 @@ module.exports = function(eleventyConfig) {
         md.renderer.rules.paragraph_close = function (tokens, idx, options, env, self) {
             const image = loneImage(tokens, idx - 2);
             if (!image) return self.renderToken(tokens, idx, options);
+            // Подпись «Схема | текст» рисуется меткой слева и текстом справа.
             const caption = image.attrGet('title');
+            let inner = '';
+            if (caption) {
+                const bar = caption.indexOf('|');
+                inner = bar === -1
+                    ? md.utils.escapeHtml(caption)
+                    : '<b>' + md.utils.escapeHtml(caption.slice(0, bar).trim()) + '</b>'
+                        + '<span>' + md.utils.escapeHtml(caption.slice(bar + 1).trim()) + '</span>';
+            }
             return '</div>'
-                + (caption ? '<figcaption>' + md.utils.escapeHtml(caption) + '</figcaption>' : '')
+                + (inner ? '<figcaption>' + inner + '</figcaption>' : '')
                 + '</figure>\n';
         };
     });
@@ -195,9 +283,10 @@ module.exports = function(eleventyConfig) {
         return Math.max(1, Math.ceil(wordCount / wordsPerMinute));
     });
 
-    // Количество разделов верхнего уровня (h2) в отрендеренном HTML
+    // Количество разделов верхнего уровня (h2) в отрендеренном HTML.
+    // Служебные заголовки (.u-kicker: «Итог», «Сноски») разделами не считаются.
     eleventyConfig.addFilter("headingCount", (content) => {
-        return (String(content).match(/<h2[\s>]/g) || []).length;
+        return (String(content).match(/<h2(?![^>]*u-kicker)[\s>]/g) || []).length;
     });
 
     // Русское склонение по числу: 1 раздел, 2 раздела, 5 разделов
@@ -222,6 +311,24 @@ module.exports = function(eleventyConfig) {
 
     // Метка раздела — для крошек в topbar и для списка последних обновлений
     eleventyConfig.addFilter('sectionLabel', sectionLabel);
+
+    // Соседи по разделу — для пагинации внизу заметки.
+    // Порядок тот же, что в навигации: по title, с русской сортировкой.
+    eleventyConfig.addFilter('neighbours', (collection, url) => {
+        if (!collection || !url) return {};
+        const folder = (u) => u.slice(0, u.lastIndexOf('/', u.length - 2) + 1);
+        const dir = folder(url);
+        const items = collection
+            .filter(item => item.url && folder(item.url) === dir)
+            .sort((a, b) => {
+                const titleA = (a.data.title || '').toString();
+                const titleB = (b.data.title || '').toString();
+                return titleA.localeCompare(titleB, 'ru', { sensitivity: 'base' });
+            });
+        const i = items.findIndex(item => item.url === url);
+        if (i === -1) return {};
+        return { prev: items[i - 1] || null, next: items[i + 1] || null };
+    });
 
     // Коллекция аниме
     eleventyConfig.addCollection("anime", function(collection) {

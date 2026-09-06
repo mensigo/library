@@ -80,12 +80,17 @@ Keep the reading width constrained. If a page needs wider content, add a modifie
 - `.prose`: markdown body.
 - `.code`, `.code__bar`, `.code__name`, `.code__lang`, `.copy`, `.code__out`: code blocks with a title bar, copy button, and attached output.
 - `.callout` with `.callout--tip` / `.callout--warn` / `.callout--stop`, plus `.callout__ico` and `.callout__body`.
+- `.split`: two code blocks side by side («before / after»); collapses to one column below 860px.
+- `.verdict`, `.verdict__col` with `.verdict--yes` / `.verdict--no`: the two-column «worth it / not worth it» block.
+- `.finale`: the closing verdict block; its `h2` is a `.u-kicker`, not a section heading.
+- `.notes-block` + `.fnref` + `.back`: footnotes, generated from `[^1]` by `markdown-it-footnote`.
+- `.pager` with `.l` / `.t` / `.next`: previous/next links, built by `note.njk` from the `neighbours` filter.
 - `.fig`, `.fig__frame`, `figcaption`, and the `.d-*` SVG tokens for theme-aware diagrams.
 - `.note-media`, `.note-media__image-wrapper`, `.note-media__image`, `.note-media__caption`: raw-HTML images that swap source per theme.
 - `.tablewrap` + `table.tbl`: every table, markdown or shortcode-generated.
 - `.rail`, `.rail__head`, `.toc` (`.lvl-2` / `.lvl-3` / `.lvl-4`), `.railcard`.
 - `.cfg`, `.cfg__group`, `.seg` / `.seg__btn`, `.cfg__pick` / `.cfg__list` / `.cfg__opt`: settings popover.
-- `.totop`, `.skip-link`, `.u-sr`, `.u-mono`.
+- `.totop`, `.skip-link`, `.u-sr`, `.u-mono`, `.u-dim` (muted inline text), `.u-kicker` (small mono caps label; on an `h2` it also opts the heading out of the TOC, the section counter, and the section count).
 - `.sortable`, `.sort-asc`, `.sort-desc`: sortable table headers.
 - `.recent-updates`, `.recent-update-*`, `.badge-review` / `.badge-note` / `.badge-draft`: the home page feed.
 
@@ -111,17 +116,24 @@ Before adding a new pattern, check whether one of these can be extended with a m
 
 Notes use `layout: note.njk`; reviews use `layout: page.njk`; index pages use `layout: plain.njk` (no hero, so they start at `h1`).
 
-Frontmatter: `title` (required, drives search and the hero), `upd_date`, `tags` (become `.chip`s; the first one gets the accent), optional `lede` (one-paragraph subtitle) and `tldr` (a list rendered as the key-points block). Reviews add `score`, `anime_status`, `manga_status`, `manga_author`, which surface in the `.railcard`. `draft: true` keeps a page out of the search index.
+Frontmatter: `title` (required, drives search and the hero), optional `titleHtml` (markup for the hero heading when the title needs it, e.g. muted dunders), `upd_date`, `tags` (become `.chip`s; the first one gets the accent), optional `lede` (one-paragraph subtitle) and `tldr` (a list rendered as the key-points block). Reviews add `score`, `anime_status`, `manga_status`, `manga_author`, which surface in the `.railcard`. `draft: true` keeps a page out of the search index.
 
 Authoring syntax, all handled by `amendLibrary` in `.eleventy.js`:
 
 - Code fences carry the language, optional highlighted lines, and an optional file name:
   ```` ```python/3,5-7 slots.py ```` — line numbers are 0-indexed and go through the syntax-highlight plugin unchanged.
+  A second group after another slash marks lines in red instead of accent: ```` ```python//2 strict.py ```` highlights line 2 as a mistake.
 - `::: note`, `::: tip`, `::: warn`, `::: stop` … `:::` produce callouts. Text after the keyword replaces the default bold title.
 - `::: out` … `:::` right after a fence renders the program's output attached to the block. A word after `out` relabels it.
-- `![alt](/images/x.png "подпись")` alone in a paragraph becomes a `<figure class="fig">`; the title becomes the caption.
-- Tables need no markup — every table is wrapped in `.tablewrap` automatically.
-- `{.class}` attribute syntax is available via `markdown-it-attrs` for one-off modifiers.
+- `![alt](/images/x.png "подпись")` alone in a paragraph becomes a `<figure class="fig">`; the title becomes the caption. A caption written as `"Схема | текст"` splits into an accent label and the caption body.
+- `::: split` … `:::` around two fences puts them side by side. Name them through the fence info line: ```` ```python было ````.
+- `:::: verdict` wrapping `::: yes` and `::: no` … `:::` blocks builds the two-column verdict. Four colons outside, three inside — that is how nesting is recognised. Text after `yes` / `no` overrides the default titles.
+- `::: finale` … `:::` closes the note. A word after `finale` replaces the «Итог» label.
+- `[^1]` in the text plus `[^1]: …` at the bottom produces the `.notes-block` footnote list with backlinks.
+- Tables need no markup — every table is wrapped in `.tablewrap` automatically. `{:.ok}` / `{:.no}` mark a cell as a win or a loss.
+- `{:.class}` attribute syntax is available via `markdown-it-attrs` for one-off modifiers. The delimiter is `{:` … `}`, not `{` … `}`, so that dicts and JSON inside `::: out` blocks survive.
+
+Hand-drawn SVG diagrams live in `src/_includes/figures/*.njk` as a complete `<figure class="fig">` and are pulled in with `{% include "figures/name.njk" %}`. Two rules: use the `.d-*` tokens instead of literal colors, so the drawing follows the theme, and keep the partial free of blank lines — a blank line ends the HTML block and markdown-it starts parsing the SVG as text.
 
 Drop to raw HTML only for `.note-media`, and only when an image needs `data-image-light` / `data-image-dark` sources. Everything else should be markdown.
 

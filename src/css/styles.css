@@ -180,6 +180,13 @@ a { color: inherit; }
 }
 
 .u-mono { font-family: var(--mono); }
+/* Служебный заголовок: мелкий моноширинный капс над блоком. */
+.u-kicker {
+    font-family: var(--mono); font-size: 10px; font-weight: 500;
+    letter-spacing: .18em; text-transform: uppercase; color: var(--ink-3);
+    display: block; margin: 0 0 10px;
+}
+.u-dim { color: var(--ink-3); }
 .u-sr {
     position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
     overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
@@ -572,6 +579,20 @@ a { color: inherit; }
 .prose h2::after {
     content: ''; flex: 1; height: 1px; background: var(--line); align-self: center;
 }
+/* Разделы верхнего уровня нумеруются автоматически: 01, 02, 03…
+   Служебные заголовки (.u-kicker — «Итог», «Сноски») в счёт не идут. */
+.prose { counter-reset: sec; }
+.prose > h2:not(.u-kicker) { counter-increment: sec; }
+.prose > h2:not(.u-kicker)::before {
+    content: counter(sec, decimal-leading-zero);
+    font-family: var(--mono); font-size: .5em; font-weight: 500;
+    letter-spacing: .1em; color: var(--acc); flex: none; padding-top: .2em;
+}
+.prose h2.u-kicker {
+    display: block; margin-top: 0;
+    font-size: 10px; font-weight: 500; letter-spacing: .18em; line-height: 1.4;
+}
+.prose h2.u-kicker::after { display: none; }
 .prose h3 {
     margin-top: 2em; margin-bottom: .4em;
     font-size: 1.18rem; font-weight: 650; letter-spacing: -.01em;
@@ -623,6 +644,12 @@ a { color: inherit; }
 .prose h2 code:not(pre code), .prose h3 code:not(pre code) { font-size: .92em; }
 
 .prose hr { border: 0; height: 1px; background: var(--line); margin: 2.6em 0; }
+
+/* Два код-блока рядом: «было / стало». */
+.split { display: grid; gap: 14px; margin: 1.6em 0; }
+@media (min-width: 860px) { .split { grid-template-columns: 1fr 1fr; } }
+.split .code { margin: 0; }
+.split .code pre { font-size: 12.8px; }
 
 /* ---------------------------------------------------------- код-блоки */
 .code {
@@ -759,10 +786,15 @@ a { color: inherit; }
     overflow-x: auto;
 }
 .fig img { display: block; max-width: 100%; height: auto; margin: 0 auto; }
-.fig svg { display: block; width: 100%; height: auto; margin: 0 auto; max-width: 620px; }
+.fig svg { display: block; width: 100%; height: auto; margin: 0 auto; max-width: 620px; min-width: 480px; }
 .fig figcaption {
     margin-top: 10px; font-size: 13px; line-height: 1.5; color: var(--ink-3);
-    text-align: center;
+    display: flex; gap: 8px;
+}
+/* Подпись вида «Схема | текст»: метка слева, текст справа. */
+.fig figcaption b {
+    flex: none; font-family: var(--mono); font-size: 9.5px; letter-spacing: .14em;
+    text-transform: uppercase; color: var(--acc); padding-top: 3px; font-weight: 500;
 }
 /* Токены для SVG-схем, чтобы картинки жили в обеих темах. */
 .d-fill   { fill: var(--surface-2); }
@@ -859,6 +891,92 @@ table.tbl th.sortable.sort-desc::after {
     border-bottom: none;
     opacity: 1;
 }
+
+/* Ячейки-оценки в таблицах: «полная» / «потеряна». */
+table.tbl .ok { color: var(--acc); }
+table.tbl .no { color: var(--danger); }
+
+/* ------------------------------------------------------- когда / когда нет */
+.verdict { display: grid; gap: 14px; margin: 1.8em 0; }
+@media (min-width: 760px) { .verdict { grid-template-columns: 1fr 1fr; } }
+.verdict__col {
+    border: 1px solid var(--line); border-radius: 12px;
+    padding: 16px 18px; background: var(--surface);
+}
+.verdict__col h4 {
+    margin: 0 0 10px; display: flex; align-items: center; gap: 8px;
+    font-size: 14px; letter-spacing: .01em;
+}
+.verdict__col h4 svg { width: 17px; height: 17px; flex: none; }
+.verdict__col ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 7px; }
+.verdict__col li {
+    position: relative; padding-left: 18px;
+    font-size: 14.5px; line-height: 1.5; color: var(--ink-2);
+}
+.verdict__col li::before {
+    content: ''; position: absolute; left: 2px; top: .62em;
+    width: 6px; height: 2px; border-radius: 2px; background: currentColor; opacity: .45;
+}
+.verdict--yes h4 { color: var(--acc); }
+.verdict--no  h4 { color: var(--danger); }
+
+/* ------------------------------------------------------------- вывод */
+.finale {
+    margin: 2.6em 0 0; padding: 24px 26px;
+    border-radius: 14px; background: var(--surface); border: 1px solid var(--line-2);
+    box-shadow: var(--shadow-1); position: relative; overflow: hidden;
+}
+.finale::before {
+    content: ''; position: absolute; inset: 0 auto 0 0; width: 3px; background: var(--acc);
+}
+.finale p { margin: 0; font-size: 17.5px; line-height: 1.55; }
+.finale p + p { margin-top: .7em; color: var(--ink-2); font-size: 16px; }
+
+/* ---------------------------------------------------------------- сноски */
+.notes-block { margin-top: 3em; padding-top: 20px; border-top: 1px solid var(--line); }
+.notes-block ol { counter-reset: fn; display: grid; gap: 12px; }
+.notes-block li {
+    counter-increment: fn; position: relative; padding-left: 30px;
+    font-size: 14.5px; line-height: 1.55; color: var(--ink-2);
+    scroll-margin-top: calc(var(--topbar-h) + 24px);
+}
+/* Перебиваем нумерацию .prose ol: у сносок свой счётчик и свой кружок. */
+.notes-block li::before {
+    content: counter(fn); position: absolute; left: 0; top: 0;
+    width: 20px; height: 20px; border-radius: 50%;
+    display: grid; place-items: center;
+    background: var(--surface-2); border: 1px solid var(--line);
+    font-family: var(--mono); font-size: 10.5px; color: var(--ink-3);
+}
+.notes-block li:target::before { background: var(--acc); border-color: var(--acc); color: var(--bg); }
+.notes-block li > p { margin: 0; display: inline; }
+.notes-block .back { text-decoration: none; color: var(--ink-3); margin-left: 4px; border: 0 !important; }
+.notes-block .back:hover { color: var(--acc); background: none !important; }
+
+/* Ссылка-сноска в тексте */
+.fnref {
+    font-family: var(--mono); font-size: .72em; vertical-align: super;
+    line-height: 0; padding: 0 1px; text-decoration: none;
+    color: var(--acc); border: 0 !important; background: none !important;
+}
+.fnref:hover { text-decoration: underline; }
+
+/* ------------------------------------------------------------- пагинация */
+.pager { display: grid; gap: 12px; margin-top: 3em; }
+@media (min-width: 720px) { .pager { grid-template-columns: 1fr 1fr; } }
+.pager a {
+    display: flex; flex-direction: column; gap: 4px;
+    padding: 15px 18px; border: 1px solid var(--line); border-radius: 12px;
+    background: var(--surface); text-decoration: none;
+    transition: border-color var(--fast), transform var(--fast), box-shadow var(--fast);
+}
+.pager a:hover { border-color: var(--acc-line); transform: translateY(-1px); box-shadow: var(--shadow-1); }
+.pager .l {
+    font-family: var(--mono); font-size: 9.5px; letter-spacing: .18em;
+    text-transform: uppercase; color: var(--ink-3);
+}
+.pager .t { font-size: 16px; font-weight: 600; color: var(--ink); }
+@media (min-width: 720px) { .pager .next { text-align: right; grid-column: 2; } }
 
 /* ---------------------------------------------------------- подвал доки */
 .doc__foot {
