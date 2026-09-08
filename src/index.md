@@ -1,6 +1,6 @@
 ---
 title: Главная страница
-layout: base.njk
+layout: plain.njk
 ---
 # Home
 

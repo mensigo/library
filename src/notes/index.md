@@ -1,6 +1,6 @@
 ---
 title: Notes
-layout: base.njk
+layout: plain.njk
 ---
 
 # Заметки

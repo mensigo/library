@@ -3,7 +3,15 @@
  */
 
 // Импортируем функции из scripts.js
-const { applyTheme, highlightMatch, generateSlug, compareValues } = require('../src/js/scripts.js');
+const {
+    applyTheme,
+    highlightMatch,
+    generateSlug,
+    compareValues,
+    resolvePalette,
+    tocLinkClass,
+    PALETTES
+} = require('../src/js/scripts.js');
 
 // Простые smoke-тесты для базовых функций
 
@@ -86,5 +94,46 @@ describe('Table sorting: value comparison', () => {
 
     test('compareValues обрабатывает смешанный ввод', () => {
         expect(compareValues('123abc', '456def')).toBeLessThan(0);
+    });
+});
+
+describe('Palette: resolvePalette', () => {
+    test('возвращает светлые цвета для светлой темы', () => {
+        const p = resolvePalette('violet', false);
+        expect(p.id).toBe('violet');
+        expect(p.acc).toBe('#6d28d9');
+    });
+
+    test('возвращает тёмные цвета для тёмной темы', () => {
+        expect(resolvePalette('violet', true).acc).toBe('#c4a6ff');
+    });
+
+    test('прозрачность акцента подобрана под тему', () => {
+        expect(resolvePalette('teal', false).accSoft).toBe('#0f766e1a');
+        expect(resolvePalette('teal', false).accLine).toBe('#0f766e40');
+        expect(resolvePalette('teal', true).accSoft).toBe('#5eead417');
+        expect(resolvePalette('teal', true).accLine).toBe('#5eead43d');
+    });
+
+    test('неизвестный id откатывается к первой палитре', () => {
+        expect(resolvePalette('нет-такой', false).id).toBe(PALETTES[0].id);
+        expect(resolvePalette(null, false).id).toBe('teal');
+    });
+
+    test('цвет строкового литерала едет вместе с акцентом', () => {
+        expect(resolvePalette('ochre', false).str).toBe('#4d7c0f');
+        expect(resolvePalette('teal', false).str).toBe('#0e7490');
+    });
+});
+
+describe('TOC: tocLinkClass', () => {
+    test('уровень заголовка превращается в класс', () => {
+        expect(tocLinkClass('H2')).toBe('lvl-2');
+        expect(tocLinkClass('h3')).toBe('lvl-3');
+        expect(tocLinkClass('H4')).toBe('lvl-4');
+    });
+
+    test('нераспознанный тег считается вторым уровнем', () => {
+        expect(tocLinkClass('DIV')).toBe('lvl-2');
     });
 });

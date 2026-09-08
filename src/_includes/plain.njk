@@ -1,0 +1,11 @@
+---
+layout: "base.njk"
+---
+
+{#
+   Простая страница без hero: индексные страницы сами начинаются с <h1>.
+   Нужна только для того, чтобы markdown попал внутрь .prose.
+#}
+<article class="prose doc__plain">
+    {{ content | safe }}
+</article>

@@ -1,9 +1,8 @@
-{% set isNotesPage = page.url | startsWith('/notes/') %}
 <!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <title>{{ title }}</title>
 
     {% block meta %}
@@ -21,268 +20,253 @@
     <!-- Предзагрузка шрифтов -->
     <link rel="preload" href="{{ pathPrefix }}/fonts/YsabeauInfant-VariableFont_wght.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="preload" href="{{ pathPrefix }}/fonts/YsabeauInfant-Italic-VariableFont_wght.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap">
 
     <link rel="stylesheet" href="{{ pathPrefix }}/css/styles.css">
-    <link rel="preload" as="image" href="{{ pathPrefix }}/images/logo.png" fetchpriority="high">
     {% block styles %}{% endblock %}
     <script>
-        // Применяем тему до загрузки страницы, чтобы избежать мигания
-        (function() {
-            const savedTheme = localStorage.getItem('theme');
-            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-            const theme = savedTheme || (prefersDark ? 'dark' : 'light');
-            document.documentElement.setAttribute('data-theme', theme);
+        // Тему и палитру ставим до первой отрисовки, иначе на тёмной системе
+        // страница мигает белым, а акцент — дефолтной бирюзой.
+        (function () {
+            try {
+                var theme = localStorage.getItem('theme')
+                    || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+                document.documentElement.setAttribute('data-theme', theme);
+
+                // [светлый акцент, тёмный акцент, светлая строка, тёмная строка]
+                var P = {
+                    teal:       ['#0f766e', '#5eead4', '#0e7490', '#7dd3d8'],
+                    forest:     ['#15803d', '#6ee7a5', '#0e7490', '#7dd3d8'],
+                    violet:     ['#6d28d9', '#c4a6ff', '#0e7490', '#7dd3d8'],
+                    ink:        ['#2563eb', '#8ab4f8', '#0e7490', '#7dd3d8'],
+                    terracotta: ['#b03a17', '#e8845c', '#4d7c0f', '#b5d99c'],
+                    ochre:      ['#a16207', '#e0a458', '#4d7c0f', '#b5d99c'],
+                    oxblood:    ['#9f1239', '#fb7185', '#4d7c0f', '#b5d99c'],
+                    slate:      ['#334155', '#cbd5e1', '#0e7490', '#7dd3d8']
+                };
+                var v = P[localStorage.getItem('accent')];
+                if (v) {
+                    var dark = theme === 'dark';
+                    var acc = dark ? v[1] : v[0];
+                    var s = document.documentElement.style;
+                    s.setProperty('--acc', acc);
+                    s.setProperty('--acc-soft', acc + (dark ? '17' : '1a'));
+                    s.setProperty('--acc-line', acc + (dark ? '3d' : '40'));
+                    s.setProperty('--t-dunder', acc);
+                    s.setProperty('--t-str', dark ? v[3] : v[2]);
+                }
+            } catch (e) {}
         })();
     </script>
 </head>
 <body class="cyrillic-optimized {{ pageClass | default('') }}">
-    <!-- Верхняя навигационная панель -->
-    <nav class="navbar">
-        <div class="navbar__container">
-            <div class="navbar__section {% if not isNotesPage %}navbar__section--active{% endif %}" data-section="library">
-                <span>📚 Reviews</span>
-            </div>
-            <div class="navbar__section {% if isNotesPage %}navbar__section--active{% endif %}" data-section="notes">
-                <span>📝 Notes</span>
-            </div>
-        </div>
+
+<a class="skip-link" href="#main">К содержанию</a>
+
+<!-- ===================================================================
+     TOPBAR — единственный постоянно видимый элемент интерфейса.
+     =================================================================== -->
+<header class="topbar">
+    <button class="iconbtn" id="menu-toggle" type="button" aria-expanded="false" aria-controls="drawer" aria-label="Открыть навигацию">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" aria-hidden="true">
+            <path d="M4 7h16M4 12h16M4 17h10"/>
+        </svg>
+    </button>
+
+    <nav class="topbar__crumbs" aria-label="Хлебные крошки">
+        <a href="{{ pathPrefix }}/">Библиотека</a>
+        {% if page.url != '/' %}
+        <span class="sep" aria-hidden="true">/</span>
+        {% set crumbSection = page.url | sectionLabel %}
+        {% if crumbSection %}
+        <span>{{ crumbSection }}</span>
+        <span class="sep" aria-hidden="true">/</span>
+        {% endif %}
+        <span class="cur" aria-current="page">{{ title }}</span>
+        {% endif %}
     </nav>
 
-    <!-- Кнопка гамбургер-меню -->
-    <button class="menu-toggle" id="menuToggle" aria-label="Открыть меню">
-        <span></span>
-        <span></span>
-        <span></span>
-    </button>
+    <span class="topbar__spacer"></span>
 
-    <!-- Переключатель темы -->
-    <button class="theme-toggle" id="themeToggle" aria-label="Переключить тему">
-        <svg class="icon-sun" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="5"></circle>
-            <line x1="12" y1="1" x2="12" y2="3"></line>
-            <line x1="12" y1="21" x2="12" y2="23"></line>
-            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-            <line x1="1" y1="12" x2="3" y2="12"></line>
-            <line x1="21" y1="12" x2="23" y2="12"></line>
-            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-        </svg>
-        <svg class="icon-moon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-        </svg>
-    </button>
-
-    <!-- Затемнение фона -->
-    <div class="sidebar-overlay" id="sidebarOverlay"></div>
-
-    <!-- Трехколоночный макет -->
-    <div class="three-column-layout">
-        <!-- Левая навигация -->
-        <nav class="sidebar-left" id="sidebarLeft">
-            <!-- Заголовок сайта -->
-            <div class="sidebar-header">
-                <a href="{{ pathPrefix }}/" class="site-logo-link">
-                    <img src="{{ pathPrefix }}/images/logo.png" alt="Logo" class="site-logo" width="176" height="176" loading="eager" fetchpriority="high">
-                </a>
-                <a href="{{ pathPrefix }}/" class="site-title">Мысли и заметки</a>
-                <div class="site-subtitle">Собрание размышлений</div>
-            </div>
-
-            <!-- Поиск -->
-            <div class="search-container">
-                <div class="search-box">
-                    <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="11" cy="11" r="8"></circle>
-                        <path d="m21 21-4.35-4.35"></path>
-                    </svg>
-                    <input type="text" id="searchInput" placeholder="Поиск..." class="search-input" aria-label="Поиск по заголовкам страниц" role="searchbox" aria-expanded="false" aria-haspopup="listbox">
-                    <span class="search-shortcut">Ctrl K</span>
-                </div>
-            </div>
-
-            <!-- Навигационное дерево -->
-            <div class="nav-tree nav-tree--loading">
-                <!-- Главная страница -->
-                <div class="nav-section nav-section--main">
-                <div class="tree-item">
-                    {% if isNotesPage %}
-                    <a href="{{ pathPrefix }}/notes/" class="tree-item-self {% if page.url == '/notes/' %}mod-active{% endif %}" {% if page.url == '/notes/' %}aria-current="page"{% endif %}>
-                        <div class="tree-item-inner">
-                            <span>🏠︎ Главная (Заметки)</span>
-                        </div>
-                    </a>
-                    {% else %}
-                    <a href="{{ pathPrefix }}/" class="tree-item-self {% if page.url == '/' %}mod-active{% endif %}" {% if page.url == '/' %}aria-current="page"{% endif %}>
-                        <div class="tree-item-inner">
-                            <span>🏠︎ Главная</span>
-                        </div>
-                    </a>
-                    {% endif %}
-                </div>
-                </div>
-
-                <!-- Аниме -->
-                <div class="nav-section nav-section--anime">
-                {% set isAnimePage = page.url == '/reviews/anime/' or (page.url | startsWith('/reviews/anime/')) %}
-                <div class="tree-item">
-                    <div class="tree-item-self mod-collapsible {% if isAnimePage %}is-clickable{% endif %}" data-path="anime">
-                        <div class="tree-item-icon collapse-icon {% if not isAnimePage %}is-collapsed{% endif %}">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon right-triangle">
-                                <path d="M3 8L12 17L21 8"></path>
-                            </svg>
-                        </div>
-                        <div class="tree-item-inner">
-                            <span>⛩️ Аниме</span>
-                        </div>
-                    </div>
-                    <div class="tree-item-children {% if not isAnimePage %}is-collapsed{% endif %}">
-                        <div class="tree-item">
-                            <a href="{{ pathPrefix }}/reviews/anime/" class="tree-item-self {% if page.url == '/reviews/anime/' %}mod-active{% endif %}" {% if page.url == '/reviews/anime/' %}aria-current="page"{% endif %}>
-                                <div class="tree-item-inner">
-                                    <span>⭐ Интро</span>
-                                </div>
-                            </a>
-                        </div>
-                        {% for anime in collections.anime %}
-                        <div class="tree-item">
-                            <a href="{{ pathPrefix }}{{ anime.url }}" class="tree-item-self {% if page.url == anime.url %}mod-active{% endif %}" {% if page.url == anime.url %}aria-current="page"{% endif %}>
-                                <div class="tree-item-inner">
-                                    <span>{{ anime.data.title }}</span>
-                                </div>
-                            </a>
-                        </div>
-                        {% endfor %}
-                    </div>
-                </div>
-                </div>
-
-                <!-- Философия -->
-                {% if collections.philosophyCategories and collections.philosophyCategories | length > 0 %}
-                <div class="nav-section nav-section--philosophy">
-                {% set isPhilosophyPage = page.url | startsWith('/reviews/philosophy/') %}
-                <div class="tree-item">
-                    <div class="tree-item-self mod-collapsible {% if isPhilosophyPage %}is-clickable{% endif %}" data-path="philosophy">
-                        <div class="tree-item-icon collapse-icon {% if not isPhilosophyPage %}is-collapsed{% endif %}">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon right-triangle">
-                                <path d="M3 8L12 17L21 8"></path>
-                            </svg>
-                        </div>
-                        <div class="tree-item-inner">
-                            <span>🏛️ Философия</span>
-                        </div>
-                    </div>
-                    <div class="tree-item-children {% if not isPhilosophyPage %}is-collapsed{% endif %}">
-                        {% for categoryName, category in collections.philosophyCategories %}
-                        {% set categoryPath = '/reviews/philosophy/' + categoryName + '/' %}
-                        {% set isCategoryPage = page.url | startsWith(categoryPath) %}
-                        <div class="tree-item">
-                            <div class="tree-item-self mod-collapsible {% if isCategoryPage %}is-clickable{% endif %}" data-path="philosophy-{{ categoryName }}">
-                                <div class="tree-item-icon collapse-icon {% if not isCategoryPage %}is-collapsed{% endif %}">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon right-triangle">
-                                        <path d="M3 8L12 17L21 8"></path>
-                                    </svg>
-                                </div>
-                                <div class="tree-item-inner">
-                                    <span>{{ categoryName | capitalize }}</span>
-                                </div>
-                            </div>
-                            <div class="tree-item-children {% if not isCategoryPage %}is-collapsed{% endif %}">
-                                {% for item in category.items %}
-                                <div class="tree-item">
-                                    <a href="{{ pathPrefix }}{{ item.url }}" class="tree-item-self {% if page.url == item.url %}mod-active{% endif %}" {% if page.url == item.url %}aria-current="page"{% endif %}>
-                                        <div class="tree-item-inner">
-                                            <span>{{ item.data.title }}</span>
-                                        </div>
-                                    </a>
-                                </div>
-                                {% endfor %}
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </div>
-                </div>
-                </div>
-                {% endif %}
-
-                <!-- Заметки -->
-                <div class="nav-section nav-section--notes-section">
-                {% set isNotesPage = page.url | startsWith('/notes/') %}
-                {% set isPythonPage = page.url | startsWith('/notes/python/') %}
-                <div class="tree-item">
-                    <div class="tree-item-self mod-collapsible {% if isPythonPage %}is-clickable{% endif %}" data-path="notes-python">
-                        <div class="tree-item-icon collapse-icon {% if not isPythonPage %}is-collapsed{% endif %}">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon right-triangle">
-                                <path d="M3 8L12 17L21 8"></path>
-                            </svg>
-                        </div>
-                        <div class="tree-item-inner">
-                            <span>🐍 Python</span>
-                        </div>
-                    </div>
-                    <div class="tree-item-children {% if not isPythonPage %}is-collapsed{% endif %}">
-                        {% for note in collections.pythonNotes %}
-                        <div class="tree-item">
-                            <a href="{{ pathPrefix }}{{ note.url }}" class="tree-item-self {% if page.url == note.url %}mod-active{% endif %}" {% if page.url == note.url %}aria-current="page"{% endif %}>
-                                <div class="tree-item-inner">
-                                    <span>{{ note.data.title }}</span>
-                                </div>
-                            </a>
-                        </div>
-                        {% endfor %}
-                    </div>
-                </div>
-                </div>
-            </div>
-
-            <!-- Черновики -->
-            {% if collections.drafts and collections.drafts | length > 0 %}
-            <div class="sidebar-drafts">
-                <div class="sidebar-drafts-label">Черновики</div>
-                {% for draft in collections.drafts %}
-                <div class="tree-item">
-                    <a href="{{ pathPrefix }}{{ draft.url }}" class="tree-item-self {% if page.url == draft.url %}mod-active{% endif %}" {% if page.url == draft.url %}aria-current="page"{% endif %}>
-                        <div class="tree-item-inner">
-                            <span>{{ draft.data.title }}</span>
-                        </div>
-                    </a>
-                </div>
-                {% endfor %}
-            </div>
-            {% endif %}
-        </nav>
-
-        <!-- Центральный контент -->
-        <main class="content-center">
-            {% block content %}
-                {{ content | safe }}
-            {% endblock %}
-            {% block footer %}{% endblock %}
-        </main>
-
-        <!-- Правое меню "На этой странице" -->
-        <aside class="sidebar-right" id="sidebarRight">
-            <div class="toc-header">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="3" y1="12" x2="21" y2="12"></line>
-                    <line x1="3" y1="6" x2="21" y2="6"></line>
-                    <line x1="3" y1="18" x2="21" y2="18"></line>
-                </svg>
-                <span>На этой странице</span>
-            </div>
-            <nav class="toc-nav" id="tocNav">
-                <!-- TOC будет заполнено через JavaScript -->
-            </nav>
-        </aside>
+    <div class="topbar__actions">
+        <button class="iconbtn" id="rail-toggle" type="button" aria-expanded="true" aria-controls="rail" aria-label="Показать или скрыть оглавление">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" aria-hidden="true">
+                <path d="M4 6h9M4 12h9M4 18h6"/><path d="M17 5v14" opacity=".45"/><path d="M20 5v14" opacity=".45"/>
+            </svg>
+        </button>
+        <button class="iconbtn" id="cfg-toggle" type="button" aria-expanded="false" aria-haspopup="true" aria-controls="cfg" aria-label="Настройки">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2Z"/>
+                <circle cx="12" cy="12" r="3"/>
+            </svg>
+        </button>
     </div>
 
-    <script>
-        window.APP_PATH_PREFIX = "{{ pathPrefix }}";
-        window.pathPrefix = window.APP_PATH_PREFIX;
-    </script>
-    <!-- Fuse.js для полнотекстового поиска -->
-    <script src="https://cdn.jsdelivr.net/npm/fuse.js@7.0.0/dist/fuse.min.js"></script>
-    <script src="{{ pathPrefix }}/js/scripts.js"></script>
-    {% block scripts %}{% endblock %}
+    <div class="progress" id="progress" aria-hidden="true"></div>
+</header>
+
+<!-- Меню настроек: тема и палитра. Раскрывается из шестерёнки в topbar. -->
+<div class="cfg" id="cfg" role="dialog" aria-label="Настройки" hidden>
+    <div class="cfg__group">
+        <span class="cfg__label">Тема</span>
+        <div class="seg" role="group" aria-label="Тема оформления">
+            <button class="seg__btn" type="button" data-theme-set="light" aria-pressed="false">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" aria-hidden="true">
+                    <circle cx="12" cy="12" r="4"/>
+                    <path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6 7 7M17 17l1.4 1.4M18.4 5.6 17 7M7 17l-1.4 1.4"/>
+                </svg>
+                Светлая
+            </button>
+            <button class="seg__btn" type="button" data-theme-set="dark" aria-pressed="false">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" aria-hidden="true">
+                    <path d="M20.5 14.6A8.5 8.5 0 0 1 9.4 3.5a8.5 8.5 0 1 0 11.1 11.1Z"/>
+                </svg>
+                Тёмная
+            </button>
+        </div>
+    </div>
+
+    <div class="cfg__sep"></div>
+
+    <div class="cfg__group">
+        <span class="cfg__label">Палитра</span>
+        <button class="cfg__pick" id="pal-toggle" type="button" aria-expanded="false" aria-controls="pal-list">
+            <i class="cfg__dot" id="pal-dot"></i>
+            <span class="cfg__pick-name" id="pal-name">Teal</span>
+            <svg class="cfg__chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" aria-hidden="true">
+                <path d="m6 9 6 6 6-6"/>
+            </svg>
+        </button>
+        <div class="cfg__list" id="pal-list" role="listbox" aria-label="Палитра акцента" hidden></div>
+    </div>
+</div>
+
+<div class="scrim" id="scrim"></div>
+
+<!-- =================================================================== -->
+<!--  DRAWER — навигация по библиотеке                                   -->
+<!-- =================================================================== -->
+<aside class="drawer" id="drawer" tabindex="-1" aria-label="Навигация по библиотеке">
+    <div class="drawer__head">
+        <a class="drawer__brand" href="{{ pathPrefix }}/">
+            <img class="drawer__mark" src="{{ pathPrefix }}/images/logo.png" alt="" width="30" height="30" loading="lazy">
+            <span>
+                <span class="drawer__name">Мысли и заметки</span>
+                <span class="drawer__sub">собрание размышлений</span>
+            </span>
+        </a>
+        <span class="topbar__spacer"></span>
+        <button class="iconbtn" id="drawer-close" type="button" aria-label="Закрыть навигацию">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" aria-hidden="true">
+                <path d="m6 6 12 12M18 6 6 18"/>
+            </svg>
+        </button>
+    </div>
+
+    <div class="drawer__search">
+        <label class="field">
+            <span class="u-sr">Поиск по библиотеке</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" aria-hidden="true">
+                <circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>
+            </svg>
+            <input id="searchInput" type="text" placeholder="Найти…" autocomplete="off" spellcheck="false"
+                   aria-label="Поиск по заголовкам страниц" role="searchbox" aria-expanded="false" aria-haspopup="listbox">
+            <kbd>/</kbd>
+        </label>
+    </div>
+
+    <nav class="drawer__body">
+        <div class="navgroup">
+            <div class="navgroup__title">Библиотека</div>
+            <a class="navlink" href="{{ pathPrefix }}/" {% if page.url == '/' %}aria-current="page"{% endif %}><span class="dot"></span><span>Главная</span></a>
+            <a class="navlink" href="{{ pathPrefix }}/notes/" {% if page.url == '/notes/' %}aria-current="page"{% endif %}><span class="dot"></span><span>Заметки</span></a>
+            <a class="navlink" href="{{ pathPrefix }}/reviews/anime/" {% if page.url == '/reviews/anime/' %}aria-current="page"{% endif %}><span class="dot"></span><span>Обзоры аниме</span></a>
+        </div>
+
+        {% if collections.pythonNotes | length %}
+        <div class="navgroup">
+            <div class="navgroup__title">Python</div>
+            {% for note in collections.pythonNotes %}
+            <a class="navlink" href="{{ pathPrefix }}{{ note.url }}" {% if page.url == note.url %}aria-current="page"{% endif %}><span class="dot"></span><span>{{ note.data.title }}</span></a>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if collections.anime | length %}
+        <div class="navgroup">
+            <div class="navgroup__title">Аниме</div>
+            {% for item in collections.anime %}
+            <a class="navlink" href="{{ pathPrefix }}{{ item.url }}" {% if page.url == item.url %}aria-current="page"{% endif %}><span class="dot"></span><span>{{ item.data.title }}</span></a>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% for categoryName, category in collections.philosophyCategories %}
+        <div class="navgroup">
+            <div class="navgroup__title">{{ categoryName | capitalize }}</div>
+            {% for item in category.items %}
+            <a class="navlink" href="{{ pathPrefix }}{{ item.url }}" {% if page.url == item.url %}aria-current="page"{% endif %}><span class="dot"></span><span>{{ item.data.title }}</span></a>
+            {% endfor %}
+        </div>
+        {% endfor %}
+
+        {% if collections.drafts | length %}
+        <div class="navgroup">
+            <div class="navgroup__title">Черновики</div>
+            {% for draft in collections.drafts %}
+            <a class="navlink" href="{{ pathPrefix }}{{ draft.url }}" {% if page.url == draft.url %}aria-current="page"{% endif %}><span class="dot"></span><span>{{ draft.data.title }}</span></a>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </nav>
+</aside>
+
+<!-- =================================================================== -->
+<div class="shell" id="shell">
+<main class="doc" id="main">
+    <div class="doc__inner">
+        {{ content | safe }}
+    </div>
+</main>
+
+<aside class="rail" id="rail" aria-label="Содержание страницы">
+    <div class="rail__head">
+        <h2 class="rail__title">На этой странице</h2>
+        <button class="iconbtn rail__close" id="rail-close" type="button" aria-label="Закрыть оглавление">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" aria-hidden="true">
+                <path d="m6 6 12 12M18 6 6 18"/>
+            </svg>
+        </button>
+    </div>
+    <nav class="toc" id="toc"><!-- заполняется в scripts.js --></nav>
+
+    {% if anime_status or manga_status or manga_author or score %}
+    <div class="railcard">
+        <h4>Справка</h4>
+        <dl>
+            {% if anime_status %}<dt>Аниме</dt><dd>{{ anime_status }}</dd>{% endif %}
+            {% if manga_status %}<dt>Манга</dt><dd>{{ manga_status }}</dd>{% endif %}
+            {% if manga_author %}<dt>Мангака</dt><dd>{{ manga_author }}</dd>{% endif %}
+            {% if score %}<dt>Оценка</dt><dd>{{ score }}</dd>{% endif %}
+        </dl>
+    </div>
+    {% endif %}
+</aside>
+</div><!-- /shell -->
+
+<button class="totop" id="to-top" type="button" aria-label="Наверх">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" aria-hidden="true"><path d="M12 19V5M6 11l6-6 6 6"/></svg>
+</button>
+
+<script>
+    window.APP_PATH_PREFIX = "{{ pathPrefix }}";
+    window.pathPrefix = window.APP_PATH_PREFIX;
+</script>
+<!-- Fuse.js для полнотекстового поиска -->
+<script src="https://cdn.jsdelivr.net/npm/fuse.js@7.0.0/dist/fuse.min.js"></script>
+<script src="{{ pathPrefix }}/js/scripts.js"></script>
+{% block scripts %}{% endblock %}
 </body>
 </html>

@@ -2,119 +2,44 @@
 layout: "base.njk"
 ---
 
-{% block content %}
-    <!-- Название -->
-    {% if title %}
-    <h1 class="page-title">{{ title }}</h1>
-    {% endif %}
-
-    <div class="page-meta">
-        <!-- Аниме статус -->
-        {% if anime_status %}
-        <div class="meta-item">
-            <span class="meta-label">Аниме:</span>
-            <span class="meta-value">{{ anime_status }}</span>
-        </div>
-        {% endif %}
-
-        <!-- Манга статус -->
-        {% if manga_status %}
-        <div class="meta-item">
-            <span class="meta-label">Манга:</span>
-            <span class="meta-value">{{ manga_status }}</span>
-        </div>
-        {% endif %}
-
-        <!-- Манга автор -->
-        {% if manga_author %}
-        <div class="meta-item">
-            <span class="meta-label">Мангака:</span>
-            <span class="meta-value">{{ manga_author }}</span>
-        </div>
-        {% endif %}
-
-        <!-- Теги -->
-        {% if tags %}
-        <div class="meta-item">
-            <span class="meta-label">Теги:</span>
-            <div class="tags">
-                {% for tag in tags %}
-                <span class="tag">{{ tag }}</span>
-                {% endfor %}
-            </div>
-        </div>
-        {% endif %}
-
-        <!-- Дата просмотра -->
-<!--        {% if watch_date %}-->
-<!--        <div class="meta-item">-->
-<!--            <span class="meta-label">Просмотр:</span>-->
-<!--            <time class="meta-value" datetime="{{ watch_date | dateToRfc3339 }}">-->
-<!--                <i>{{ watch_date | shortDate }}</i>-->
-<!--            </time>-->
-<!--        </div>-->
-<!--        {% endif %}-->
-    </div>
-
-    <!-- Оценка -->
-    {% if score %}
-    <div class="score-stars-container">
-        {% set scoreValue = score | getScoreValue %}
-        {% set filledStars = score | getFilledStars %}
-        {% set scorePercent = score | getScorePercent %}
-        <div class="stars-wrapper">
-            {% set starRange = 7 | range %}
-            {% for i in starRange %}
-            <div class="star-container">
-                <svg class="star-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-                    <defs>
-                        <linearGradient id="starGradient{{ i }}" x1="0%" y1="0%" x2="100%" y2="100%">
-                            <stop offset="0%" style="stop-color:#e8e8e8;stop-opacity:1" />
-                            <stop offset="25%" style="stop-color:#d0d0d0;stop-opacity:1" />
-                            <stop offset="50%" style="stop-color:#a0a0a0;stop-opacity:1" />
-                            <stop offset="75%" style="stop-color:#909090;stop-opacity:1" />
-                            <stop offset="100%" style="stop-color:#707070;stop-opacity:1" />
-                        </linearGradient>
-                        <linearGradient id="starGloss{{ i }}" x1="0%" y1="0%" x2="0%" y2="100%">
-                            <stop offset="0%" style="stop-color:#ffffff;stop-opacity:0.4" />
-                            <stop offset="30%" style="stop-color:#ffffff;stop-opacity:0.2" />
-                            <stop offset="60%" style="stop-color:#ffffff;stop-opacity:0" />
-                            <stop offset="100%" style="stop-color:#000000;stop-opacity:0.1" />
-                        </linearGradient>
-                    </defs>
-                    <path class="star-path {% if i < filledStars %}star-filled{% else %}star-empty{% endif %}" 
-                          d="M50 5 L61 35 L95 35 L68 55 L79 90 L50 70 L21 90 L32 55 L5 35 L39 35 Z" 
-                          fill="{% if i < filledStars %}url(#starGradient{{ i }}){% else %}#e0e0e0{% endif %}"
-                          stroke="{% if i < filledStars %}#b0b0b0{% else %}#d0d0d0{% endif %}"
-                          stroke-width="{% if i < filledStars %}1.2{% else %}1.5{% endif %}"
-                          opacity="{% if i < filledStars %}0.85{% else %}0.4{% endif %}"/>
-                    {% if i < filledStars %}
-                    <path class="star-gloss" 
-                          d="M50 5 L61 35 L95 35 L68 55 L79 90 L50 70 L21 90 L32 55 L5 35 L39 35 Z" 
-                          fill="url(#starGloss{{ i }})"
-                          opacity="0.9"/>
-                    {% endif %}
-                </svg>
-            </div>
-            {% endfor %}
-        </div>
+<header class="hero">
+    {% if tags %}
+    <div class="hero__tags">
+        {% for tag in tags %}
+        <span class="chip{% if loop.first %} chip--acc{% endif %}">{{ tag }}</span>
+        {% endfor %}
     </div>
     {% endif %}
 
-    <!-- Оригинальный контент -->
-    <div class="content-wrapper">
-        <div class="article">
-            <article class="article__content">
-                {{ content | safe }}
-            </article>
-        </div>
-    </div>
+    <h1>{{ title }}</h1>
 
-    <!-- Дата обновления -->
-    {% if upd_date %}
-    <div class="page-updated">
-        <small>{{ upd_date | readableDate }}</small>
-    </div>
+    {% if lede %}
+    <p class="hero__lede">{{ lede }}</p>
     {% endif %}
 
-{% endblock %}
+    <div class="hero__meta">
+        {% if score %}
+        <span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 4 2.5 5.1 5.5.8-4 3.9.9 5.6-4.9-2.6-4.9 2.6.9-5.6-4-3.9 5.5-.8Z"/></svg>
+            <b>{{ score | getScoreValue }}</b>&#8202;/&#8202;10
+        </span>
+        {% endif %}
+        {# Полные статусы аниме/манги живут в .railcard, чтобы не раздувать hero #}
+        {% if upd_date %}
+        <span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>
+            <time datetime="{{ upd_date | dateToRfc3339 }}">{{ upd_date | readableDate }}</time>
+        </span>
+        {% endif %}
+    </div>
+</header>
+
+<article class="prose">
+    {{ content | safe }}
+</article>
+
+{% if upd_date %}
+<div class="doc__foot">
+    <span>Обновлено {{ upd_date | readableDate }}</span>
+</div>
+{% endif %}
