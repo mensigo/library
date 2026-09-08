@@ -85,6 +85,9 @@ body{font-family:var(--serif);background:var(--paper);color:var(--ink);line-heig
    сверху держит текстовый блок в нижней трети, где кадр темнее и спокойнее. */
 .hero h1{font-weight:800;letter-spacing:-.028em;line-height:.92;
   font-size:clamp(3.4rem,10vw,7.4rem);margin:.18em 0 .3em}
+/* Первая строка на ступень крупнее второй: раздел заявляет себя, уточнение
+   остаётся спокойным. Трекинг чуть плотнее — компенсация большего кегля. */
+.hero h1 .lead{display:inline-block;font-size:1.20em;letter-spacing:-.034em}
 .hero h1 .co{color:var(--sig)}
 /* Вариант B держит прежний кегль — плотный кадр, риск перекрыть героиню. */
 .hero--soft h1{font-size:clamp(2.9rem,8vw,5.8rem)}
