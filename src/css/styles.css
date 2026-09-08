@@ -328,6 +328,38 @@ a { color: inherit; }
 .navlink code { font-family: var(--mono); font-size: 13px; }
 .navlink span:not(.dot) { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
+/* ------------------------------------------------------- дверь в cinema */
+/* Раздел /cinema/ — отдельный тёмный мир с собственной вёрсткой, он живёт
+   вне этой системы стилей. Ссылка на него стоит в общем списке, но не должна
+   читаться как соседняя страница, поэтому: голос лейбла (моно, капс), точка
+   в цвете грейда вместо нейтральной, стрелка справа. При наведении строка
+   заливается тёмным в обеих темах — это единственное место в навигации,
+   где виден свет из-за двери. Цвет берётся из --portal-grade, а не из --acc:
+   палитра читателя остаётся снаружи. См. DESIGN.md → «The one exception». */
+.navlink--cinema {
+    --portal-grade: #e39a4f;
+    margin-top: 6px; padding-top: 11px;
+    border-top: 1px solid var(--line);
+    border-radius: 8px;
+    font-family: var(--mono); font-size: 11.5px;
+    letter-spacing: .16em; text-transform: uppercase;
+}
+.navlink--cinema .dot {
+    background: var(--portal-grade);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--portal-grade) 18%, transparent);
+}
+.navlink--cinema .go { margin-left: auto; flex: none; color: var(--ink-3); transition: transform var(--base) var(--ease); }
+
+a.navlink--cinema:hover { background: #0d0f13; color: #eef1f6; }
+a.navlink--cinema:hover .go { color: var(--portal-grade); transform: translateX(3px); }
+a.navlink--cinema:focus-visible { outline: 2px solid var(--portal-grade); outline-offset: -2px; }
+a.navlink--cinema[aria-current="page"] { background: #0d0f13; color: var(--portal-grade); }
+
+/* Заглушка: дверь есть, комнаты за ней пока нет. */
+.navlink--cinema.is-soon { cursor: default; color: var(--ink-3); }
+.navlink--cinema.is-soon .dot { background: var(--line-2); box-shadow: none; }
+.navlink--cinema.is-soon .go { letter-spacing: 0; }
+
 /* --------------------------------------------------- результаты поиска */
 .search-results {
     position: absolute;
