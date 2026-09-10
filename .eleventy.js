@@ -1,3 +1,5 @@
+const fs = require("fs");
+const path = require("path");
 const syntaxHighlight = require("@11ty/eleventy-plugin-syntaxhighlight");
 const markdownItAnchor = require("markdown-it-anchor");
 const markdownItAttrs = require("markdown-it-attrs");
@@ -260,6 +262,16 @@ module.exports = function(eleventyConfig) {
     eleventyConfig.addPassthroughCopy("src/js");
     eleventyConfig.addPassthroughCopy("src/images");
     eleventyConfig.addPassthroughCopy("src/fonts");
+
+    // Cinema (src/cinema/) — рукописный мир вне шаблонов. Страницы копируются
+    // как есть (только *.html), а CSS/JS склеиваются из src/cinema/_src/
+    // шаблоном src/cinema/bundles.njk — по одному файлу на страницу.
+    eleventyConfig.addPassthroughCopy("src/cinema/**/*.html");
+    eleventyConfig.addWatchTarget("src/cinema/_src/");
+    eleventyConfig.addFilter("cinemaBundle", (parts) => parts
+        .map(name => `/* ── ${name} ── */\n`
+            + fs.readFileSync(path.join(__dirname, "src/cinema/_src", name), "utf8"))
+        .join("\n"));
 
     // Фильтр для читаемой даты
     eleventyConfig.addFilter("readableDate", (dateObj) => {

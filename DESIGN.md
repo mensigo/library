@@ -93,8 +93,23 @@ Keep the reading width constrained. If a page needs wider content, add a modifie
 - `.totop`, `.skip-link`, `.u-sr`, `.u-mono`, `.u-dim` (muted inline text), `.u-kicker` (small mono caps label; on an `h2` it also opts the heading out of the TOC, the section counter, and the section count).
 - `.sortable`, `.sort-asc`, `.sort-desc`: sortable table headers.
 - `.recent-updates`, `.recent-update-*`, `.badge-review` / `.badge-note` / `.badge-draft`: the home page feed.
+- `.navlink--cinema` (with `.go`; `.is-soon` for a door whose target does not exist): the door into `/cinema/`, in the drawer directly under «Обзоры аниме». See the exception below.
 
 Before adding a new pattern, check whether one of these can be extended with a modifier.
+
+### The one exception: `.navlink--cinema`
+
+`/cinema/` is a separate hand-authored world with its own stylesheet, deliberately outside this foundation. Its door sits in the drawer's first `.navgroup`, right after «Обзоры аниме» — so it has to live in a flat list of identical rows while not reading as one more sibling page. It breaks one rule on purpose:
+
+- **It hardcodes color.** The dot and the hover state use `--portal-grade` (the grade of the world behind the door), not `--acc`. The reader's palette stops at the threshold. On hover the row fills `#0d0f13` in *both* themes — the only place in the interface where light from the other world shows through.
+
+Everything it does not break still applies: `--mono` for the label voice, a hairline separator instead of a new group, `:focus-visible` outline, and no motion that ignores `prefers-reduced-motion`.
+
+The door is an `<a href>`; the hover and focus rules are written against `a.navlink--cinema`. `.is-soon` renders it as a `<span aria-disabled="true">` instead — for when the target page does not exist, because `npm run test:links` fails on dangling internal links.
+
+Inside `/cinema/` none of this file applies. Its pages are plain HTML in `src/cinema/`, copied verbatim; their CSS/JS sources live in `src/cinema/_src/` and are concatenated per page by `src/cinema/bundles.njk`.
+
+Do not treat this as licence for a second exception. If another component wants to opt out of the accent, it almost certainly wants a modifier instead.
 
 ## States
 

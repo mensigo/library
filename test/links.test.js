@@ -26,12 +26,16 @@ function extractInternalLinks(html) {
   return links;
 }
 
-function resolveTarget(href) {
+function resolveTarget(href, pageFile) {
   // strip query string and fragment
   const clean = href.split('?')[0].split('#')[0];
   if (!clean) return null;
 
-  const abs = path.join(SITE_DIR, clean);
+  // root-relative hrefs resolve from _site/, relative ones (hand-written
+  // /cinema/ pages) from the directory of the page that links them
+  const abs = clean.startsWith('/')
+    ? path.join(SITE_DIR, clean)
+    : path.resolve(path.dirname(pageFile), clean);
 
   // exact file match
   if (fs.existsSync(abs) && fs.statSync(abs).isFile()) return abs;
@@ -62,7 +66,7 @@ test('no dangling internal links across all pages', () => {
     const page = '/' + path.relative(SITE_DIR, file);
 
     for (const href of links) {
-      if (!resolveTarget(href)) {
+      if (!resolveTarget(href, file)) {
         broken.push(`${page} → ${href}`);
       }
     }
