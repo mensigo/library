@@ -183,10 +183,8 @@
             <a class="navlink" href="{{ pathPrefix }}/" {% if page.url == '/' %}aria-current="page"{% endif %}><span class="dot"></span><span>Главная</span></a>
             <a class="navlink" href="{{ pathPrefix }}/notes/" {% if page.url == '/notes/' %}aria-current="page"{% endif %}><span class="dot"></span><span>Заметки</span></a>
             <a class="navlink" href="{{ pathPrefix }}/reviews/anime/" {% if page.url == '/reviews/anime/' %}aria-current="page"{% endif %}><span class="dot"></span><span>Обзоры аниме</span></a>
-            {# Дверь в /cinema/. Пока <span>, а не <a>: страницы за ней ещё нет,
-               а test:links валится на висячих внутренних ссылках. Когда /cinema/
-               появится — меняем на <a href> и снимаем .is-soon. #}
-            <span class="navlink navlink--cinema is-soon" aria-disabled="true"><span class="dot"></span><span>Cinema</span><span class="go" aria-hidden="true">скоро</span></span>
+            {# Дверь в /cinema/ — отдельный рукописный мир, см. DESIGN.md. #}
+            <a class="navlink navlink--cinema" href="{{ pathPrefix }}/cinema/"><span class="dot"></span><span>Cinema</span><span class="go" aria-hidden="true">→</span></a>
         </div>
 
         {% if collections.pythonNotes | length %}

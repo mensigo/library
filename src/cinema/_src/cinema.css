@@ -1,0 +1,96 @@
+/* ======================================================================
+   CINEMA · общая рамка
+   Отдельный мир внутри библиотеки: тёмный, рукописный, вне DESIGN.md.
+   Здесь только то, что повторяется на каждой странице: шрифты, токены,
+   зерно, .wrap / .kicker / .rise, HUD и блоки грейдов.
+
+   Файл сам не публикуется — src/cinema/bundles.njk склеивает его с CSS
+   конкретной страницы в один /cinema/<страница>.css. Поэтому все url()
+   пишутся относительно /cinema/.
+
+   Принцип: рамка нейтральна (графит + циан), цвет конкретного тайтла —
+   «грейд» — включается только внутри его собственного блока.
+   ====================================================================== */
+
+@font-face{font-family:'Ysabeau Infant';
+  src:url('../fonts/YsabeauInfant-VariableFont_wght.woff2') format('woff2-variations'),
+      url('../fonts/YsabeauInfant-VariableFont_wght.woff2') format('woff2');
+  font-weight:100 900;font-style:normal;font-display:swap}
+@font-face{font-family:'Ysabeau Infant';
+  src:url('../fonts/YsabeauInfant-Italic-VariableFont_wght.woff2') format('woff2-variations'),
+      url('../fonts/YsabeauInfant-Italic-VariableFont_wght.woff2') format('woff2');
+  font-weight:100 900;font-style:italic;font-display:swap}
+
+:root{
+  --paper:#0d0f13; --panel:#14171d; --panel-2:#181c23;
+  --ink:#e9ecf1; --ink-dim:#c2c8d2; --muted:#818b9b; --muted-2:#5c6472;
+  --line:#242a34; --line-soft:#1b2029;
+  --sig:#4fbfd0; --sig-line:rgba(79,191,208,.35); --sig-glow:rgba(79,191,208,.16);
+  --maxw:1180px;
+  /* тот же стек, что в библиотеке: без второго вебфонта на пути отрисовки */
+  --mono:'JetBrains Mono','SF Mono',ui-monospace,'Consolas','Monaco',monospace;
+  --serif:'Ysabeau Infant',Georgia,serif;
+  --ease:cubic-bezier(.16,1,.3,1);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{font-family:var(--serif);background:var(--paper);color:var(--ink);line-height:1.6;
+  -webkit-font-smoothing:antialiased;overflow-x:hidden}
+
+/* z-index 9: всё, что потом ляжет поверх страницы, должно быть выше */
+.atmo{position:fixed;inset:0;pointer-events:none;z-index:9}
+.atmo.grain{opacity:.045;mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+
+.wrap{max-width:var(--maxw);margin:0 auto;padding:0 24px}
+.kicker{font-family:var(--mono);font-size:12px;letter-spacing:.28em;text-transform:uppercase;
+  color:var(--sig);display:inline-flex;align-items:center;gap:10px}
+.kicker::before{content:"";width:26px;height:1px;background:var(--sig)}
+
+/* .rise прячется только при живом JS: класс .js ставит инлайн-скрипт в <head>
+   и снимает его на load, если cinema.js так и не отработал. */
+.js .rise{opacity:0;transform:translateY(26px);transition:opacity .9s var(--ease),transform .9s var(--ease)}
+.js .rise.in{opacity:1;transform:none}
+
+/* ================= HUD ================= */
+/* Ссылка в HUD — единственный выход из мира: у страниц нет топбара и дровера.
+   Страница может переопределить что угодно, кроме неё. */
+.hud{position:fixed;top:0;left:0;right:0;z-index:20;display:flex;align-items:center;gap:14px;
+  padding:11px 22px;font-family:var(--mono);font-size:11px;letter-spacing:.14em;
+  color:var(--muted);text-transform:uppercase;
+  background:linear-gradient(to bottom,rgba(10,11,14,.8),rgba(10,11,14,0));backdrop-filter:blur(6px)}
+.hud .dot{width:6px;height:6px;border-radius:50%;background:var(--sig);
+  box-shadow:0 0 10px 2px var(--sig-glow);animation:pulse 2.6s var(--ease) infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.hud b{color:var(--ink-dim);font-weight:500}
+.hud .sep{color:var(--line)}
+.hud .right{margin-left:auto;display:flex;gap:14px}
+.hud a{color:var(--sig);text-decoration:none;border-bottom:1px solid transparent;transition:.25s}
+.hud a:hover{border-bottom-color:var(--sig-line)}
+.hud a:focus-visible{outline:2px solid var(--sig);outline-offset:3px}
+@media(max-width:640px){.hud .hide{display:none}}
+
+/* ================= ГРЕЙДЫ ================= */
+.grade-noir{
+  --gp:#0d0f13; --gp2:#171b22; --gi:#eef1f6; --gid:#c4cad4; --gm:#828c9c; --gl:#262c37;
+  --ga:#e39a4f; --ga-text:#eaa860; --gal:rgba(227,154,79,.42);
+  --gveil:linear-gradient(to top,#0d0f13 3%,rgba(13,15,19,.2) 55%,rgba(13,15,19,.55)),
+          linear-gradient(to right,rgba(13,15,19,.7),transparent 65%);
+  --hero-pos:50% 42%;
+}
+.grade-noir .scanline{position:absolute;inset:0;z-index:3;pointer-events:none;opacity:.35;
+  background:repeating-linear-gradient(to bottom,transparent 0 2px,rgba(0,0,0,.16) 2px 3px)}
+.grade-day{
+  --gp:#efe7d7; --gp2:#faf5ea; --gi:#2a251d; --gid:#544c3d; --gm:#7d7263; --gl:#ddd2bd;
+  --ga:#dd7f22; --ga-text:#9c4f16; --gal:rgba(221,127,34,.4);
+  --gveil:linear-gradient(to top,#efe7d7 8%,rgba(239,231,215,.3) 58%,rgba(239,231,215,.15)),
+          linear-gradient(to right,rgba(239,231,215,.75),transparent 66%);
+  --hero-pos:50% 30%;
+}
+
+/* В конце файла: при равной специфичности побеждает то, что ниже. */
+@media(prefers-reduced-motion:reduce){
+  .js .rise{opacity:1;transform:none;transition:none}
+  .hud .dot{animation:none}
+  .scanline{display:none}
+}

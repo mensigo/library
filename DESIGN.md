@@ -93,7 +93,7 @@ Keep the reading width constrained. If a page needs wider content, add a modifie
 - `.totop`, `.skip-link`, `.u-sr`, `.u-mono`, `.u-dim` (muted inline text), `.u-kicker` (small mono caps label; on an `h2` it also opts the heading out of the TOC, the section counter, and the section count).
 - `.sortable`, `.sort-asc`, `.sort-desc`: sortable table headers.
 - `.recent-updates`, `.recent-update-*`, `.badge-review` / `.badge-note` / `.badge-draft`: the home page feed.
-- `.navlink--cinema` (with `.go`, and `.is-soon` while the target does not exist): the door into `/cinema/`, in the drawer directly under «Обзоры аниме». See the exception below.
+- `.navlink--cinema` (with `.go`; `.is-soon` for a door whose target does not exist): the door into `/cinema/`, in the drawer directly under «Обзоры аниме». See the exception below.
 
 Before adding a new pattern, check whether one of these can be extended with a modifier.
 
@@ -105,7 +105,9 @@ Before adding a new pattern, check whether one of these can be extended with a m
 
 Everything it does not break still applies: `--mono` for the label voice, a hairline separator instead of a new group, `:focus-visible` outline, and no motion that ignores `prefers-reduced-motion`.
 
-`.is-soon` renders the door as a `<span aria-disabled="true">` while the target page does not exist, because `npm run test:links` fails on dangling internal links. It becomes an `<a href>` when `/cinema/` lands; the hover and focus rules are already written against `a.navlink--cinema`, so they activate on their own.
+The door is an `<a href>`; the hover and focus rules are written against `a.navlink--cinema`. `.is-soon` renders it as a `<span aria-disabled="true">` instead — for when the target page does not exist, because `npm run test:links` fails on dangling internal links.
+
+Inside `/cinema/` none of this file applies. Its pages are plain HTML in `src/cinema/`, copied verbatim; their CSS/JS sources live in `src/cinema/_src/` and are concatenated per page by `src/cinema/bundles.njk`.
 
 Do not treat this as licence for a second exception. If another component wants to opt out of the accent, it almost certainly wants a modifier instead.
 
