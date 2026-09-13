@@ -13,6 +13,12 @@ bundles:
     parts: [cinema.css, landing.css]
   - out: landing.js
     parts: [cinema.js, landing.js]
+  - out: bebop.css
+    parts: [cinema.css, bebop.css]
+  # Своего JS у страницы Бибопа пока нет: карусели закомментированы.
+  # Бандл нужен ради cinema.js (флаг cinemaReady и появление .rise).
+  - out: bebop.js
+    parts: [cinema.js]
 permalink: "/cinema/{{ bundle.out }}"
 eleventyExcludeFromCollections: true
 ---
