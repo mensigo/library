@@ -97,7 +97,8 @@
   border-top:2px solid var(--pc,var(--acc));padding:0;position:relative;overflow:hidden;
   display:grid;grid-template-columns:minmax(140px,220px) 1fr}
 .rv-w .ph{position:relative;background:#15171c;min-height:220px;overflow:hidden}
-.rv-w .ph img{width:100%;height:100%;object-fit:cover;display:block}
+.rv-w .ph img{width:100%;height:100%;object-fit:cover;display:block;
+  object-position:var(--ph-pos,50% 50%)}
 .rv-w .ph.empty{display:flex;align-items:center;justify-content:center;
   background:repeating-linear-gradient(135deg,rgba(255,255,255,.03) 0 10px,rgba(255,255,255,.06) 10px 20px)}
 .rv-w .ph.empty span{font-family:var(--mono);font-size:9px;letter-spacing:.16em;text-transform:uppercase;
@@ -234,7 +235,7 @@
 
 <!-- ================= ШАПКА: ЛИСТ ДЕЛА ================= -->
 <header class="rv-hero" style="--hero-pos:50% 0%">
-  <img class="bg" src="../../images/bebop/together/characters.webp"
+  <img class="bg" src="../../images/cinema/bebop/hero_crew_lineup.webp"
        alt="Джет, Спайк, Фэй и Эд у ростовой линейки полицейского участка">
   <div class="veil"></div>
   <div class="scanline"></div>
@@ -297,9 +298,9 @@
       начать с них: сюжет тут держится именно на людях.</p>
 
     <div class="rv-wanted">
-      <div class="rv-w" style="--pc:#d9b04a">
+      <div class="rv-w" style="--pc:#d9b04a;--ph-pos:50% 40%">
         <div class="ph">
-          <img src="../../images/bebop/spike/spike_lookup_2_cropped.jpeg" alt="Спайк Шпигель смотрит вверх, прикуривает сигарету">
+          <img src="../../images/cinema/bebop/card_spike.jpeg" alt="Спайк Шпигель">
         </div>
         <div class="body">
         <div class="tag">борт · 01</div>
@@ -317,9 +318,9 @@
         </div>
       </div>
 
-      <div class="rv-w" style="--pc:#c98a4b">
+      <div class="rv-w" style="--pc:#c98a4b;--ph-pos:50% 75%">
         <div class="ph">
-          <img src="../../images/bebop/jet/jet_2.jpeg" alt="Джет Блэк">
+          <img src="../../images/cinema/bebop/card_jet.jpeg" alt="Джет Блэк">
         </div>
         <div class="body">
         <div class="tag">борт · 02</div>
@@ -336,9 +337,9 @@
         </div>
       </div>
 
-      <div class="rv-w" style="--pc:#b6708f">
+      <div class="rv-w" style="--pc:#b6708f;--ph-pos:50% 20%">
         <div class="ph">
-          <img src="../../images/bebop/faye/faye_1_cropped.jpeg" alt="Фэй Валентайн">
+          <img src="../../images/cinema/bebop/card_faye.jpeg" alt="Фэй Валентайн">
         </div>
         <div class="body">
         <div class="tag">борт · 03</div>
@@ -355,9 +356,9 @@
         </div>
       </div>
 
-      <div class="rv-w" style="--pc:#d8654a">
+      <div class="rv-w" style="--pc:#d8654a;--ph-pos:50% 50%">
         <div class="ph">
-          <img src="../../images/bebop/edward/ed_1.jpeg" alt="Эдвард Вонг Хау Пеппелу Тивруски Четвертый">
+          <img src="../../images/cinema/bebop/card_ed.jpeg" alt="Эдвард Вонг Хау Пеппелу Тивруски Четвертый">
         </div>
         <div class="body">
         <div class="tag">борт · 04</div>
@@ -374,9 +375,9 @@
         </div>
       </div>
 
-      <div class="rv-w" style="--pc:#9a9a86">
+      <div class="rv-w" style="--pc:#9a9a86;--ph-pos:50% 38%">
         <div class="ph">
-          <img src="../../images/bebop/ein/ein_the_dog.jpeg" alt="Эйн, корги-дата">
+          <img src="../../images/cinema/bebop/card_ein.jpeg" alt="Эйн, корги-дата">
         </div>
         <div class="body">
         <div class="tag">борт · 05</div>
@@ -417,9 +418,9 @@
       Меняется только тональность, тема — никогда.</p>
 
     <figure class="rv-fig">
-      <img src="../../images/bebop/spike/spike_smoking_with_fay_2.jpeg"
+      <img src="../../images/cinema/bebop/section_2_opener_smoking.jpeg"
            style="aspect-ratio:16/9;object-fit:cover;object-position:50% 30%"
-           alt="Спайк и Фэй курят рядом на фоне красного неба, не глядя друг на друга">
+           alt="Спайк и Фэй стоят порознь на фоне красного закатного неба, не глядя друг на друга">
       <figcaption>спайк и фэй · перекур</figcaption>
     </figure>
 
@@ -486,12 +487,12 @@
              Временно отключена.
         <div class="rv-carousel rise">
           <div class="track" tabindex="0" role="group" aria-label="Кадры: финальные серии">
-            <figure><img src="../../images/bebop/s22_spike.png" alt="Спайк, крупный план"></figure>
-            <figure><img src="../../images/bebop/s24_boat.png" alt="Лодка на воде"></figure>
-            <figure><img src="../../images/bebop/s24_city.png" alt="Город в финальных сериях"></figure>
+            <figure><img src="" alt=""></figure>
+            <figure><img src="" alt=""></figure>
+            <figure><img src="" alt=""></figure>
           </div>
           <div class="bar">
-            <span class="cap" data-label="финал">финал · 1 / 3</span>
+            <span class="cap" data-label="финал"></span>
             <div class="dots"></div>
             <div class="nav">
               <button type="button" class="prev" aria-label="Предыдущий кадр">←</button>
@@ -519,13 +520,13 @@
          Временно отключена.
     <div class="rv-carousel rise">
       <div class="track" tabindex="0" role="group" aria-label="Кадры: Фэй Валентайн">
-        <figure><img src="../../images/bebop/e20_fay.png" alt="Фэй Валентайн, крупный план"></figure>
-        <figure><img src="../../images/bebop/e20_fay2.png" alt="Фэй Валентайн в кадре"></figure>
-        <figure><img src="../../images/bebop/e22_fay.png" alt="Фэй Валентайн в разговоре"></figure>
-        <figure><img src="../../images/bebop/e22_fay2.png" alt="Фэй Валентайн, сцена в помещении"></figure>
+        <figure><img src="" alt=""></figure>
+        <figure><img src="" alt=""></figure>
+        <figure><img src="" alt=""></figure>
+        <figure><img src="" alt=""></figure>
       </div>
       <div class="bar">
-        <span class="cap" data-label="фэй">фэй · 1 / 4</span>
+        <span class="cap" data-label="фэй"></span>
         <div class="dots"></div>
         <div class="nav">
           <button type="button" class="prev" aria-label="Предыдущий кадр">←</button>
@@ -550,9 +551,9 @@
     </div>
 
     <figure class="rv-fig">
-      <img src="../../images/cinema/bebop/section_3_opener_1800.jpeg"
+      <img src="../../images/cinema/bebop/section_3_opener_together.webp"
            style="aspect-ratio:16/9;object-fit:cover;object-position:50% 25%"
-           alt="Экипаж «Бибопа» вечером в теплом свете лампы: Джет в кресле, Эд спит на столе, Спайк оглядывается через плечо, Фэй полулежит на диване">
+           alt="Джет сидит слева, Эд спит на столе, Спайк на переднем плане оглядывается через плечо, Фэй полулежит справа у лампы">
       <figcaption>экипаж · вечер на «бибопе»</figcaption>
     </figure>
 
