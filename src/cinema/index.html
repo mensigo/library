@@ -67,7 +67,7 @@
   <div class="wrap">
     <span class="kicker rise">Про раздел</span>
     <h2 class="rise">Один сеанс за раз</h2>
-    <p class="lead rise">Мне важно досмотреть тайтл целиком, с музыкой и паузами, не просто поставить галочку
+    <p class="lead rise">Мне важно досмотреть тайтл целиком, с музыкой и паузами — не просто поставить галочку
       в списке просмотренного. Обзоров здесь мало, зато у каждого свой уголок.</p>
     <p class="lead rise">Оценка говорит не о качестве в целом, а о том, что от сериала осталось лично
       у меня через неделю после финала. Приятного просмотра!</p>
@@ -79,21 +79,22 @@
   <div class="wrap">
     <div class="filmo-stage" id="stage">
       <!-- Кадр тайтла, всплывающий фоном при наведении на строку.
-           Пока вместо картинок заглушки (.ph) — ничего не грузится.
-           data-src — будущий кадр: вернуть <img src="…" alt=""> на место .ph. -->
+           Слой заводится только для тайтла, у которого кадр действительно
+           есть. У «Бездны» его нет — при наведении на её строку фон просто
+           не меняется. Появится кадр — добавить сюда .filmo-bg.abyss с <img>
+           и парное правило в landing.css. -->
       <div class="filmo-bgs">
-        <div class="filmo-bg bebop"><div class="ph" data-src="../images/cinema/bebop/e21_city.png" style="--ph:#e39a4f"></div></div>
-        <div class="filmo-bg abyss"><div class="ph" data-src="../images/cinema/abyss/Made_in_Abyss.jpg" style="--ph:#dd7f22"></div></div>
+        <div class="filmo-bg bebop"><img src="../images/cinema/bebop/section_3_opener_together.webp" alt="" loading="lazy" decoding="async"></div>
       </div>
 
       <div class="filmo-head rise">
         <h3>Все обзоры</h3>
       </div>
 
-      <!-- Строки — <div>, пока страниц тайтлов нет: test:links валится на висячих
-           ссылках (они ловят и href внутри комментариев). Когда появится
-           страница bebop/ — строка становится ссылкой a.row на неё. -->
-      <div class="row rise" data-title="bebop" style="--dot:#e39a4f">
+      <!-- Строка тайтла — ссылка, если его страница уже есть. У «Бездны»
+           страницы нет, поэтому её строка остаётся <div>: test:links валится
+           на висячих ссылках (он ловит и href внутри комментариев). -->
+      <a class="row rise" href="bebop/" data-title="bebop" style="--dot:#e39a4f">
         <span class="idx">01</span>
         <span class="name">
           <span class="grade-dot" style="background:#e39a4f"></span>
@@ -102,14 +103,15 @@
         </span>
         <span class="meta">1998 · 26 эп. · нуар</span>
         <span class="sc">8.4</span>
-      </div>
+      </a>
 
-      <div class="row rise" data-title="abyss" style="--dot:#dd7f22">
+      <div class="row row--wip rise" data-title="abyss" style="--dot:#dd7f22">
         <span class="idx">02</span>
         <span class="name">
           <span class="grade-dot" style="background:#dd7f22"></span>
           <span class="t">Созданный в бездне</span>
           <span class="o">メイドインアビス</span>
+          <span class="wip">в работе</span>
         </span>
         <span class="meta">2017 · 13 эп. · тёмная сказка</span>
         <span class="sc">7.8</span>
@@ -117,7 +119,7 @@
 
       <div class="slot rise">
         <span class="idx">03</span>
-        <span class="t">следующий — в работе</span>
+        <span class="t">следующий — в планах</span>
       </div>
     </div>
   </div>

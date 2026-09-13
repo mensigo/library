@@ -7,6 +7,8 @@ Gemfile.lock
 
 .DS_Store
 .idea/
+.cursor/
+.serena/
 
 *.log
 *.png

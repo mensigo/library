@@ -12,7 +12,6 @@
 .hero-img img{width:100%;height:100%;object-fit:cover;
   object-position:var(--hero-pos,50% 50%);
   animation:drift 26s ease-in-out infinite alternate}
-@keyframes drift{from{transform:scale(1.04)}to{transform:scale(1.11)}}
 
 /* Скрим двойной: снизу растворяет кадр в фоне страницы, слева — тёмный
    клин под текст. Без него мелкая моно-подпись тонет в ярких пикселях. */
@@ -72,16 +71,14 @@
 .filmo-stage{position:relative;isolation:isolate}
 .filmo-bgs{position:absolute;inset:-40px 0;z-index:0;pointer-events:none;overflow:hidden;border-radius:10px}
 .filmo-bg{position:absolute;inset:0;opacity:0;transition:opacity .55s var(--ease)}
-.filmo-bg img{width:100%;height:100%;object-fit:cover;object-position:50% 32%;filter:saturate(.85)}
-/* Заглушка вместо кадра: тон тайтла без загрузки картинки */
-.filmo-bg .ph{width:100%;height:100%;
-  background:radial-gradient(ellipse 60% 90% at 78% 40%,color-mix(in srgb,var(--ph,#888) 55%,transparent),transparent 70%),
-             repeating-linear-gradient(0deg,rgba(255,255,255,.035) 0 1px,transparent 1px 3px),#15181e}
+.filmo-bg img{width:100%;height:100%;object-fit:cover;object-position:50% 32%;
+  filter:saturate(.95) brightness(1.12)}
+/* Скрим держит текст строк читаемым, поэтому слева он почти глухой, а
+   вправо расходится: там кадра видно больше всего. */
 .filmo-bg::after{content:"";position:absolute;inset:0;
-  background:linear-gradient(to right,rgba(13,15,19,.94) 30%,rgba(13,15,19,.55) 100%),
-             linear-gradient(to bottom,rgba(13,15,19,.8),rgba(13,15,19,.8))}
+  background:linear-gradient(to right,rgba(13,15,19,.88) 28%,rgba(13,15,19,.34) 100%),
+             linear-gradient(to bottom,rgba(13,15,19,.45),rgba(13,15,19,.45))}
 .filmo-stage[data-active="bebop"] .filmo-bg.bebop{opacity:1}
-.filmo-stage[data-active="abyss"] .filmo-bg.abyss{opacity:1}
 
 .filmo-head{position:relative;z-index:1;display:flex;align-items:center;justify-content:space-between;
   gap:18px;flex-wrap:wrap;padding-bottom:14px;border-bottom:1px solid var(--line)}
@@ -105,8 +102,20 @@
 .row .meta{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;
   color:var(--muted);text-align:right;white-space:nowrap}
 .row .sc{font-family:var(--mono);font-size:13px;color:var(--ink-dim);min-width:38px;text-align:right}
+
+/* Тайтл, у которого страницы ещё нет. Строка остаётся <div>, поэтому не
+   ловит фокус и не ведёт никуда — метка это объясняет, а приглушённый
+   текст и отключённая подсветка не дают принять её за ссылку. */
+.row--wip{cursor:default}
+.row--wip .name .t,.row--wip:hover .name .t{color:var(--muted)}
+.row--wip .grade-dot{opacity:.45;box-shadow:none}
+.row--wip .sc{color:var(--muted-2)}
+.row--wip:hover{background:none;padding-left:12px}
+.wip{flex:none;font-family:var(--mono);font-size:9px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--muted-2);border:1px solid var(--line);border-radius:3px;padding:3px 7px;white-space:nowrap}
 @media(max-width:760px){
   .row{grid-template-columns:1fr auto;gap:8px 14px;padding:18px 10px}
+  .row--wip:hover{padding-left:10px}
   .row .idx{display:none}
   .row .name{grid-column:1/2}
   .row .name .o{display:none}
@@ -120,11 +129,6 @@
 .slot .idx{font-family:var(--mono);font-size:11px;color:var(--muted-2)}
 .slot .t{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted-2)}
 @media(max-width:760px){.slot{grid-template-columns:1fr}.slot .idx{display:none}}
-
-/* ================= ФИНАЛ ================= */
-.signoff{text-align:center;padding:0 24px 90px}
-.signoff h2{font-weight:300;font-style:italic;font-size:clamp(1.6rem,4.4vw,2.6rem);color:var(--ink);
-  margin:16px 0 10px;line-height:1.18}
 
 @media(prefers-reduced-motion:reduce){
   .scrollcue span{animation:none}
