@@ -1,0 +1,521 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Orth → Layer 01 · переход</title>
+
+<!-- ======================================================================
+     СПУСК: ORTH (поверхность) → СЛОЙ 01 (край бездны)
+
+     Один длинный кадр камеры, которым управляет колесо мыши.
+     Никакого WebGL: два <img>, две заливки и немного SVG-листвы.
+
+     ПОРЯДОК:
+       1. Orth стоит. В правом нижнем углу одна за другой проходят три
+          карточки текста: что это за яма, откуда взялся город, чем
+          платят за спуск. Они единственные не привязаны к колесу:
+          скролл только взводит их, играют они по своему времени
+          (см. .cardslot / CONFIG.cards).
+          Камера почти неподвижна — здесь читают.        p = 0 … HOLD
+       2. Карточка уходит, и сразу начинается спуск.     p = HOLD … 1
+
+     ДВА РЕШЕНИЯ, НА КОТОРЫХ ВСЁ ДЕРЖИТСЯ.
+
+     Первое: Orth не уезжает и не мельчает — он РАСТЁТ, с центром
+     увеличения ровно в кратере (orth.origin). Уменьшение читалось бы
+     как «камера отступила»; нам нужно влететь в дыру.
+
+     Второе: яркость идёт горбом вниз —
+
+         ЯРКО            ТЕМНО             ЯРКО
+       Orth, небо  →  внутри облака  →  слой 1, дымка
+
+     Тёмная середина — момент, когда кратер уже сожрал кадр, а слой 1
+     ещё не открылся. Там же проходит листва. Стык двух картинок
+     прячется в этой темноте, дорисовывать ничего не нужно.
+
+     ВАЖНО ПРО ВЁРСТКУ: блюр висит на .scene, а не на .stage.
+     Всё, что должно оставаться читаемым (карточка, подписи), лежит
+     рядом со .scene, а не внутри — иначе фильтр размоет и текст.
+
+     Ассеты листвы пока генерируются в SVG (см. makeFoliage).
+     Появятся прозрачные WebP — впиши путь в CONFIG.foliage.<слой>.src.
+     ====================================================================== -->
+
+<style>
+:root{
+  --ink:#e8e6e1;
+  --mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+
+  /* цвета взяты из самих кадров — держи их в синхроне с картинками */
+  --orth-crater:#5d7080;   /* нутро кратера в orth-clouds-2 */
+  --cloud-pale:#c3d0d8;    /* светлые клочья облака там же */
+  --edge-haze:#d8e6cf;     /* светящаяся дымка в edge-restyle-1 */
+}
+*{box-sizing:border-box}
+body{margin:0;background:#07090b;color:var(--ink);font-family:system-ui,-apple-system,sans-serif}
+
+.track{position:relative}
+.stage{position:sticky;top:0;height:100svh;overflow:hidden;isolation:isolate;background:#07090b}
+/* весь пейзаж живёт здесь; только на этой обёртке блюр и затемнение */
+.scene{position:absolute;inset:0;transform:translateZ(0)}
+
+/* --- слои окружения --- */
+.env{position:absolute;inset:0;z-index:1;will-change:transform,opacity;
+  transform:translate3d(0,0,0);backface-visibility:hidden}
+.env img{width:100%;height:100%;object-fit:cover;display:block}
+.env--edge{z-index:2}
+
+/* --- облачная стена: разрастается из кратера и съедает кадр --- */
+.wash{position:absolute;inset:-25%;z-index:3;pointer-events:none;will-change:transform,opacity;
+  background:radial-gradient(circle at 50% 50%,
+    var(--orth-crater) 0%,
+    var(--orth-crater) 26%,
+    color-mix(in srgb,var(--orth-crater) 70%,var(--cloud-pale)) 44%,
+    color-mix(in srgb,var(--orth-crater) 30%,transparent) 66%,
+    transparent 78%)}
+.wisps{position:absolute;inset:-25%;z-index:4;pointer-events:none;will-change:transform,opacity;opacity:0;
+  background:
+    radial-gradient(ellipse 60% 18% at 30% 38%,var(--cloud-pale) 0%,transparent 70%),
+    radial-gradient(ellipse 45% 14% at 68% 55%,var(--cloud-pale) 0%,transparent 70%),
+    radial-gradient(ellipse 70% 20% at 48% 72%,var(--cloud-pale) 0%,transparent 70%)}
+
+/* --- листва --- */
+.fol{position:absolute;left:-15%;right:-15%;top:0;height:100%;pointer-events:none;
+  will-change:transform,opacity;transform:translate3d(0,0,0);backface-visibility:hidden}
+.fol svg,.fol img{position:absolute;display:block}
+.fol--small{z-index:6}
+.fol--medium{z-index:7}
+.fol--large{z-index:8}
+
+.grade{position:absolute;inset:0;z-index:9;pointer-events:none;mix-blend-mode:soft-light;
+  background:var(--edge-haze);opacity:0}
+.vig{position:absolute;inset:0;z-index:10;pointer-events:none;
+  background:radial-gradient(ellipse at 50% 45%,transparent 42%,rgba(4,6,8,.8) 100%)}
+
+/* ======================================================================
+   НАД СЦЕНОЙ — не размывается
+   ====================================================================== */
+
+/* ======================================================================
+   КАРТОЧКИ ПРОЛОГА. Три шага в одном слоте, правый нижний угол Orth.
+
+   Ни одна не привязана к колесу: скролл только взводит .in / .out,
+   дальше блок доигрывает своё время. Где бы ни замер скролл, текст
+   либо полностью виден, либо полностью убран.
+
+   Три состояния: базовое (ещё не показывали), .in (стоит), .out (ушла).
+   Первая приходит справа с расфокусом — кадр был пустой, это событие.
+   Средние сменяются скромно: 12px по вертикали и прозрачность, чтобы
+   смена читалась как перелистывание, а не как езда. Последняя уходит
+   вправо, как пришла первая, и на этом пролог закрывается.
+   ====================================================================== */
+.cardslot{position:absolute;z-index:20;right:clamp(20px,4vw,64px);bottom:clamp(96px,15vh,160px);
+  width:min(420px,calc(100vw - 40px));pointer-events:none}
+
+/* базовое состояние = и вход, и (для средних) выход назад по скроллу */
+.card{position:absolute;right:0;bottom:0;width:100%;
+  padding:clamp(20px,2.4vw,30px);
+  background:rgba(9,12,16,.74);backdrop-filter:blur(10px);
+  border:1px solid rgba(232,230,225,.14);border-radius:3px;
+  will-change:transform,opacity,filter;
+  opacity:0;transform:translate3d(0,14px,0);
+  transition:opacity .3s ease,transform .3s ease,filter .3s ease}
+
+.card.in{opacity:1;transform:none;filter:none;
+  transition:opacity .5s ease,
+             transform .55s cubic-bezier(.16,1,.3,1),
+             filter .5s ease}
+.card.out{opacity:0;transform:translate3d(0,-12px,0);
+  transition:opacity .3s ease,transform .3s ease,filter .3s ease}
+
+/* края пролога играют крупнее середины */
+.card--first{transform:translate3d(40px,22px,0);filter:blur(6px)}
+.card--first.in{transition:opacity .7s ease,
+                           transform .9s cubic-bezier(.16,1,.3,1),
+                           filter .7s ease}
+.card--last.out{transform:translate3d(40px,10px,0);filter:blur(6px);
+  transition:opacity .5s ease,transform .6s ease,filter .5s ease}
+
+.card[hidden]{display:none}
+.card .mob{display:none}
+
+/* сколько шагов осталось — чтобы не гадать, надолго ли это */
+.ticks{position:absolute;right:0;top:calc(100% + 14px);display:flex;gap:7px}
+.ticks i{width:18px;height:2px;background:rgba(232,230,225,.22);
+  transition:background .35s ease}
+.ticks i.on{background:rgba(232,230,225,.75)}
+
+.card .kicker{font-family:var(--mono);font-size:10px;letter-spacing:.28em;text-transform:uppercase;
+  color:#9fb6c6;margin-bottom:14px}
+.card h2{margin:0 0 14px;font-size:clamp(1.6rem,3.4vw,2.2rem);font-weight:800;letter-spacing:-.02em;
+  line-height:1}
+.card p{margin:0 0 .7em;font-size:14.5px;line-height:1.62;color:#c9c7c2}
+.card p:last-child{margin-bottom:0}
+.card .accent{color:var(--ink)}
+/* имя вещи внутри абзаца: чуть ярче и плотнее, без выделения цветом */
+.card .term{color:var(--ink);font-weight:600}
+
+/* подписи глубины */
+.hud{position:absolute;z-index:20;left:clamp(20px,4vw,64px);bottom:clamp(28px,6vh,64px);
+  pointer-events:none;font-family:var(--mono)}
+.hud .slot{position:relative;height:clamp(64px,13vh,120px)}
+.hud .depth{font-size:10px;letter-spacing:.32em;text-transform:uppercase;opacity:.65}
+.hud .name{font-size:clamp(2rem,6vw,4.2rem);font-weight:800;letter-spacing:-.02em;line-height:.95;
+  margin-top:.18em;text-shadow:0 2px 40px rgba(0,0,0,.65)}
+.hud .layer{position:absolute;inset:0;will-change:transform,opacity}
+
+.scrollhint{position:absolute;z-index:20;right:clamp(20px,4vw,64px);bottom:clamp(28px,6vh,64px);
+  font-family:var(--mono);font-size:10px;letter-spacing:.28em;text-transform:uppercase;
+  opacity:.5;pointer-events:none}
+.scrollhint::after{content:"";display:block;width:1px;height:38px;margin:10px auto 0;
+  background:linear-gradient(var(--ink),transparent)}
+
+.dbg{position:fixed;z-index:50;top:12px;left:12px;display:none;gap:10px;align-items:center;
+  font-family:var(--mono);font-size:11px;background:rgba(8,10,13,.82);border:1px solid #2a2f36;
+  border-radius:4px;padding:8px 12px;backdrop-filter:blur(6px)}
+.dbg.on{display:flex}
+.dbg b{color:#9fd3a6;min-width:4ch}
+
+/* телефон: карточка во всю ширину, третий шаг склеен со вторым */
+@media(max-width:760px){
+  .cardslot{left:clamp(16px,4vw,24px);right:clamp(16px,4vw,24px);width:auto;
+    bottom:clamp(72px,12vh,110px)}
+  .card .mob{display:block}
+}
+
+@media(prefers-reduced-motion:reduce){
+  .fol{display:none}
+  .card,.card.in,.card.out{transition:opacity .2s linear;transform:none;filter:none}
+}
+</style>
+</head>
+<body>
+
+<div class="track" id="track">
+  <div class="stage">
+
+    <div class="scene" id="scene">
+      <div class="env env--orth" id="envOrth">
+        <img src="../../../images/abyss/gen/orth/orth-clouds-2.png" alt="Орт, город на краю Бездны">
+      </div>
+      <div class="env env--edge" id="envEdge">
+        <img src="../../../images/abyss/gen/edge/edge-restyle-1.png" alt="Край Бездны, первый слой">
+      </div>
+
+      <div class="wash"  id="wash"></div>
+      <div class="wisps" id="wisps"></div>
+
+      <div class="fol fol--small"  id="folSmall"></div>
+      <div class="fol fol--medium" id="folMedium"></div>
+      <div class="fol fol--large"  id="folLarge"></div>
+
+      <div class="grade" id="grade"></div>
+      <div class="vig"></div>
+    </div>
+
+    <div class="cardslot" id="cardslot">
+      <div class="card card--first">
+        <div class="kicker">Что там внизу</div>
+        <h2>Бездна</h2>
+        <p>Яма в земле, километр поперек.</p>
+        <p>Вниз она уходит на километров двадцать, и это только та часть, до которой дошли. Дна никто не видел.</p>
+        <p class="accent">Ее нашли 1900 лет назад на острове в южном море и за все эти годы так и не поняли, как она появилась.</p>
+      </div>
+
+      <div class="card">
+        <div class="kicker">Город на краю</div>
+        <h2>Орт</h2>
+        <p>Внизу можно найти загадочные реликвии, отголоски забытой цивилизации.</p>
+        <p>Слухи о них разошлись быстро, и на остров потянулись сначала охотники за легкой наживой, за ними ученые.</p>
+        <p class="accent">Никто не закладывал здесь город. Орт нарос на кромке сам и живет с того, что снаряжает уходящих вниз и скупает у вернувшихся добычу.</p>
+        <p class="mob accent">Спуск ничего не стоит. Свое Бездна берет на подъеме, и с шестого слоя прежним не возвращается никто.</p>
+      </div>
+
+      <div class="card card--last">
+        <div class="kicker">Плата за подъем</div>
+        <h2>Проклятие</h2>
+        <p>Спуск стоит денег и крови: снаряжение, припасы, оружие против сказочных тварей. Предсказуемо.</p>
+        <p>Свое Бездна берет на обратном пути, и чем глубже забрался, тем дороже выйдет подняться.</p>
+        <p>Это назвали <span class="term">проклятием Бездны</span>. С первых слоев это тошнота и помутнение рассудка, с глубоких уже кровотечения и потеря собственной сущности.</p>
+        <p class="accent">Отсюда уходят вниз.</p>
+      </div>
+
+      <div class="ticks" id="ticks"></div>
+    </div>
+
+    <div class="hud">
+      <div class="slot">
+        <div class="layer" id="hudOrth">
+          <div class="depth">Поверхность</div>
+          <div class="name">ОРТ</div>
+        </div>
+        <div class="layer" id="hudEdge">
+          <div class="depth">Слой&nbsp;01 · Край бездны</div>
+          <div class="name">БЕЗДНА</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="scrollhint" id="hint">Спуск</div>
+
+    <div class="dbg" id="dbg">
+      p <b id="dbgVal">0.000</b>
+      <input type="range" id="dbgRange" min="0" max="1000" value="0" style="width:220px">
+    </div>
+  </div>
+</div>
+
+<script>
+/* ======================================================================
+   ПАРАМЕТРЫ. Всё, что стоит крутить руками, живёт здесь.
+   ====================================================================== */
+const CONFIG = {
+  length: 4.6,            // длина поездки: трек = (1 + length) экранов
+
+  // --- ПРОЛОГ: Orth стоит, читают карточку ---
+  hold: 0.52,             // доля прокрутки до начала спуска
+  /* пороги показа карточек; slack — гистерезис, чтобы блок не дребезжал
+     на границе. Между until и следующим at оставлен зазор: уходящий текст
+     успевает погаснуть раньше, чем проявится следующий.
+     Амплитуды и времена — в CSS, здесь только тайминг по скроллу. */
+  cards: [{at: 0.04, until: 0.16},
+          {at: 0.19, until: 0.32},
+          {at: 0.35, until: 0.48}],
+  cardSlack: 0.02,
+
+  /* Ниже времена считаются от НАЧАЛА СПУСКА (q), а не от начала трека:
+     q = 0 в точке hold, q = 1 в конце. Менять hold можно свободно —
+     таймлайн спуска не поедет. */
+
+  // --- ORTH: камера влетает в кратер ---
+  orth: {
+    origin: [55, 62],     // ТОЧКА КРАТЕРА на orth-clouds-2, в % кадра.
+                          // Сменишь картинку — поправь это первым делом.
+    push:   1.95,         // во сколько раз кратер разрастётся
+    rise:   6,            // лёгкий подъём: камера клюёт носом вниз
+    drift:  0,            // «дыхание» камеры; включается ТОЛЬКО после hold —
+                          // в прологе кадр должен стоять намертво, иначе
+                          // приход карточки читается как съезд картинки вниз
+    fade:   [0.38, 0.60]
+  },
+
+  // --- СЛОЙ 1: выходим из облака ---
+  edge: {
+    origin: [24, 26],     // светящееся пятно в левом верху edge-restyle-1
+    from:   1.42,         // приходит крупным, будто мы ещё внутри него
+    rise:   10,
+    fade:   [0.50, 0.76]
+  },
+
+  wash:  {span: [0.20, 0.78], scale: [0.35, 3.6], peak: 0.54, width: 0.30},
+  wisps: {peak: 0.56, width: 0.20, scale: [1.0, 2.2], max: 0.55},
+  dark:  {peak: 0.55, width: 0.24, dim: 0.38, blur: 7},
+
+  foliage: {
+    large:  {src:null, span:[0.42,1.00], from:150, to:-215, scale:[0.9,2.1], drift:-10, blur:9, opacity:.98, count:7,  size:[300,520]},
+    medium: {src:null, span:[0.45,0.98], from:145, to:-155, scale:[0.85,1.5], drift:6,  blur:3, opacity:.92, count:12, size:[130,240]},
+    small:  {src:null, span:[0.47,1.00], from:135, to:-125, scale:[0.8,1.2],  drift:-3, blur:0, opacity:.85, count:26, size:[26,72]}
+  },
+
+  grade: {in: [0.58, 0.92], max: 0.5},
+  hud:   {orthOut: [0.06, 0.22], edgeIn: [0.82, 0.96]}
+};
+
+/* --- утилиты --- */
+const clamp = (v,a,b)=>v<a?a:v>b?b:v;
+const lerp  = (a,b,t)=>a+(b-a)*t;
+const inv   = (p,a,b)=>clamp((p-a)/(b-a),0,1);
+const smooth= t=>t*t*(3-2*t);
+const ramp  = (p,a,b)=>smooth(inv(p,a,b));
+const bell  = (p,c,w)=>smooth(1-clamp(Math.abs(p-c)/w,0,1));
+
+const rnd = (() => { let s = 20251202; return (a=0,b=1)=>{ s=(s*1664525+1013904223)>>>0; return a+(s/4294967296)*(b-a); }; })();
+
+/* ======================================================================
+   ЛИСТВА. Пока процедурный SVG; зелень подобрана под edge-restyle-1.
+   ====================================================================== */
+const GREENS = [['#3f6b41','#1b3020'],['#4d7f46','#24402a'],['#2e5233','#13251a'],['#5b8f4f','#2b4a2f']];
+
+function leafSVG(size, tint, blur){
+  const [a,b] = GREENS[tint % GREENS.length];
+  const id = 'g'+Math.round(rnd(0,1e6));
+  return `<svg width="${size}" height="${size}" viewBox="-60 -60 120 120" style="filter:blur(${blur}px)">
+    <defs><linearGradient id="${id}" x1="0" y1="-1" x2=".4" y2="1">
+      <stop offset="0" stop-color="${a}"/><stop offset="1" stop-color="${b}"/>
+    </linearGradient></defs>
+    <path d="M0,-52 C30,-30 36,18 0,52 C-36,18 -30,-30 0,-52 Z" fill="url(#${id})"/>
+    <path d="M0,-46 L0,46" stroke="${b}" stroke-width="2" opacity=".55" fill="none"/>
+    <path d="M0,-26 L17,-10 M0,-4 L20,12 M0,16 L14,30" stroke="${b}" stroke-width="1.4" opacity=".4" fill="none"/>
+  </svg>`;
+}
+
+function makeFoliage(el, spec){
+  if (spec.src){                      // режим готового ассета
+    el.innerHTML = [-100,0,100].map(y =>
+      `<img src="${spec.src}" style="left:0;top:${y}%;width:100%;height:100%;
+        object-fit:cover;filter:blur(${spec.blur}px);opacity:${spec.opacity}">`).join('');
+    return;
+  }
+  let html = '';
+  for (let i=0;i<spec.count;i++){
+    const size = rnd(spec.size[0], spec.size[1]);
+    const edgeBias = spec.count < 10;   // крупные листья жмутся к краям и подрезаются кромкой
+    const x = edgeBias ? (rnd(0,1)<.5 ? rnd(-12,22) : rnd(78,112)) : rnd(-8,108);
+    html += `<span style="position:absolute;left:${x}%;top:${rnd(-40,140)}%;
+      transform:translate(-50%,-50%) rotate(${rnd(0,360)}deg);opacity:${spec.opacity}">
+      ${leafSVG(size, i, spec.blur)}</span>`;
+  }
+  el.innerHTML = html;
+}
+
+/* ====================================================================== */
+const track  = document.getElementById('track');
+const scene  = document.getElementById('scene');
+const envOrth= document.getElementById('envOrth');
+const envEdge= document.getElementById('envEdge');
+const wash   = document.getElementById('wash');
+const wisps  = document.getElementById('wisps');
+const grade  = document.getElementById('grade');
+const ticksEl= document.getElementById('ticks');
+const cardEls= [...document.querySelectorAll('.card')];
+const hudOrth= document.getElementById('hudOrth');
+const hudEdge= document.getElementById('hudEdge');
+const hint   = document.getElementById('hint');
+
+const layers = {
+  large:  document.getElementById('folLarge'),
+  medium: document.getElementById('folMedium'),
+  small:  document.getElementById('folSmall')
+};
+
+envOrth.style.transformOrigin = CONFIG.orth.origin.join('% ') + '%';
+envEdge.style.transformOrigin = CONFIG.edge.origin.join('% ') + '%';
+wash.style.transformOrigin    = CONFIG.orth.origin.join('% ') + '%';
+wisps.style.transformOrigin   = CONFIG.orth.origin.join('% ') + '%';
+
+function setHeight(){ track.style.height = (1 + CONFIG.length) * 100 + 'svh'; }
+setHeight();
+for (const k in layers) makeFoliage(layers[k], CONFIG.foliage[k]);
+
+let progress = 0, scrubbed = null, ticking = false;
+
+/* На узком экране третий шаг не показывается: его мысль дописана
+   в конец второго (.mob), а диапазон отдан второму же. */
+const narrow = matchMedia('(max-width:760px)');
+let ranges = [], shown = [];
+
+function buildCards(){
+  ranges = CONFIG.cards.map(c => ({...c}));
+  if (narrow.matches){
+    ranges[1].until = ranges[2].until;
+    ranges.length = 2;
+  }
+  shown = ranges.map(() => false);
+  cardEls.forEach((el,i) => { el.classList.remove('in','out'); el.hidden = i >= ranges.length; });
+  ticksEl.innerHTML = ranges.map(() => '<i></i>').join('');
+}
+buildCards();
+narrow.addEventListener('change', () => { buildCards(); onScroll(); });
+
+function render(){
+  ticking = false;
+  const C = CONFIG;
+  const p = scrubbed !== null ? scrubbed : progress;   // весь трек
+  const q = inv(p, C.hold, 1);                          // только спуск
+
+  // --- ПРОЛОГ: карточка ---
+  /* защёлки, а не скраб: пороги расходятся на slack, так что микродвижения
+     у границы не гасят и не зажигают текст по десять раз */
+  const sl = C.cardSlack;
+  for (let i = 0; i < ranges.length; i++){
+    const r = ranges[i], el = cardEls[i];
+    const on = shown[i]
+      ? (p >= r.at - sl && p < r.until + sl)
+      : (p >= r.at      && p < r.until);
+    if (on === shown[i]) continue;
+    shown[i] = on;
+    /* Оба класса пересчитываются каждый раз. Снимать только 'in' нельзя:
+       'out' объявлен ниже и с той же специфичностью, так что забытый
+       'out' гасит карточку, которая по скроллу вверх снова активна. */
+    el.classList.toggle('in', on);
+    el.classList.toggle('out', !on && p >= r.until);
+    ticksEl.children[i].classList.toggle('on', on);
+  }
+
+  // --- ORTH: кратер разрастается ---
+  const o = C.orth, ot = ramp(q, 0, 0.72);
+  const drift = o.drift ? o.drift * ramp(q, 0, 0.2) * Math.sin(q*6.0) : 0;
+  envOrth.style.transform =
+    `translate3d(0,${-o.rise*ot + drift}%,0) scale(${lerp(1, o.push, ot)})`;
+  envOrth.style.opacity = 1 - ramp(q, o.fade[0], o.fade[1]);
+
+  // --- облачная стена: следом за кратером, шире и быстрее ---
+  const w = C.wash, wt = smooth(inv(q, w.span[0], w.span[1]));
+  wash.style.transform = `scale(${lerp(w.scale[0], w.scale[1], wt)})`;
+  wash.style.opacity   = bell(q, w.peak, w.width);
+
+  const wi = C.wisps;
+  wisps.style.transform = `scale(${lerp(wi.scale[0], wi.scale[1], wt)})`;
+  wisps.style.opacity   = wi.max * bell(q, wi.peak, wi.width);
+
+  // --- СЛОЙ 1: раскрывается из дымки ---
+  const e = C.edge, et = ramp(q, 0.46, 1.0);
+  envEdge.style.transform =
+    `translate3d(0,${lerp(e.rise, 0, et)}%,0) scale(${lerp(e.from, 1, et)})`;
+  envEdge.style.opacity = ramp(q, e.fade[0], e.fade[1]);
+
+  // --- листва: снизу вверх мимо камеры ---
+  for (const k in layers){
+    const f = C.foliage[k], el = layers[k];
+    const t = inv(q, f.span[0], f.span[1]);
+    el.style.transform =
+      `translate3d(${f.drift*t}%,${lerp(f.from, f.to, t)}%,0) scale(${lerp(f.scale[0], f.scale[1], t)})`;
+    el.style.opacity = t <= 0 ? 0 : 1 - smooth(inv(t, 0.88, 1));
+  }
+
+  // --- тёмный провал: блюр только на сцене, текст остаётся резким ---
+  const d = C.dark, dv = bell(q, d.peak, d.width);
+  scene.style.filter = dv > 0.01
+    ? `blur(${(d.blur*dv).toFixed(2)}px) brightness(${1 - d.dim*dv})`
+    : '';
+
+  grade.style.opacity = C.grade.max * ramp(q, C.grade.in[0], C.grade.in[1]);
+
+  // --- подписи ---
+  const outO = ramp(q, C.hud.orthOut[0], C.hud.orthOut[1]);
+  hudOrth.style.opacity = 1 - outO;
+  hudOrth.style.transform = `translate3d(0,${-18*outO}px,0)`;
+  const inE = ramp(q, C.hud.edgeIn[0], C.hud.edgeIn[1]);
+  hudEdge.style.opacity = inE;
+  hudEdge.style.transform = `translate3d(0,${18*(1-inE)}px,0)`;
+  hint.style.opacity = 0.5 * (1 - ramp(p, 0.02, 0.10));
+
+  dbgVal.textContent = p.toFixed(3);
+  if (scrubbed === null) dbgRange.value = p * 1000;
+}
+
+function onScroll(){
+  const dist = track.offsetHeight - window.innerHeight;
+  progress = clamp(-track.getBoundingClientRect().top / dist, 0, 1);
+  if (!ticking){ ticking = true; requestAnimationFrame(render); }
+}
+
+addEventListener('scroll', onScroll, {passive:true});
+addEventListener('resize', () => { setHeight(); onScroll(); });
+
+/* --- отладка: D открывает ползунок прогресса --- */
+const dbg = document.getElementById('dbg');
+addEventListener('keydown', ev => {
+  if (ev.key === 'd' || ev.key === 'в'){
+    dbg.classList.toggle('on');
+    if (!dbg.classList.contains('on')){ scrubbed = null; onScroll(); }
+  }
+});
+dbgRange.addEventListener('input', () => { scrubbed = dbgRange.value / 1000; render(); });
+
+onScroll();
+</script>
+</body>
+</html>
