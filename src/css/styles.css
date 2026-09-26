@@ -712,6 +712,7 @@ a.navlink--cinema[aria-current="page"] { background: #0d0f13; color: var(--porta
     text-transform: uppercase; color: var(--ink-3);
     border: 1px solid var(--line-2); border-radius: 4px; padding: 2px 6px;
 }
+.code__lang + .code__ver { margin-left: -4px; color: var(--acc); border-color: var(--acc-line); }
 .copy {
     flex: none; display: inline-flex; align-items: center; gap: 5px;
     height: 28px; padding: 0 9px; border-radius: 7px;
@@ -871,43 +872,28 @@ a.navlink--cinema[aria-current="page"] { background: #0d0f13; color: var(--porta
 
 /* ------------------------------------------- картинки, зависящие от темы */
 .note-media {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-3);
+    display: flex; flex-direction: column; align-items: center; gap: 10px;
     margin: 2em 0;
 }
-
+/* Та же рамка, что у .fig__frame, но без внутренних полей: картинка до края. */
 .note-media__image-wrapper {
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 5px;
-    border: 1px solid var(--line);
-    border-radius: var(--radius-xl);
-    background: var(--surface);
-    box-shadow: var(--shadow-1);
+    width: 100%; max-width: 720px;
+    border: 1px solid var(--line); border-radius: 12px;
+    background: var(--surface); overflow: hidden; line-height: 0;
 }
-
-.note-media__image {
-    display: block;
-    width: 100%;
-    max-width: 720px;
-    height: auto;
-    border-radius: var(--radius-lg);
-    object-fit: contain;
-}
-
+.note-media__image { display: block; width: 100%; height: auto; }
+.note-media--full .note-media__image-wrapper { max-width: none; }
+/* Иллюстрация-настроение: не должна перетягивать внимание с текста. */
+.note-media--sm .note-media__image-wrapper { max-width: 340px; }
+/* Подпись в голосе .fig figcaption, «Метка» в <b> перед текстом. */
 .note-media__caption {
-    font-size: 0.95rem;
-    color: var(--ink-3);
-    text-align: center;
+    display: flex; gap: 8px; max-width: 340px;
+    font-size: 13px; line-height: 1.5; color: var(--ink-3);
 }
-
-.note-media--full .note-media__image { max-width: 100%; }
-
-.note-image-simple .note-media__image-wrapper { max-width: 500px; margin: 0 auto; }
-.note-image-simple .note-media--full .note-media__image { max-width: 500px; }
+.note-media__caption b {
+    flex: none; font-family: var(--mono); font-size: 9.5px; letter-spacing: .14em;
+    text-transform: uppercase; color: var(--acc); padding-top: 3px; font-weight: 500;
+}
 
 /* -------------------------------------------------------------- таблица */
 .tablewrap {

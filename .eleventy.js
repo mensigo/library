@@ -216,13 +216,16 @@ module.exports = function(eleventyConfig) {
 
             const parts = info.split(/\s+/);
             const lang = parts.shift().split('/')[0];
-            const name = parts.join(' ');
+            // `@3.12` в строке фенса — бейдж версии рядом с бейджем языка.
+            const versions = parts.filter(p => /^@\S+$/.test(p)).map(p => p.slice(1));
+            const name = parts.filter(p => !/^@\S+$/.test(p)).join(' ');
 
             return '<div class="code">'
                 + '<div class="code__bar">'
                 + '<span class="code__dots" aria-hidden="true"><i></i><i></i><i></i></span>'
                 + (name ? '<span class="code__name">' + md.utils.escapeHtml(name) + '</span>' : '')
                 + '<span class="code__lang">' + md.utils.escapeHtml(lang) + '</span>'
+                + versions.map(v => '<span class="code__lang code__ver">' + md.utils.escapeHtml(v) + '</span>').join('')
                 + '<button class="copy" type="button">'
                 + '<svg class="ico-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>'
                 + '<svg class="ico-done" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" aria-hidden="true"><path d="m5 13 4 4L19 7"/></svg>'

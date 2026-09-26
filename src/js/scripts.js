@@ -246,7 +246,9 @@ function initTableOfContents() {
     if (!toc || !article) return;
 
     // .u-kicker — служебные заголовки блоков («Итог», «Примечания»): в оглавление не идут.
-    const headings = article.querySelectorAll('h2:not(.u-kicker), h3:not(.u-kicker), h4:not(.u-kicker)');
+    // Заголовки колонок .verdict («Стоит брать» / «Не стоит») — тоже подписи, а не разделы.
+    const headings = [...article.querySelectorAll('h2:not(.u-kicker), h3:not(.u-kicker), h4:not(.u-kicker)')]
+        .filter(heading => !heading.closest('.verdict'));
     if (!headings.length) return;
 
     const fragment = document.createDocumentFragment();

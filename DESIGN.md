@@ -78,7 +78,7 @@ Keep the reading width constrained. If a page needs wider content, add a modifie
 - `.hero`, `.hero__tags`, `.hero__lede`, `.hero__meta`, `.chip` (`.chip--acc`): page header.
 - `.tldr`: optional key-points block above the article.
 - `.prose`: markdown body.
-- `.code`, `.code__bar`, `.code__name`, `.code__lang`, `.copy`, `.code__out`: code blocks with a title bar, copy button, and attached output.
+- `.code`, `.code__bar`, `.code__name`, `.code__lang` (`.code__ver` — version badge), `.copy`, `.code__out`: code blocks with a title bar, copy button, and attached output.
 - `.callout` with `.callout--tip` / `.callout--warn` / `.callout--stop`, plus `.callout__ico` and `.callout__body`.
 - `.flow`: a one-line pipeline diagram (`A → B → C`) — centred mono text, `<b>` for the node the point rests on, `<i>` for the arrows. Use it instead of a fenced block when the chain is prose, not code.
 - `.split`: two code blocks side by side («before / after»); collapses to one column below 860px.
@@ -87,7 +87,7 @@ Keep the reading width constrained. If a page needs wider content, add a modifie
 - `.notes-block` + `.fnref` + `.back`: footnotes, generated from `[^1]` by `markdown-it-footnote`.
 - `.pager` with `.l` / `.t` / `.next`: previous/next links, built by `note.njk` from the `neighbours` filter.
 - `.fig`, `.fig__frame`, `figcaption`, and the `.d-*` SVG tokens for theme-aware diagrams.
-- `.note-media`, `.note-media__image-wrapper`, `.note-media__image`, `.note-media__caption`: raw-HTML images that swap source per theme.
+- `.note-media`, `.note-media__image-wrapper`, `.note-media__image`, `.note-media__caption`: raw-HTML images that swap source per theme. Framed like `.fig__frame` but edge-to-edge; `--sm` caps it at 340px for mood illustrations, `--full` lifts the 720px cap. The caption takes a `<b>Метка</b>` like `.fig figcaption`.
 - `.tablewrap` + `table.tbl`: every table, markdown or shortcode-generated.
 - `.rail`, `.rail__head`, `.toc` (`.lvl-2` / `.lvl-3` / `.lvl-4`), `.railcard`.
 - `.cfg`, `.cfg__group`, `.seg` / `.seg__btn`, `.cfg__pick` / `.cfg__list` / `.cfg__opt`: settings popover.
@@ -137,7 +137,7 @@ Frontmatter: `title` (required, drives search and the hero), optional `titleHtml
 Authoring syntax, all handled by `amendLibrary` in `.eleventy.js`:
 
 - Code fences carry the language, optional highlighted lines, and an optional file name:
-  ```` ```python/3,5-7 slots.py ```` — line numbers are 0-indexed and go through the syntax-highlight plugin unchanged.
+  ```` ```python/3,5-7 slots.py ```` — line numbers are 0-indexed and go through the syntax-highlight plugin unchanged. A trailing `@3.12` token adds a version badge next to the language badge.
   A second group after another slash marks lines in red instead of accent: ```` ```python//2 strict.py ```` highlights line 2 as a mistake.
 - `::: note`, `::: tip`, `::: warn`, `::: stop` … `:::` produce callouts. Text after the keyword replaces the default bold title.
 - `::: out` … `:::` right after a fence renders the program's output attached to the block. A word after `out` relabels it. Plain text inside wraps; wrap the content in a nested fence when leading whitespace matters (bytecode dumps, tracebacks) — a fence inside `::: out` is rendered bare, keeping its highlighting but dropping the title bar and frame.
