@@ -43,7 +43,7 @@ Fixed `.topbar` (breadcrumbs + reading progress), off-canvas `.drawer` for navig
 
 - ` ```python/3,5-7 slots.py ` — language, 0-indexed highlighted lines, optional file name. A second slash-group marks error lines: ` ```python//2 ` → `.highlight-line-remove`. Line highlighting comes from `eleventy-plugin-syntaxhighlight`, which emits `.highlight-line` / `.highlight-line-active`.
 - `::: note` / `::: tip` / `::: warn` / `::: stop` … `:::` → callouts. Text after the keyword overrides the bold title.
-- `::: out` … `:::` directly after a fence → output block attached to it.
+- `::: out` … `:::` directly after a fence → output block attached to it. A nested fence inside it renders without chrome, so indented output (bytecode dumps, tracebacks) survives markdown; bare text inside wraps as a paragraph.
 - `::: split` … `:::` → two code blocks side by side; `:::: verdict` around `::: yes` / `::: no` → the two-column verdict block; `::: finale` … `:::` → the closing block. Nesting needs four colons outside, three inside.
 - `[^1]` footnotes → `.fnref` links and a `.notes-block` list (`markdown-it-footnote`, re-rendered into the design's markup).
 - `![alt](src "caption")` alone in a paragraph → `<figure class="fig">`; a caption of the form `"Label | text"` splits into an accent label and body. Hand-drawn SVG diagrams live in `src/_includes/figures/*.njk` and are pulled in with `{% include %}` — keep those partials free of blank lines, or markdown-it breaks the HTML block apart.

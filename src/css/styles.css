@@ -581,7 +581,10 @@ a.navlink--cinema[aria-current="page"] { background: #0d0f13; color: var(--porta
 /* --------------------------------------------------------------- prose */
 .prose { padding-top: 8px; }
 .prose > * + * { margin-top: 1.15em; }
-.prose p { margin: 0; text-wrap: pretty; }
+/* Сбросы полей завёрнуты в :where() — нулевая специфичность, иначе
+   они перебивают ритм выше и абзацы со списками слипаются. */
+:where(.prose p) { margin: 0; }
+.prose p { text-wrap: pretty; }
 .prose strong { font-weight: 650; color: var(--ink); }
 .prose em { font-style: italic; }
 .prose a:not(.chip) {
@@ -612,7 +615,7 @@ a.navlink--cinema[aria-current="page"] { background: #0d0f13; color: var(--porta
     content: ''; flex: 1; height: 1px; background: var(--line); align-self: center;
 }
 /* Разделы верхнего уровня нумеруются автоматически: 01, 02, 03…
-   Служебные заголовки (.u-kicker — «Итог», «Сноски») в счёт не идут. */
+   Служебные заголовки (.u-kicker — «Итог», «Примечания») в счёт не идут. */
 .prose { counter-reset: sec; }
 .prose > h2:not(.u-kicker) { counter-increment: sec; }
 .prose > h2:not(.u-kicker)::before {
@@ -646,7 +649,8 @@ a.navlink--cinema[aria-current="page"] { background: #0d0f13; color: var(--porta
 .anchor:hover { color: var(--acc); background: none !important; }
 @media (max-width: 720px) { .anchor { display: none; } }
 
-.prose ul, .prose ol { margin: 0; padding-left: 0; list-style: none; display: grid; gap: 8px; }
+:where(.prose ul, .prose ol) { margin: 0; }
+.prose ul, .prose ol { padding-left: 0; list-style: none; display: grid; gap: 8px; }
 .prose ul > li { position: relative; padding-left: 22px; }
 .prose ul > li::before {
     content: ''; position: absolute; left: 4px; top: .68em;
@@ -665,8 +669,10 @@ a.navlink--cinema[aria-current="page"] { background: #0d0f13; color: var(--porta
     color: var(--ink-2); font-style: italic;
 }
 
-.prose code:not(pre code) {
-    font-family: var(--mono); font-size: .86em;
+/* Инлайн-код. .tldr вне .prose — без него код там падает в браузерный monospace.
+   .82em, а не привычные .85–.9: у JetBrains Mono x-height заметно выше, чем у Ysabeau. */
+:is(.prose, .tldr) code:not(pre code) {
+    font-family: var(--mono); font-size: .82em;
     padding: .12em .38em; border-radius: 5px;
     background: var(--surface-2); border: 1px solid var(--line);
     color: var(--ink);
@@ -729,23 +735,34 @@ a.navlink--cinema[aria-current="page"] { background: #0d0f13; color: var(--porta
 /* code как блок — иначе процентная ширина подсвеченной строки не считается. */
 .code pre code { font: inherit; background: none; border: 0; padding: 0; display: block; }
 
+/* Вывод — панель терминала: на тон темнее кода в обеих темах. */
 .code__out {
-    border-top: 1px dashed var(--line-2); padding: 10px 18px;
-    font-family: var(--mono); font-size: 12.5px; color: var(--ink-2);
-    background: var(--surface-2);
-    display: flex; gap: 10px;
+    position: relative;
+    border-top: 1px solid var(--line); padding: 18px 18px 14px;
+    font-family: var(--mono); font-size: 12px; color: var(--ink);
+    background: color-mix(in oklab, var(--code-bg), #000 8%);
 }
+/* Ярлык (stdout или свой) — в правом верхнем углу, не мешает левому краю. */
 .code__out b {
-    flex: none; font-weight: 500; color: var(--ink-3);
-    font-size: 9.5px; letter-spacing: .14em; text-transform: uppercase; padding-top: 3px;
+    position: absolute; top: 8px; right: 12px;
+    font-weight: 500; color: var(--ink-3);
+    font-size: 9.5px; letter-spacing: .14em; text-transform: uppercase;
 }
+
 .code__out p { margin: 0; white-space: pre-wrap; min-width: 0; overflow-wrap: break-word; }
+.code__out > p + p { margin-top: .85em; }
+/* Вывод, положенный в фенс: отступы выживают, широкое прокручивается. */
+.code__out pre {
+    margin: 0; overflow-x: auto; tab-size: 4;
+    font: inherit; line-height: 1.7;
+}
+.code__out pre code { font: inherit; background: none; border: 0; padding: 0; display: block; }
 
 /* Блок вывода, стоящий сразу за код-блоком, приклеивается к нему снизу. */
 .code:has(+ .code__out) { border-bottom-left-radius: 0; border-bottom-right-radius: 0; margin-bottom: 0; }
 .code + .code__out {
     margin: 0 0 1.6em;
-    border: 1px solid var(--line); border-top: 1px dashed var(--line-2);
+    border: 1px solid var(--line);
     border-radius: 0 0 12px 12px;
 }
 
@@ -840,6 +857,18 @@ a.navlink--cinema[aria-current="page"] { background: #0d0f13; color: var(--porta
 .d-warn   { fill: var(--warn); }
 .d-warn-s { stroke: var(--warn); }
 
+/* ---------------------------------------------------------------- flow */
+/* Однострочная схема «A → B → C»: легче блока кода и не требует SVG. */
+.flow {
+    margin: 1.6em 0;
+    font-family: var(--mono); font-size: 12.5px; line-height: 1.9;
+    color: var(--ink-2); text-align: center; text-wrap: balance;
+}
+/* Узел, на котором держится мысль. */
+.flow b { color: var(--ink); font-weight: 500; }
+/* Стрелки между узлами. */
+.flow i { color: var(--acc); font-style: normal; padding: 0 var(--space-2); }
+
 /* ------------------------------------------- картинки, зависящие от темы */
 .note-media {
     display: flex;
@@ -894,7 +923,8 @@ table.tbl th {
 }
 table.tbl tr:last-child td { border-bottom: 0; }
 table.tbl tbody tr:hover { background: var(--surface-2); }
-table.tbl td code { font-family: var(--mono); font-size: 13px; }
+/* nowrap — «BUILD_TUPLE n» не должен рваться; колонка сама раздвинется. */
+table.tbl td code { font-family: var(--mono); font-size: 13px; white-space: nowrap; }
 
 /* Сортировка таблиц */
 table.tbl th.sortable {
@@ -966,6 +996,7 @@ table.tbl .no { color: var(--danger); }
 
 /* ---------------------------------------------------------------- сноски */
 .notes-block { margin-top: 3em; padding-top: 20px; border-top: 1px solid var(--line); }
+.notes-block .u-kicker { margin-bottom: 18px; }
 .notes-block ol { counter-reset: fn; display: grid; gap: 12px; }
 .notes-block li {
     counter-increment: fn; position: relative; padding-left: 30px;
@@ -982,6 +1013,14 @@ table.tbl .no { color: var(--danger); }
 }
 .notes-block li:target::before { background: var(--acc); border-color: var(--acc); color: var(--bg); }
 .notes-block li > p { margin: 0; display: inline; }
+/* Длинная сноска из нескольких блоков: абзацы и код идут столбиком. */
+.notes-block li > :not(:first-child) { display: block; margin-top: .8em; }
+.notes-block li > pre {
+    overflow-x: auto; padding: 12px 14px;
+    border: 1px solid var(--line); border-radius: 8px; background: var(--code-bg);
+    font: 12px/1.55 var(--mono); color: var(--ink); tab-size: 4;
+}
+.notes-block li > pre code { font: inherit; color: inherit; background: none; border: 0; padding: 0; }
 .notes-block .back { text-decoration: none; color: var(--ink-3); margin-left: 4px; border: 0 !important; }
 .notes-block .back:hover { color: var(--acc); background: none !important; }
 

@@ -114,7 +114,7 @@ function footnoteMarkup(md) {
         return '<a class="fnref" href="#fn' + id + '" id="fnref' + id + '">' + caption + '</a>';
     };
     md.renderer.rules.footnote_block_open = () => '<section class="notes-block" aria-labelledby="fn-h">'
-        + '<h2 class="u-kicker" id="fn-h">Сноски</h2><ol>\n';
+        + '<h2 class="u-kicker" id="fn-h">Примечания</h2><ol>\n';
     md.renderer.rules.footnote_block_close = () => '</ol></section>\n';
     md.renderer.rules.footnote_open = (tokens, idx, options, env, slf) => {
         const id = slf.rules.footnote_anchor_name(tokens, idx, options, env, slf);
@@ -181,7 +181,14 @@ module.exports = function(eleventyConfig) {
         md.use(markdownItContainer, 'out', {
             render(tokens, idx) {
                 if (tokens[idx].nesting !== 1) return '</div>\n';
-                const label = tokens[idx].info.trim().slice(3).trim() || 'вывод';
+                const label = tokens[idx].info.trim().slice(3).trim();
+                // Без своего ярлыка блок помечается как stdout: слово «вывод»
+                // остаётся только для скринридеров.
+                if (!label) {
+                    return '<div class="code__out">'
+                        + '<b aria-hidden="true">stdout</b>'
+                        + '<span class="u-sr">вывод</span>\n';
+                }
                 return '<div class="code__out"><b>' + md.utils.escapeHtml(label) + '</b>\n';
             }
         });
@@ -191,10 +198,21 @@ module.exports = function(eleventyConfig) {
         //   первый токен целиком уходит в highlighter (язык + номера строк),
         //   остаток — имя файла.
         const defaultFence = md.renderer.rules.fence;
+
+        // Фенс внутри ::: out — это вывод, а не самостоятельный код-блок:
+        // шапка и рамка ему не нужны, но отступы и подсветка должны выжить.
+        function insideOut(tokens, idx) {
+            for (let i = idx - 1; i >= 0; i--) {
+                if (tokens[i].type === 'container_out_close') return false;
+                if (tokens[i].type === 'container_out_open') return true;
+            }
+            return false;
+        }
+
         md.renderer.rules.fence = function (tokens, idx, options, env, self) {
             const body = defaultFence(tokens, idx, options, env, self);
             const info = (tokens[idx].info || '').trim();
-            if (!info) return body;
+            if (!info || insideOut(tokens, idx)) return body;
 
             const parts = info.split(/\s+/);
             const lang = parts.shift().split('/')[0];
@@ -296,7 +314,7 @@ module.exports = function(eleventyConfig) {
     });
 
     // Количество разделов верхнего уровня (h2) в отрендеренном HTML.
-    // Служебные заголовки (.u-kicker: «Итог», «Сноски») разделами не считаются.
+    // Служебные заголовки (.u-kicker: «Итог», «Примечания») разделами не считаются.
     eleventyConfig.addFilter("headingCount", (content) => {
         return (String(content).match(/<h2(?![^>]*u-kicker)[\s>]/g) || []).length;
     });

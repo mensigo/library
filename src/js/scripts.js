@@ -245,7 +245,7 @@ function initTableOfContents() {
     const article = document.querySelector('.prose');
     if (!toc || !article) return;
 
-    // .u-kicker — служебные заголовки блоков («Итог», «Сноски»): в оглавление не идут.
+    // .u-kicker — служебные заголовки блоков («Итог», «Примечания»): в оглавление не идут.
     const headings = article.querySelectorAll('h2:not(.u-kicker), h3:not(.u-kicker), h4:not(.u-kicker)');
     if (!headings.length) return;
 
