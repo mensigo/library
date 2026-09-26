@@ -80,6 +80,7 @@ Keep the reading width constrained. If a page needs wider content, add a modifie
 - `.prose`: markdown body.
 - `.code`, `.code__bar`, `.code__name`, `.code__lang` (`.code__ver` — version badge), `.copy`, `.code__out`: code blocks with a title bar, copy button, and attached output.
 - `.callout` with `.callout--tip` / `.callout--warn` / `.callout--stop`, plus `.callout__ico` and `.callout__body`.
+- `.more` + `.more__body`: a collapsible aside on native `<details>`, closed by default. No headings inside — the TOC would point into hidden content.
 - `.flow`: a one-line pipeline diagram (`A → B → C`) — centred mono text, `<b>` for the node the point rests on, `<i>` for the arrows. Use it instead of a fenced block when the chain is prose, not code.
 - `.split`: two code blocks side by side («before / after»); collapses to one column below 860px.
 - `.verdict`, `.verdict__col` with `.verdict--yes` / `.verdict--no`: the two-column «worth it / not worth it» block.
@@ -140,6 +141,7 @@ Authoring syntax, all handled by `amendLibrary` in `.eleventy.js`:
   ```` ```python/3,5-7 slots.py ```` — line numbers are 0-indexed and go through the syntax-highlight plugin unchanged. A trailing `@3.12` token adds a version badge next to the language badge.
   A second group after another slash marks lines in red instead of accent: ```` ```python//2 strict.py ```` highlights line 2 as a mistake.
 - `::: note`, `::: tip`, `::: warn`, `::: stop` … `:::` produce callouts. Text after the keyword replaces the default bold title.
+- `::: more Заголовок` … `:::` wraps a side note in a collapsible `.more` block; the text after `more` is the clickable summary (default «Подробнее»).
 - `::: out` … `:::` right after a fence renders the program's output attached to the block. A word after `out` relabels it. Plain text inside wraps; wrap the content in a nested fence when leading whitespace matters (bytecode dumps, tracebacks) — a fence inside `::: out` is rendered bare, keeping its highlighting but dropping the title bar and frame.
 - `![alt](/images/x.png "подпись")` alone in a paragraph becomes a `<figure class="fig">`; the title becomes the caption. A caption written as `"Схема | текст"` splits into an accent label and the caption body.
 - `::: split` … `:::` around two fences puts them side by side. Name them through the fence info line: ```` ```python было ````.

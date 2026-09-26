@@ -177,6 +177,16 @@ module.exports = function(eleventyConfig) {
             }
         });
 
+        // ::: more Заголовок — сворачиваемая справка, по умолчанию закрыта.
+        md.use(markdownItContainer, 'more', {
+            render(tokens, idx) {
+                if (tokens[idx].nesting !== 1) return '</div></details>\n';
+                const title = tokens[idx].info.trim().slice('more'.length).trim() || 'Подробнее';
+                return '<details class="more"><summary>' + md.utils.escapeHtml(title)
+                    + '</summary><div class="more__body">\n';
+            }
+        });
+
         // ::: out — блок вывода, приклеенный к предыдущему код-блоку.
         md.use(markdownItContainer, 'out', {
             render(tokens, idx) {
