@@ -1,11 +1,8 @@
-### Инициализируем package.json
-npm init -y
+### Install dependencies
+npm install
 
-### Устанавливаем Eleventy
-npm install @11ty/eleventy --save-dev
-
-### Запускаем
+### Start dev server
 npm run dev
 
----
-⛩️🏛️
+### Run tests
+npm test

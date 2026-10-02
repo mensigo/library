@@ -1,0 +1,24 @@
+<figure class="fig">
+  <div class="fig__frame">
+    <svg viewBox="0 0 620 152" role="img" aria-labelledby="fig2-t">
+      <title id="fig2-t">Столбчатое сравнение памяти на экземпляр: вариант со словарем заметно выше варианта со слотами</title>
+      <g font-size="10.5">
+        <text class="d-dim" x="10" y="14" letter-spacing="1.4">ПАМЯТЬ НА ЭКЗЕМПЛЯР · ПОРЯДОК ВЕЛИЧИН</text>
+        <text class="d-txt" x="10" y="50" font-size="11">__dict__</text>
+        <rect class="d-fill-2 d-line" x="118" y="36" width="420" height="22" rx="4" stroke-width="1"/>
+        <rect class="d-warn" x="118" y="36" width="420" height="22" rx="4" opacity=".22"/>
+        <rect class="d-warn" x="118" y="36" width="3" height="22"/>
+        <text class="d-warn" x="548" y="51" font-size="11">×1.0</text>
+        <text class="d-txt" x="10" y="96" font-size="11">__slots__</text>
+        <rect class="d-fill-2 d-line" x="118" y="82" width="420" height="22" rx="4" stroke-width="1"/>
+        <rect class="d-acc-bg" x="118" y="82" width="152" height="22" rx="4"/>
+        <rect class="d-acc" x="118" y="82" width="152" height="22" rx="4" opacity=".28"/>
+        <rect class="d-acc" x="118" y="82" width="3" height="22"/>
+        <text class="d-acc" x="548" y="97" font-size="11">≈ ×0.35</text>
+        <line class="d-line" x1="118" y1="118" x2="538" y2="118" stroke-width="1"/>
+        <text class="d-dim" x="118" y="136" font-size="9">класс из двух полей · CPython 3.12 · x86-64 · замер через tracemalloc</text>
+      </g>
+    </svg>
+  </div>
+  <figcaption><b>Замер</b><span>Иллюстративное отношение для класса из двух полей. У класса с двадцатью полями или с key-sharing-словарями картина будет другой — поэтому в фигуре отношение, а не мегабайты.</span></figcaption>
+</figure>

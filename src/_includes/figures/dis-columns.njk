@@ -1,0 +1,30 @@
+<figure class="fig">
+  <div class="fig__frame">
+    <svg viewBox="0 0 620 124" role="img" aria-labelledby="fig-dis-t">
+      <title id="fig-dis-t">Строка вывода dis разобрана на пять колонок: номер строки, смещение, инструкция, аргумент и расшифровка аргумента</title>
+      <g font-family="ui-monospace, monospace">
+        <rect class="d-fill-2 d-line" x="16" y="18" width="588" height="34" rx="8" stroke-width="1"/>
+        <text class="d-dim" x="40" y="40" font-size="13">4</text>
+        <text class="d-dim" x="100" y="40" font-size="13">2</text>
+        <text class="d-txt d-acc" x="160" y="40" font-size="13">LOAD_FAST</text>
+        <text class="d-txt" x="270" y="40" font-size="13">0</text>
+        <text class="d-dim" x="330" y="40" font-size="13">(x)</text>
+        <g class="d-line" stroke-width="1" stroke-dasharray="3 3" fill="none">
+          <path d="M44 56 V66"/>
+          <path d="M104 56 V90"/>
+          <path d="M195 56 V66"/>
+          <path d="M274 56 V90"/>
+          <path d="M342 56 V66"/>
+        </g>
+        <g text-anchor="middle" font-size="9.5" letter-spacing=".08em">
+          <text class="d-dim" x="44" y="78">строка</text>
+          <text class="d-dim" x="195" y="78">инструкция</text>
+          <text class="d-dim" x="342" y="78">расшифровка</text>
+          <text class="d-dim" x="104" y="102">смещение</text>
+          <text class="d-dim" x="274" y="102">аргумент</text>
+        </g>
+      </g>
+    </svg>
+  </div>
+  <figcaption><b>Схема</b><span>Аргумент инструкции - всегда целое число, а не сам объект. У загрузок это индекс в таблицу: здесь <code>0</code> означает «локальная переменная номер ноль», а <code>dis</code> любезно подписывает в скобках, что это <code>x</code>. У других инструкций число может быть счетчиком, флагом или кодом операции.</span></figcaption>
+</figure>

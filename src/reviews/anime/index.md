@@ -1,9 +1,9 @@
 ---
-layout: base.njk
-title: Аниме
+layout: plain.njk
+title: Интро
 ---
 
-## Аниме тайтлы
+## Интро
 
 {% sortableTable %}
 | Аниме              | Год  | Оценка |

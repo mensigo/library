@@ -1,143 +1,20 @@
-document.addEventListener('DOMContentLoaded', function() {
-    // Инициализация темы
-    initTheme();
+// ========================================
+// Утилитарные функции (используются в логике и тестах)
+// ========================================
 
-    // Инициализация сортировки таблиц
-    initTableSorting();
-
-    // Инициализация TOC
-    initTableOfContents();
-
-    // Инициализация поиска
-    initSearch();
-    
-    const menuToggle = document.getElementById('menuToggle');
-    const sidebarLeft = document.getElementById('sidebarLeft');
-    const overlay = document.getElementById('sidebarOverlay');
-    const body = document.body;
-
-    function toggleMenu() {
-        if (menuToggle && sidebarLeft) {
-            menuToggle.classList.toggle('active');
-            sidebarLeft.classList.toggle('active');
-            if (overlay) overlay.classList.toggle('active');
-            body.classList.toggle('menu-open');
-        }
-    }
-
-    // Клик по гамбургеру
-    if (menuToggle) {
-        menuToggle.addEventListener('click', toggleMenu);
-    }
-
-    // Клик по overlay (закрытие меню)
-    if (overlay) {
-        overlay.addEventListener('click', toggleMenu);
-    }
-
-    // Клик по ссылке в меню (закрытие на мобильных)
-    const navLinks = document.querySelectorAll('.sidebar-left a');
-    navLinks.forEach(link => {
-        link.addEventListener('click', function() {
-            if (window.innerWidth <= 768) {
-                toggleMenu();
-            }
-        });
-    });
-
-    // Закрытие меню при изменении размера окна
-    window.addEventListener('resize', function() {
-        if (window.innerWidth > 768 && sidebarLeft) {
-            if (menuToggle) menuToggle.classList.remove('active');
-            sidebarLeft.classList.remove('active');
-            if (overlay) overlay.classList.remove('active');
-            body.classList.remove('menu-open');
-        }
-    });
-
-    // Древовидная навигация - сворачивание/разворачивание
-    const collapsibleItems = document.querySelectorAll('.tree-item-self.mod-collapsible');
-    
-    collapsibleItems.forEach(item => {
-        item.addEventListener('click', function(e) {
-            // Если клик по ссылке, не сворачиваем
-            if (e.target.tagName === 'A' || e.target.closest('a')) {
-                // Но если клик по иконке, все равно сворачиваем
-                if (!e.target.closest('.tree-item-icon')) {
-                    return;
-                }
-            }
-
-            const icon = this.querySelector('.tree-item-icon');
-            const children = this.nextElementSibling;
-            
-            if (children && children.classList.contains('tree-item-children')) {
-                const isCollapsed = children.classList.contains('is-collapsed');
-                
-                if (isCollapsed) {
-                    children.classList.remove('is-collapsed');
-                    if (icon) icon.classList.remove('is-collapsed');
-                } else {
-                    children.classList.add('is-collapsed');
-                    if (icon) icon.classList.add('is-collapsed');
-                }
-                
-                // Предотвращаем переход по ссылке, если клик был по иконке или области элемента
-                if (e.target.closest('.tree-item-icon') || !e.target.closest('a')) {
-                    e.preventDefault();
-                }
-            }
-        });
-    });
-
-    // Автоматически разворачиваем родительские элементы активной страницы
-    const activeItem = document.querySelector('.tree-item-self.mod-active');
-    if (activeItem) {
-        let current = activeItem.parentElement;
-        while (current) {
-            const children = current.querySelector('.tree-item-children');
-            const icon = current.querySelector('.tree-item-icon');
-            if (children && children.classList.contains('is-collapsed')) {
-                children.classList.remove('is-collapsed');
-                if (icon) icon.classList.remove('is-collapsed');
-            }
-            current = current.parentElement;
-            if (!current || !current.classList.contains('tree-item')) {
-                break;
-            }
-        }
-    }
-});
-
-// Функции для работы с темой
-function initTheme() {
-    const themeToggle = document.getElementById('themeToggle');
-    const savedTheme = localStorage.getItem('theme');
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    
-    // Определяем начальную тему
-    let initialTheme = savedTheme || (prefersDark ? 'dark' : 'light');
-    
-    // Применяем тему
-    applyTheme(initialTheme);
-    
-    // Обработчик клика на переключатель
-    themeToggle.addEventListener('click', function() {
-        const currentThemeAttr = document.documentElement.getAttribute('data-theme');
-        // Если атрибут не установлен, определяем по системным настройкам
-        const currentTheme = currentThemeAttr || (prefersDark ? 'dark' : 'light');
-        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-        applyTheme(newTheme);
-        localStorage.setItem('theme', newTheme);
-    });
-    
-    // Слушаем изменения системной темы (только если пользователь не выбрал тему вручную)
-    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(e) {
-        if (!localStorage.getItem('theme')) {
-            applyTheme(e.matches ? 'dark' : 'light');
-        }
-    });
-}
+// Палитры акцента. Каждый вариант несёт две тройки — для светлой и тёмной
+// темы — плюс цвет строкового литерала: у тёплых акцентов холодная бирюза
+// в коде заметно спорит с акцентом, поэтому она едет вместе с ним.
+const PALETTES = [
+    { id: 'teal',       name: 'Teal',       light: { acc: '#0f766e', str: '#0e7490' }, dark: { acc: '#5eead4', str: '#7dd3d8' } },
+    { id: 'forest',     name: 'Forest',     light: { acc: '#15803d', str: '#0e7490' }, dark: { acc: '#6ee7a5', str: '#7dd3d8' } },
+    { id: 'violet',     name: 'Violet',     light: { acc: '#6d28d9', str: '#0e7490' }, dark: { acc: '#c4a6ff', str: '#7dd3d8' } },
+    { id: 'ink',        name: 'Ink blue',   light: { acc: '#2563eb', str: '#0e7490' }, dark: { acc: '#8ab4f8', str: '#7dd3d8' } },
+    { id: 'terracotta', name: 'Terracotta', light: { acc: '#b03a17', str: '#4d7c0f' }, dark: { acc: '#e8845c', str: '#b5d99c' } },
+    { id: 'ochre',      name: 'Ochre',      light: { acc: '#a16207', str: '#4d7c0f' }, dark: { acc: '#e0a458', str: '#b5d99c' } },
+    { id: 'oxblood',    name: 'Oxblood',    light: { acc: '#9f1239', str: '#4d7c0f' }, dark: { acc: '#fb7185', str: '#b5d99c' } },
+    { id: 'slate',      name: 'Slate',      light: { acc: '#334155', str: '#cbd5e1' }, dark: { acc: '#cbd5e1', str: '#7dd3d8' } }
+];
 
 function applyTheme(theme) {
     if (theme === 'dark') {
@@ -145,9 +22,497 @@ function applyTheme(theme) {
     } else {
         document.documentElement.setAttribute('data-theme', 'light');
     }
+    updateThemeImages(theme);
 }
 
-// Функционал сортировки таблиц
+function updateThemeImages(theme) {
+    if (typeof document === 'undefined') {
+        return;
+    }
+    const images = document.querySelectorAll('[data-image-light][data-image-dark]');
+    images.forEach(img => {
+        const target = theme === 'dark' ? img.dataset.imageDark : img.dataset.imageLight;
+        if (target && img.getAttribute('src') !== target) {
+            img.setAttribute('src', target);
+        }
+    });
+}
+
+// Набор CSS-переменных для палитры в конкретной теме.
+// Неизвестный id откатывается к первой палитре.
+function resolvePalette(id, isDark) {
+    const variant = PALETTES.find(p => p.id === id) || PALETTES[0];
+    const colors = isDark ? variant.dark : variant.light;
+    return {
+        id: variant.id,
+        name: variant.name,
+        acc: colors.acc,
+        accSoft: colors.acc + (isDark ? '17' : '1a'),
+        accLine: colors.acc + (isDark ? '3d' : '40'),
+        str: colors.str
+    };
+}
+
+// Класс пункта оглавления по уровню заголовка: h2 → lvl-2 и так далее.
+function tocLinkClass(tagName) {
+    const level = parseInt(String(tagName).replace(/^h/i, ''), 10);
+    return `lvl-${isNaN(level) ? 2 : level}`;
+}
+
+function highlightMatch(text, query) {
+    if (!query) return text;
+    const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+    return text.replace(regex, '<mark>$1</mark>');
+}
+
+function generateSlug(text) {
+    return text
+        .toLowerCase()
+        .replace(/[^\wа-яё\s-]/gi, '')
+        .replace(/\s+/g, '-')
+        .replace(/-+/g, '-');
+}
+
+function compareValues(aValue, bValue) {
+    const aNum = parseFloat(aValue);
+    const bNum = parseFloat(bValue);
+
+    if (!isNaN(aNum) && !isNaN(bNum)) {
+        return aNum - bNum;
+    }
+    return aValue.localeCompare(bValue, 'ru', { sensitivity: 'base' });
+}
+
+// Экспорт для тестирования (только в Node.js окружении)
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = {
+        applyTheme,
+        highlightMatch,
+        generateSlug,
+        compareValues,
+        resolvePalette,
+        tocLinkClass,
+        PALETTES
+    };
+}
+
+// ========================================
+// Основная логика приложения
+// ========================================
+
+const appPathPrefix = (typeof window !== 'undefined' && window.APP_PATH_PREFIX) || '';
+const LS = { theme: 'theme', rail: 'rail', accent: 'accent' };
+
+function store(key, value) { try { localStorage.setItem(key, value); } catch (e) {} }
+function load(key) { try { return localStorage.getItem(key); } catch (e) { return null; } }
+
+// --------------------------------------------------------------- тема
+function initTheme() {
+    const buttons = document.querySelectorAll('[data-theme-set]');
+    const media = window.matchMedia('(prefers-color-scheme: dark)');
+    const saved = load(LS.theme);
+
+    function paint(theme) {
+        applyTheme(theme);
+        buttons.forEach(b => b.setAttribute('aria-pressed', String(b.dataset.themeSet === theme)));
+    }
+
+    paint(saved || (media.matches ? 'dark' : 'light'));
+
+    buttons.forEach(button => {
+        button.addEventListener('click', function () {
+            paint(button.dataset.themeSet);
+            store(LS.theme, button.dataset.themeSet);
+        });
+    });
+
+    // Системную тему слушаем только пока пользователь не выбрал свою.
+    media.addEventListener('change', function (e) {
+        if (!load(LS.theme)) paint(e.matches ? 'dark' : 'light');
+    });
+}
+
+// ------------------------------------------------------- левая панель
+function initDrawer() {
+    const drawer = document.getElementById('drawer');
+    const scrim = document.getElementById('scrim');
+    const toggle = document.getElementById('menu-toggle');
+    const closeBtn = document.getElementById('drawer-close');
+    if (!drawer || !toggle || !scrim) return;
+    let lastFocus = null;
+
+    function open() {
+        lastFocus = document.activeElement;
+        drawer.classList.add('is-open');
+        scrim.classList.add('is-open');
+        toggle.setAttribute('aria-expanded', 'true');
+        document.body.classList.add('is-locked');
+        const input = drawer.querySelector('input');
+        (input || drawer).focus({ preventScroll: true });
+    }
+    function close() {
+        drawer.classList.remove('is-open');
+        scrim.classList.remove('is-open');
+        toggle.setAttribute('aria-expanded', 'false');
+        document.body.classList.remove('is-locked');
+        if (lastFocus && lastFocus.focus) lastFocus.focus({ preventScroll: true });
+    }
+    function isOpen() { return drawer.classList.contains('is-open'); }
+
+    toggle.addEventListener('click', function () { isOpen() ? close() : open(); });
+    scrim.addEventListener('click', function () { if (isOpen()) close(); });
+    if (closeBtn) closeBtn.addEventListener('click', close);
+    drawer.addEventListener('click', function (e) {
+        if (e.target.closest('a[href]')) close();
+    });
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && isOpen()) { e.preventDefault(); close(); }
+    });
+    // Легкая ловушка фокуса: пока панель открыта, Tab не уходит на страницу.
+    drawer.addEventListener('keydown', function (e) {
+        if (e.key !== 'Tab' || !isOpen()) return;
+        const f = drawer.querySelectorAll('a[href], button, input, [tabindex]:not([tabindex="-1"])');
+        if (!f.length) return;
+        const first = f[0];
+        const last = f[f.length - 1];
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    });
+}
+
+// ------------------------------------------------- правая панель (TOC)
+function initRail() {
+    const shell = document.getElementById('shell');
+    const btn = document.getElementById('rail-toggle');
+    const rail = document.getElementById('rail');
+    const scrim = document.getElementById('scrim');
+    if (!shell || !btn) return;
+
+    const mqNarrow = window.matchMedia('(max-width: 1100px)');
+
+    // Оглавление пустое и справки нет — панель прятать целиком.
+    if (rail && !rail.querySelector('.toc a') && !rail.querySelector('.railcard')) {
+        btn.hidden = true;
+        rail.hidden = true;
+        shell.classList.remove('rail-open');
+        return;
+    }
+
+    // На широком экране rail — часть сетки и открыт по умолчанию.
+    // На узком он оверлей, и по умолчанию закрыт.
+    set(mqNarrow.matches ? false : load(LS.rail) !== 'closed');
+
+    function set(value) {
+        shell.classList.toggle('rail-open', value);
+        btn.setAttribute('aria-expanded', String(value));
+        if (rail) rail.setAttribute('aria-hidden', String(!value));
+        // Как оверлей rail ведет себя так же, как левая панель: затемнение и блок скролла.
+        if (mqNarrow.matches && scrim) {
+            scrim.classList.toggle('is-open', value);
+            document.body.classList.toggle('is-locked', value);
+        } else if (scrim && !value) {
+            scrim.classList.remove('is-open');
+            document.body.classList.remove('is-locked');
+        }
+    }
+
+    if (scrim) scrim.addEventListener('click', function () {
+        if (mqNarrow.matches && shell.classList.contains('rail-open')) set(false);
+    });
+    const railClose = document.getElementById('rail-close');
+    if (railClose) railClose.addEventListener('click', function () { set(false); });
+    btn.addEventListener('click', function () {
+        const next = !shell.classList.contains('rail-open');
+        set(next);
+        if (!mqNarrow.matches) store(LS.rail, next ? 'open' : 'closed');
+    });
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && mqNarrow.matches && shell.classList.contains('rail-open')) set(false);
+    });
+    // Смена брейкпоинта: пересобираем состояние под новый режим.
+    mqNarrow.addEventListener('change', function () {
+        set(mqNarrow.matches ? false : load(LS.rail) !== 'closed');
+    });
+    // На узком экране клик по пункту TOC закрывает оверлей.
+    if (rail) rail.addEventListener('click', function (e) {
+        if (mqNarrow.matches && e.target.closest('a[href^="#"]')) set(false);
+    });
+}
+
+// ------------------------------------------------- генерация оглавления
+function initTableOfContents() {
+    const toc = document.getElementById('toc');
+    const article = document.querySelector('.prose');
+    if (!toc || !article) return;
+
+    // .u-kicker — служебные заголовки блоков («Итог», «Примечания»): в оглавление не идут.
+    // Заголовки колонок .verdict («Стоит брать» / «Не стоит») — тоже подписи, а не разделы.
+    const headings = [...article.querySelectorAll('h2:not(.u-kicker), h3:not(.u-kicker), h4:not(.u-kicker)')]
+        .filter(heading => !heading.closest('.verdict'));
+    if (!headings.length) return;
+
+    const fragment = document.createDocumentFragment();
+    headings.forEach((heading, index) => {
+        // id обычно уже проставлен markdown-it-anchor; фолбэк — на случай
+        // сырого HTML в контенте.
+        if (!heading.id) {
+            heading.id = generateSlug(heading.textContent.trim()) || `heading-${index}`;
+        }
+
+        // Текст без символа якорной ссылки.
+        const clone = heading.cloneNode(true);
+        clone.querySelectorAll('.anchor').forEach(a => a.remove());
+
+        const link = document.createElement('a');
+        link.href = `#${heading.id}`;
+        link.textContent = clone.textContent.trim();
+        link.className = tocLinkClass(heading.tagName);
+        fragment.appendChild(link);
+    });
+
+    toc.appendChild(fragment);
+}
+
+// ------------------------------------------- оглавление: активный пункт
+function initScrollSpy() {
+    const links = Array.prototype.slice.call(document.querySelectorAll('.toc a[href^="#"]'));
+    if (!links.length || !('IntersectionObserver' in window)) return;
+
+    const map = {};
+    const targets = [];
+    links.forEach(function (a) {
+        const el = document.getElementById(decodeURIComponent(a.getAttribute('href').slice(1)));
+        if (el) { map[el.id] = a; targets.push(el); }
+    });
+    const visible = new Set();
+
+    function paint() {
+        let best = null;
+        targets.forEach(function (t) { if (visible.has(t.id) && !best) best = t.id; });
+        if (!best) return;
+        links.forEach(function (a) { a.classList.remove('is-active'); a.removeAttribute('aria-current'); });
+        if (map[best]) { map[best].classList.add('is-active'); map[best].setAttribute('aria-current', 'true'); }
+    }
+
+    // Верхняя граница чуть ниже topbar + scroll-margin заголовков: иначе
+    // переход по якорю подсвечивает предыдущий пункт, а не тот, куда прыгнули.
+    const io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (en) {
+            if (en.isIntersecting) visible.add(en.target.id); else visible.delete(en.target.id);
+        });
+        paint();
+    }, { rootMargin: '-6% 0px -76% 0px', threshold: 0 });
+    targets.forEach(function (t) { io.observe(t); });
+}
+
+// ------------------------------------------------------ прогресс чтения
+function initProgress() {
+    const bar = document.getElementById('progress');
+    const article = document.querySelector('.doc__inner');
+    const top = document.getElementById('to-top');
+    if (!bar || !article) return;
+    let ticking = false;
+
+    function paint() {
+        ticking = false;
+        const start = article.offsetTop;
+        const span = article.offsetHeight - window.innerHeight;
+        let p = span > 0 ? (window.scrollY - start) / span : 1;
+        p = Math.min(1, Math.max(0, p));
+        bar.style.transform = 'scaleX(' + p + ')';
+        if (top) top.classList.toggle('is-on', window.scrollY > window.innerHeight * 0.8);
+    }
+
+    window.addEventListener('scroll', function () {
+        if (!ticking) { ticking = true; requestAnimationFrame(paint); }
+    }, { passive: true });
+    window.addEventListener('resize', paint, { passive: true });
+    paint();
+
+    if (top) top.addEventListener('click', function () {
+        window.scrollTo({
+            top: 0,
+            behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'
+        });
+    });
+}
+
+// ------------------------------------------------- копирование кода
+function initCopy() {
+    document.querySelectorAll('.code').forEach(function (block) {
+        const btn = block.querySelector('.copy');
+        const pre = block.querySelector('pre');
+        if (!btn || !pre) return;
+
+        btn.addEventListener('click', function () {
+            const text = pre.innerText.replace(/\n+$/, '');
+
+            function done() {
+                btn.classList.add('is-done');
+                const label = btn.querySelector('.copy__label');
+                if (label) label.textContent = 'Готово';
+                setTimeout(function () {
+                    btn.classList.remove('is-done');
+                    if (label) label.textContent = 'Копировать';
+                }, 1600);
+            }
+
+            function fallback() {
+                const ta = document.createElement('textarea');
+                ta.value = text;
+                ta.setAttribute('readonly', '');
+                ta.style.cssText = 'position:fixed;opacity:0;';
+                document.body.appendChild(ta);
+                ta.select();
+                try { document.execCommand('copy'); done(); } catch (e) {}
+                document.body.removeChild(ta);
+            }
+
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(done, fallback);
+            } else {
+                fallback();
+            }
+        });
+    });
+}
+
+// ------------------------------------------------- подсказки у терминов
+// Сама подсказка — это .term::after на чистом CSS. Здесь только поправка:
+// у края окна центрированная подсказка вылезла бы за экран, сдвигаем её обратно.
+function initTerms() {
+    const gap = 12;
+
+    function place(term) {
+        term.style.removeProperty('--tip-shift');
+        const box = term.getBoundingClientRect();
+        const half = parseFloat(getComputedStyle(term, '::after').width) / 2;
+        if (!half) return;
+
+        const mid = box.left + box.width / 2;
+        const over = Math.max(0, mid + half + gap - document.documentElement.clientWidth);
+        const under = Math.max(0, gap - (mid - half));
+        if (over || under) term.style.setProperty('--tip-shift', (under - over) + 'px');
+    }
+
+    document.querySelectorAll('.term').forEach(function (term) {
+        term.addEventListener('pointerenter', function () { place(term); });
+        term.addEventListener('focus', function () { place(term); });
+    });
+}
+
+// ------------------------------------------------- меню настроек
+function initConfig() {
+    const btn = document.getElementById('cfg-toggle');
+    const menu = document.getElementById('cfg');
+    if (!btn || !menu) return;
+
+    function open(value, moveFocus) {
+        menu.hidden = !value;
+        btn.setAttribute('aria-expanded', String(value));
+        // Фокус переносим только при открытии с клавиатуры: у мыши кольцо
+        // фокуса на первой кнопке читается как «эта тема выбрана».
+        if (value && moveFocus) {
+            const first = menu.querySelector('button');
+            if (first) first.focus({ preventScroll: true });
+        }
+    }
+
+    btn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        open(menu.hidden, e.detail === 0);   // detail === 0 → Enter/Space, не клик
+    });
+    document.addEventListener('click', function (e) {
+        if (!menu.hidden && !menu.contains(e.target) && e.target !== btn) open(false);
+    });
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && !menu.hidden) {
+            e.preventDefault(); open(false); btn.focus();
+        }
+    });
+    // Tab не должен уводить фокус из открытого меню на страницу.
+    menu.addEventListener('keydown', function (e) {
+        if (e.key !== 'Tab') return;
+        let f = menu.querySelectorAll('button:not([hidden])');
+        f = Array.prototype.filter.call(f, el => el.offsetParent !== null);
+        if (!f.length) return;
+        const first = f[0];
+        const last = f[f.length - 1];
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    });
+    open(false);
+}
+
+// ------------------------------------------------------------- палитра
+const TICK = '<svg class="tick" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
+             'stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="m5 13 4 4L19 7"/></svg>';
+
+function initPalette() {
+    const list = document.getElementById('pal-list');
+    const trigger = document.getElementById('pal-toggle');
+    const nameEl = document.getElementById('pal-name');
+    if (!list || !trigger) return;
+
+    let current = load(LS.accent) || PALETTES[0].id;
+    function isDark() { return document.documentElement.getAttribute('data-theme') === 'dark'; }
+
+    function apply(id) {
+        const p = resolvePalette(id, isDark());
+        const root = document.documentElement.style;
+        // Инлайн на :root перебивает и светлую, и тёмную тему разом.
+        root.setProperty('--acc', p.acc);
+        root.setProperty('--acc-soft', p.accSoft);
+        root.setProperty('--acc-line', p.accLine);
+        root.setProperty('--t-dunder', p.acc);
+        root.setProperty('--t-str', p.str);
+        current = p.id;
+        if (nameEl) nameEl.textContent = p.name;
+        repaint();
+    }
+
+    // Кружки и подписи показывают оттенок текущей темы, иначе тёмные
+    // варианты нечитаемы на тёмном фоне и наоборот.
+    function repaint() {
+        list.querySelectorAll('.cfg__opt').forEach(function (b) {
+            b.style.setProperty('--opt', resolvePalette(b.dataset.id, isDark()).acc);
+            b.setAttribute('aria-selected', String(b.dataset.id === current));
+        });
+    }
+
+    PALETTES.forEach(function (variant) {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'cfg__opt';
+        b.setAttribute('role', 'option');
+        b.dataset.id = variant.id;
+        b.innerHTML = '<i></i><span></span>' + TICK;
+        b.querySelector('span').textContent = variant.name;
+        b.addEventListener('click', function () {
+            apply(variant.id);
+            store(LS.accent, variant.id);
+            setList(false);
+            trigger.focus();
+        });
+        list.appendChild(b);
+    });
+
+    function setList(open) {
+        list.hidden = !open;
+        trigger.setAttribute('aria-expanded', String(open));
+    }
+    trigger.addEventListener('click', function () { setList(list.hidden); });
+    setList(false);
+
+    // Тему переключает другой модуль — ловим смену атрибута, чтобы не
+    // заводить связь между ними.
+    new MutationObserver(function () { apply(current); })
+        .observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+    apply(current);
+}
+
+// --------------------------------------------------- сортировка таблиц
 function initTableSorting() {
     const sortableHeaders = document.querySelectorAll('th.sortable');
 
@@ -172,20 +537,7 @@ function initTableSorting() {
             rows.sort((a, b) => {
                 const aValue = a.children[columnIndex].textContent.trim();
                 const bValue = b.children[columnIndex].textContent.trim();
-
-                // Проверяем, являются ли значения числами
-                const aNum = parseFloat(aValue);
-                const bNum = parseFloat(bValue);
-
-                let comparison = 0;
-                if (!isNaN(aNum) && !isNaN(bNum)) {
-                    // Сортировка чисел
-                    comparison = aNum - bNum;
-                } else {
-                    // Сортировка текста
-                    comparison = aValue.localeCompare(bValue, 'ru', { sensitivity: 'base' });
-                }
-
+                const comparison = compareValues(aValue, bValue);
                 return sortDirection === 'asc' ? comparison : -comparison;
             });
 
@@ -195,132 +547,18 @@ function initTableSorting() {
     });
 }
 
-// Генерация Table of Contents (Оглавление)
-function initTableOfContents() {
-    const tocNav = document.getElementById('tocNav');
-    const contentArea = document.querySelector('.content-center, .content');
-    
-    if (!tocNav || !contentArea) {
-        return;
-    }
-
-    // Находим все заголовки h2, h3, h4 в контенте
-    const headings = contentArea.querySelectorAll('h2, h3, h4');
-    
-    if (headings.length === 0) {
-        // Если заголовков нет, скрываем TOC
-        const sidebarRight = document.querySelector('.sidebar-right');
-        if (sidebarRight) {
-            sidebarRight.style.display = 'none';
-        }
-        return;
-    }
-
-    // Создаем ID для заголовков, если их нет
-    headings.forEach((heading, index) => {
-        if (!heading.id) {
-            const text = heading.textContent.trim();
-            const slug = text
-                .toLowerCase()
-                .replace(/[^\wа-яё\s-]/gi, '')
-                .replace(/\s+/g, '-')
-                .replace(/-+/g, '-');
-            heading.id = slug || `heading-${index}`;
-        }
-    });
-
-    // Генерируем ссылки TOC
-    const fragment = document.createDocumentFragment();
-    headings.forEach(heading => {
-        const link = document.createElement('a');
-        link.href = `#${heading.id}`;
-        link.textContent = heading.textContent;
-        link.className = `toc-link toc-${heading.tagName.toLowerCase()}`;
-        link.setAttribute('tabindex', '0');
-        link.setAttribute('role', 'link');
-        
-        // Обработчик клика для плавной прокрутки
-        link.addEventListener('click', function(e) {
-            e.preventDefault();
-            const target = document.getElementById(heading.id);
-            if (target) {
-                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                // Обновляем URL без перезагрузки
-                history.pushState(null, null, `#${heading.id}`);
-                updateActiveTocLink();
-            }
-        });
-
-        // Обработчик нажатия Enter для доступности
-        link.addEventListener('keydown', function(e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                link.click();
-            }
-        });
-        
-        fragment.appendChild(link);
-    });
-
-    tocNav.appendChild(fragment);
-
-    // Отслеживание активного раздела при прокрутке
-    let isScrolling = false;
-    window.addEventListener('scroll', function() {
-        if (!isScrolling) {
-            window.requestAnimationFrame(function() {
-                updateActiveTocLink();
-                isScrolling = false;
-            });
-            isScrolling = true;
-        }
-    }, { passive: true });
-
-    // Инициализируем активную ссылку
-    updateActiveTocLink();
-}
-
-// Обновление активной ссылки в TOC
-function updateActiveTocLink() {
-    const tocLinks = document.querySelectorAll('.toc-link');
-    const contentArea = document.querySelector('.content-center, .content');
-
-    if (!contentArea || tocLinks.length === 0) {
-        return;
-    }
-
-    const headings = contentArea.querySelectorAll('h2, h3, h4');
-    let activeHeading = null;
-    const scrollPosition = window.scrollY + 100; // Смещение для лучшего UX
-
-    // Находим текущий активный заголовок
-    headings.forEach(heading => {
-        const headingTop = heading.offsetTop;
-        if (scrollPosition >= headingTop) {
-            activeHeading = heading;
-        }
-    });
-
-    // Обновляем активные классы
-    tocLinks.forEach(link => {
-        link.classList.remove('active');
-        if (activeHeading && link.href.endsWith(`#${activeHeading.id}`)) {
-            link.classList.add('active');
-        }
-    });
-}
-
-// Функционал поиска по навигации
+// --------------------------------- поиск по всем страницам (Fuse.js)
 function initSearch() {
     const searchInput = document.getElementById('searchInput');
-    const searchContainer = document.querySelector('.search-container');
+    const searchContainer = document.querySelector('.drawer__search');
 
     if (!searchInput || !searchContainer) {
         return;
     }
 
-    // Кэш для навигационных элементов
-    let navItemsCache = null;
+    // Кэш для индекса поиска
+    let fuse = null;
+    let searchIndexLoaded = false;
 
     // Создаем контейнер для результатов поиска
     const searchResults = document.createElement('div');
@@ -328,42 +566,60 @@ function initSearch() {
     searchResults.style.display = 'none';
     searchContainer.appendChild(searchResults);
 
-    // Флаг для отслеживания состояния поиска
-    let isSearchActive = false;
+    // Загрузить индекс при первом взаимодействии
+    function loadSearchIndex() {
+        if (searchIndexLoaded) return Promise.resolve();
+
+        return fetch(`${appPathPrefix}/search-index.json`)
+            .then(response => response.json())
+            .then(data => {
+                // Инициализируем Fuse.js с индексом
+                fuse = new Fuse(data, {
+                    keys: [
+                        { name: 'title', weight: 2 },
+                        { name: 'content', weight: 1 }
+                    ],
+                    threshold: 0.3,  // Разумный порог для точности
+                    minMatchCharLength: 2,  // Минимум 2 символа для совпадения
+                    includeScore: true,
+                    ignoreLocation: true,
+                    distance: 100  // Умеренное расстояние для fuzzy matching
+                });
+                searchIndexLoaded = true;
+            })
+            .catch(error => {
+                console.error('Ошибка загрузки индекса поиска:', error);
+            });
+    }
 
     // Обработчик ввода в поле поиска
     searchInput.addEventListener('input', function(e) {
-        const query = e.target.value.trim().toLowerCase();
+        const query = e.target.value.trim();
 
-        if (query.length === 0) {
+        if (query.length < 3) {
             hideSearchResults();
             return;
         }
 
-        // Собираем элементы при первом поиске
-        if (!navItemsCache) {
-            navItemsCache = collectNavigationItems();
-        }
-
-        const results = filterNavigationItems(navItemsCache, query);
-        displaySearchResults(results, query);
+        loadSearchIndex().then(() => {
+            const results = fuse.search(query).slice(0, 10); // Ограничиваем до 10 результатов
+            displaySearchResults(results, query);
+        });
     });
 
     // Обработчик фокуса на поле поиска
     searchInput.addEventListener('focus', function() {
-        if (searchInput.value.trim().length > 0) {
-            // Собираем элементы при первом поиске
-            if (!navItemsCache) {
-                navItemsCache = collectNavigationItems();
-            }
-            const query = searchInput.value.trim().toLowerCase();
-            const results = filterNavigationItems(navItemsCache, query);
-            displaySearchResults(results, query);
+        if (searchInput.value.trim().length >= 3) {
+            loadSearchIndex().then(() => {
+                const query = searchInput.value.trim();
+                const results = fuse.search(query).slice(0, 10);
+                displaySearchResults(results, query);
+            });
         }
     });
 
     // Обработчик потери фокуса
-    searchInput.addEventListener('blur', function(e) {
+    searchInput.addEventListener('blur', function() {
         // Задержка чтобы успеть кликнуть по результатам
         setTimeout(() => {
             if (!searchResults.contains(document.activeElement)) {
@@ -372,13 +628,21 @@ function initSearch() {
         }, 150);
     });
 
-    // Горячая клавиша Ctrl+K
+    // Горячие клавиши: Ctrl+K и «/» — обе открывают панель и ведут в поиск.
     document.addEventListener('keydown', function(e) {
-        if (e.ctrlKey && e.key === 'k') {
-            e.preventDefault();
+        const inField = /^(INPUT|TEXTAREA)$/.test(document.activeElement.tagName);
+        const isSlash = e.key === '/' && !inField && !e.ctrlKey && !e.metaKey;
+        const isCtrlK = (e.ctrlKey || e.metaKey) && e.key === 'k';
+        if (!isSlash && !isCtrlK) return;
+
+        e.preventDefault();
+        const menuToggle = document.getElementById('menu-toggle');
+        if (menuToggle && menuToggle.getAttribute('aria-expanded') !== 'true') {
+            menuToggle.click();   // открытие панели само уводит фокус в поиск
+        } else {
             searchInput.focus();
-            searchInput.select();
         }
+        searchInput.select();
     });
 
     // Обработчик клавиш в поле поиска
@@ -390,7 +654,6 @@ function initSearch() {
             e.preventDefault();
             const firstResult = searchResults.querySelector('.search-result-item');
             if (firstResult) {
-                // Имитируем клик по первому результату
                 firstResult.click();
             }
         } else if (e.key === 'ArrowDown') {
@@ -402,36 +665,6 @@ function initSearch() {
         }
     });
 
-    function collectNavigationItems() {
-        const items = [];
-
-        // Собираем все ссылки из навигации
-        const navLinks = document.querySelectorAll('.sidebar-left a');
-
-        navLinks.forEach(link => {
-            const text = link.textContent.trim();
-            const href = link.getAttribute('href');
-
-            if (text && href && !href.startsWith('#') && !href.startsWith('javascript:')) {
-                items.push({
-                    text: text,
-                    href: href,
-                    element: link
-                });
-            }
-        });
-
-        return items;
-    }
-
-    function filterNavigationItems(items, query) {
-        return items.filter(item => {
-            // Удаляем эмодзи из текста для поиска
-            const cleanText = item.text.replace(/[\u{1F300}-\u{1F9FF}]/gu, '').trim().toLowerCase();
-            return cleanText.includes(query);
-        });
-    }
-
     function displaySearchResults(results, query) {
         searchResults.innerHTML = '';
 
@@ -441,20 +674,27 @@ function initSearch() {
             noResults.textContent = 'Ничего не найдено';
             searchResults.appendChild(noResults);
         } else {
-            results.forEach((result, index) => {
+            results.forEach((result) => {
+                const item = result.item;
                 const resultItem = document.createElement('a');
                 resultItem.className = 'search-result-item';
-                resultItem.href = result.href;
+                resultItem.href = appPathPrefix + item.url;
                 resultItem.setAttribute('tabindex', '0');
                 resultItem.setAttribute('role', 'option');
                 resultItem.setAttribute('aria-selected', 'false');
 
-                // Подсвечиваем найденный текст
-                const highlightedText = highlightMatch(result.text, query);
-                resultItem.innerHTML = highlightedText;
+                // Подсвечиваем найденный текст в заголовке
+                const highlightedTitle = highlightMatch(item.title, query);
+
+                // Показываем фрагмент контента с контекстом
+                const contextHtml = `<div class="search-result-item__title">${highlightedTitle}</div>`;
+                const contentPreview = item.content.substring(0, 100);
+                const highlightedContent = contentPreview ? `<div class="search-result-item__preview">${contentPreview}...</div>` : '';
+
+                resultItem.innerHTML = contextHtml + highlightedContent;
 
                 // Обработчик клика
-                resultItem.addEventListener('click', function(e) {
+                resultItem.addEventListener('click', function() {
                     hideSearchResults();
                     searchInput.blur();
                 });
@@ -492,7 +732,6 @@ function initSearch() {
         searchResults.classList.add('show');
         searchInput.setAttribute('aria-expanded', 'true');
         searchResults.setAttribute('role', 'listbox');
-        isSearchActive = true;
     }
 
     function hideSearchResults() {
@@ -502,21 +741,26 @@ function initSearch() {
             searchResults.style.display = 'none';
         }, 150);
         searchInput.setAttribute('aria-expanded', 'false');
-        isSearchActive = false;
-    }
-
-    function highlightMatch(text, query) {
-        // Удаляем эмодзи для подсветки
-        const cleanText = text.replace(/[\u{1F300}-\u{1F9FF}]/gu, '').trim();
-        const regex = new RegExp(`(${query})`, 'gi');
-        const highlighted = cleanText.replace(regex, '<mark>$1</mark>');
-
-        // Возвращаем текст с эмодзи если он был
-        const emoji = text.match(/[\u{1F300}-\u{1F9FF}]/gu);
-        if (emoji) {
-            return emoji[0] + ' ' + highlighted;
-        }
-
-        return highlighted;
     }
 }
+
+// ------------------------------------------------------------ бутстрап
+function init() {
+    initTheme();
+    initTableOfContents();   // до initRail: тот решает, прятать ли панель
+    initDrawer();
+    initRail();
+    initScrollSpy();
+    initProgress();
+    initCopy();
+    initTerms();
+    initTableSorting();
+    initSearch();
+    initConfig();
+    initPalette();
+}
+
+// Скрипт подключён в конце body без defer, поэтому DOMContentLoaded ещё
+// впереди. Слушатель (а не немедленный вызов) заодно оставляет модуль
+// безопасным для импорта в тестах.
+document.addEventListener('DOMContentLoaded', init);

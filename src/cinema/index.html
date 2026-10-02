@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cinema — обзоры аниме</title>
+<script>
+  // До первой отрисовки: .rise прячется, только если JS жив. Если landing.js
+  // не отработал к load (не загрузился, упал) — класс снимается, текст виден.
+  document.documentElement.classList.add('js');
+  addEventListener('load', function () {
+    if (!window.cinemaReady) document.documentElement.classList.remove('js');
+  });
+</script>
+<link rel="stylesheet" href="landing.css">
+</head>
+<body>
+
+<div class="atmo grain"></div>
+
+<div class="hud">
+  <span class="dot"></span>
+  <a href="../"><b>БИБЛИОТЕКА</b></a>
+  <span class="sep">/</span>
+  <span>аниме</span>
+</div>
+
+<!-- ================= HERO =================
+     Кадр нейтральный: не Bebop и не «Бездна». Он задаёт настроение раздела
+     («смотрю и записываю по ночам»), но не претендует на грейд конкретного
+     тайтла — поэтому имеет право стоять над всей коллекцией.
+================================================================= -->
+<header class="hero" id="hero">
+  <div class="hero-img">
+    <img src="../images/cinema/index/hero.jpg"
+         alt="Девушка с геймпадом в кокпите космического корабля на орбите планеты">
+  </div>
+  <div class="hero-scrim"></div>
+  <div class="hero-scan"></div>
+
+  <div class="hero-inner">
+    <span class="kicker">Раздел</span>
+    <h1><span class="lead">Обзоры</span><br><span class="co">аниме</span></h1>
+    <p class="sub">
+      <b>Избранные из просмотренных тайтлов.</b>
+      <span>Понравились, зацепили, оставили отпечаток.</span>
+    </p>
+
+    <div class="counters">
+      <span><b>2</b>обзора</span>
+      <span><b>8.1</b>средний балл</span>
+      <span><b>39</b>эпизодов</span>
+      <span><b>2026</b>обновлено</span>
+    </div>
+
+    <div class="frameline">
+      <span>пленка крутится</span>
+      <span>утро подождет</span>
+    </div>
+  </div>
+
+  <a class="scrollcue" href="#collection" aria-label="К списку обзоров"><span></span></a>
+</header>
+
+<!-- ================= РАЗБОР ================= -->
+<section class="notes">
+  <div class="wrap">
+    <span class="kicker rise">Про раздел</span>
+    <h2 class="rise">Один сеанс за раз</h2>
+    <p class="lead rise">Мне важно досмотреть тайтл целиком, с музыкой и паузами — не просто поставить галочку
+      в списке просмотренного. Обзоров здесь мало, зато у каждого свой уголок.</p>
+    <p class="lead rise">Оценка говорит не о качестве в целом, а о том, что от сериала осталось лично
+      у меня через неделю после финала. Приятного просмотра!</p>
+  </div>
+</section>
+
+<!-- ================= СПИСОК ================= -->
+<section class="filmo" id="collection">
+  <div class="wrap">
+    <div class="filmo-stage" id="stage">
+      <!-- Кадр тайтла, всплывающий фоном при наведении на строку.
+           Слой заводится только для тайтла, у которого кадр действительно
+           есть. У «Бездны» его нет — при наведении на её строку фон просто
+           не меняется. Появится кадр — добавить сюда .filmo-bg.abyss с <img>
+           и парное правило в landing.css. -->
+      <div class="filmo-bgs">
+        <div class="filmo-bg bebop"><img src="../images/cinema/bebop/section_3_opener_together.webp" alt="" loading="lazy" decoding="async"></div>
+      </div>
+
+      <div class="filmo-head rise">
+        <h3>Все обзоры</h3>
+      </div>
+
+      <!-- Строка тайтла — ссылка, если его страница уже есть. У «Бездны»
+           страницы нет, поэтому её строка остаётся <div>: test:links валится
+           на висячих ссылках (он ловит и href внутри комментариев). -->
+      <a class="row rise" href="bebop/" data-title="bebop" style="--dot:#e39a4f">
+        <span class="idx">01</span>
+        <span class="name">
+          <span class="grade-dot" style="background:#e39a4f"></span>
+          <span class="t">Ковбой Бибоп</span>
+          <span class="o">カウボーイビバップ</span>
+        </span>
+        <span class="meta">1998 · 26 эп. · нуар</span>
+        <span class="sc">8.4</span>
+      </a>
+
+      <div class="row row--wip rise" data-title="abyss" style="--dot:#dd7f22">
+        <span class="idx">02</span>
+        <span class="name">
+          <span class="grade-dot" style="background:#dd7f22"></span>
+          <span class="t">Созданный в бездне</span>
+          <span class="o">メイドインアビス</span>
+          <span class="wip">в работе</span>
+        </span>
+        <span class="meta">2017 · 13 эп. · тёмная сказка</span>
+        <span class="sc">7.8</span>
+      </div>
+
+      <div class="slot rise">
+        <span class="idx">03</span>
+        <span class="t">следующий — в планах</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="signoff">
+  <h2>«Свет в зале гаснет..»</h2>
+</div>
+
+<script src="landing.js"></script>
+</body>
+</html>

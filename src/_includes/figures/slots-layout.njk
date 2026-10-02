@@ -1,0 +1,60 @@
+<figure class="fig">
+  <div class="fig__frame">
+    <svg viewBox="0 0 620 268" role="img" aria-labelledby="fig1-t">
+      <title id="fig1-t">Слева экземпляр со ссылкой на отдельный словарь атрибутов, справа экземпляр с полями, уложенными прямо в объект</title>
+      <g font-size="10.5">
+        <!-- ---------------- левая панель ---------------- -->
+        <text class="d-dim" x="10" y="14" letter-spacing="1.4">БЕЗ __SLOTS__</text>
+        <rect class="d-fill d-line" x="10" y="30" width="126" height="104" rx="6" stroke-width="1"/>
+        <text class="d-txt" x="22" y="49" font-size="11">User obj</text>
+        <line class="d-line" x1="10" y1="58" x2="136" y2="58" stroke-width="1"/>
+        <text class="d-dim" x="22" y="77">PyObject_HEAD</text>
+        <text class="d-acc" x="22" y="97">__dict__  *</text>
+        <text class="d-dim" x="22" y="117">__weakref__ *</text>
+        <path class="d-acc-s" d="M140 92 H172" stroke-width="1.4" fill="none" marker-end="url(#ar)"/>
+        <rect class="d-fill-2 d-line" x="182" y="30" width="112" height="150" rx="6" stroke-width="1"/>
+        <text class="d-txt" x="192" y="49" font-size="11">dict</text>
+        <line class="d-line" x1="182" y1="58" x2="294" y2="58" stroke-width="1"/>
+        <rect class="d-acc-bg" x="192" y="66" width="92" height="15" rx="3"/>
+        <text class="d-acc" x="197" y="77" font-size="9.5">'name' → …</text>
+        <rect class="d-fill d-line" x="192" y="85" width="92" height="15" rx="3" stroke-width=".8" stroke-dasharray="2 2"/>
+        <rect class="d-acc-bg" x="192" y="104" width="92" height="15" rx="3"/>
+        <text class="d-acc" x="197" y="115" font-size="9.5">'age' → …</text>
+        <rect class="d-fill d-line" x="192" y="123" width="92" height="15" rx="3" stroke-width=".8" stroke-dasharray="2 2"/>
+        <rect class="d-fill d-line" x="192" y="142" width="92" height="15" rx="3" stroke-width=".8" stroke-dasharray="2 2"/>
+        <text class="d-dim" x="192" y="171" font-size="9">запас пустых ячеек</text>
+        <text class="d-dim" x="10" y="205" font-size="9.5">объект + отдельный словарь</text>
+        <text class="d-dim" x="10" y="221" font-size="9.5">на каждый экземпляр</text>
+        <!-- разделитель -->
+        <line class="d-line" x1="312" y1="24" x2="312" y2="236" stroke-width="1" stroke-dasharray="3 4"/>
+        <!-- ---------------- правая панель ---------------- -->
+        <text class="d-dim" x="330" y="14" letter-spacing="1.4">С __SLOTS__</text>
+        <rect class="d-fill d-line" x="330" y="30" width="150" height="124" rx="6" stroke-width="1"/>
+        <text class="d-txt" x="342" y="49" font-size="11">User obj</text>
+        <line class="d-line" x1="330" y1="58" x2="480" y2="58" stroke-width="1"/>
+        <text class="d-dim" x="342" y="77">PyObject_HEAD</text>
+        <rect class="d-acc-bg" x="338" y="85" width="134" height="17" rx="3"/>
+        <text class="d-acc" x="344" y="97" font-size="9.5">[0] 'Alice'</text>
+        <rect class="d-acc-bg" x="338" y="108" width="134" height="17" rx="3"/>
+        <text class="d-acc" x="344" y="120" font-size="9.5">[1] 20</text>
+        <text class="d-dim" x="342" y="143" font-size="9">нет __dict__</text>
+        <rect class="d-fill-2 d-line" x="504" y="46" width="106" height="80" rx="6" stroke-width="1" stroke-dasharray="3 3"/>
+        <text class="d-txt" x="514" y="65" font-size="10.5">class User</text>
+        <line class="d-line" x1="504" y1="73" x2="610" y2="73" stroke-width="1"/>
+        <text class="d-dim" x="514" y="90" font-size="9">name → [0]</text>
+        <text class="d-dim" x="514" y="106" font-size="9">age  → [1]</text>
+        <text class="d-dim" x="514" y="120" font-size="8.5">дескрипторы</text>
+        <path class="d-line" d="M504 90 H484" stroke-width="1" fill="none" stroke-dasharray="2 2"/>
+        <path class="d-line" d="M504 106 H484" stroke-width="1" fill="none" stroke-dasharray="2 2"/>
+        <text class="d-dim" x="330" y="205" font-size="9.5">поля лежат внутри самого объекта,</text>
+        <text class="d-dim" x="330" y="221" font-size="9.5">имена — один раз в классе</text>
+      </g>
+      <defs>
+        <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+          <path d="M0 0 L10 5 L0 10 z" class="d-acc"/>
+        </marker>
+      </defs>
+    </svg>
+  </div>
+  <figcaption><b>Схема</b><span>Словарь на экземпляр против ячеек в самом объекте. Имена атрибутов при <code>__slots__</code> хранятся один раз — в классе, в виде дескрипторов.</span></figcaption>
+</figure>

@@ -16,15 +16,30 @@ concurrency:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
+
+      - name: Checkout images repo
+        uses: actions/checkout@v7
+        with:
+          repository: mensigo/library_static
+          path: images_repo
+          fetch-depth: 1
+          ssh-key: ${{ secrets.IMAGES_SSH_KEY }}
+
+      - name: Sync images
+        run: |
+          rm -rf src/images/notes src/images/reviews
+          mkdir -p src/images/notes src/images/reviews
+          rsync -a --delete --exclude 'logo.png' images_repo/src/images/ src/images/
+          rm -rf images_repo
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
-          node-version: 18
+          node-version: 22
           cache: npm
 
       - name: Install dependencies
@@ -34,10 +49,10 @@ jobs:
         run: NODE_ENV=production npx eleventy
 
       - name: Setup Pages
-        uses: actions/configure-pages@v4
+        uses: actions/configure-pages@v6
 
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v5
         with:
           path: ./_site
 
@@ -45,9 +60,9 @@ jobs:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: build
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5

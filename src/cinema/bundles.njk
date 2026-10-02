@@ -1,0 +1,25 @@
+---
+# Склейка CSS/JS мира Cinema. Исходники лежат в _src/ и сами не публикуются:
+# из src/cinema/ как есть копируются только *.html (см. .eleventy.js).
+# Каждая запись — один файл в /cinema/: общая рамка + код страницы. Все бандлы
+# лежат на одном уровне, поэтому url() в любом исходнике — относительно /cinema/.
+# Новая страница: пара записей здесь + ../<имя>.css / ../<имя>.js в её index.html.
+pagination:
+  data: bundles
+  size: 1
+  alias: bundle
+bundles:
+  - out: landing.css
+    parts: [cinema.css, landing.css]
+  - out: landing.js
+    parts: [cinema.js, landing.js]
+  - out: bebop.css
+    parts: [cinema.css, bebop.css]
+  # Своего JS у страницы Бибопа пока нет: карусели закомментированы.
+  # Бандл нужен ради cinema.js (флаг cinemaReady и появление .rise).
+  - out: bebop.js
+    parts: [cinema.js]
+permalink: "/cinema/{{ bundle.out }}"
+eleventyExcludeFromCollections: true
+---
+{{ bundle.parts | cinemaBundle | safe }}

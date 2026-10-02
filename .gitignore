@@ -7,9 +7,12 @@ Gemfile.lock
 
 .DS_Store
 .idea/
+.cursor/
+.serena/
 
 *.log
 *.png
+*.py
 
 _site/
 node_modules/
@@ -18,3 +21,5 @@ node_modules/
 *plans*
 
 123_files/
+src/images/
+images/
