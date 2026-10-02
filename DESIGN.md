@@ -86,6 +86,7 @@ Keep the reading width constrained. If a page needs wider content, add a modifie
 - `.verdict`, `.verdict__col` with `.verdict--yes` / `.verdict--no`: the two-column «worth it / not worth it» block.
 - `.finale`: the closing verdict block; its `h2` is a `.u-kicker`, not a section heading.
 - `.notes-block` + `.fnref` + `.back`: footnotes, generated from `[^1]` by `markdown-it-footnote`.
+- `.term`: a word with a dotted underline and a short explanation that pops up on hover or focus. The text lives in `data-tip` and is drawn by `::after`; `initTerms` only nudges it back when it would cross the window edge.
 - `.pager` with `.l` / `.t` / `.next`: previous/next links, built by `note.njk` from the `neighbours` filter.
 - `.fig`, `.fig__frame`, `figcaption`, and the `.d-*` SVG tokens for theme-aware diagrams.
 - `.note-media`, `.note-media__image-wrapper`, `.note-media__image`, `.note-media__caption`: raw-HTML images that swap source per theme. Framed like `.fig__frame` but edge-to-edge; `--sm` caps it at 340px for mood illustrations, `--full` lifts the 720px cap. The caption takes a `<b>Метка</b>` like `.fig figcaption`.
@@ -148,6 +149,7 @@ Authoring syntax, all handled by `amendLibrary` in `.eleventy.js`:
 - `:::: verdict` wrapping `::: yes` and `::: no` … `:::` blocks builds the two-column verdict. Four colons outside, three inside — that is how nesting is recognised. Text after `yes` / `no` overrides the default titles.
 - `::: finale` … `:::` closes the note. A word after `finale` replaces the «Итог» label.
 - `[^1]` in the text plus `[^1]: …` at the bottom produces the `.notes-block` footnote list with backlinks.
+- `*[CNCF]: расшифровка` on its own line (conventionally at the bottom of the file) turns every occurrence of `CNCF` in that file into a `.term` with the explanation as its hover caption (`markdown-it-abbr`).
 - Tables need no markup — every table is wrapped in `.tablewrap` automatically. `{:.ok}` / `{:.no}` mark a cell as a win or a loss.
 - `{:.class}` attribute syntax is available via `markdown-it-attrs` for one-off modifiers. The delimiter is `{:` … `}`, not `{` … `}`, so that dicts and JSON inside `::: out` blocks survive.
 

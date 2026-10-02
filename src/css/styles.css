@@ -1041,6 +1041,27 @@ table.tbl .no { color: var(--danger); }
 }
 .fnref:hover { text-decoration: underline; }
 
+/* Термин с пояснением: пунктир под словом, подсказка по наведению и фокусу.
+   Сдвиг --tip-shift выставляет initTerms, когда подсказка упирается в край окна. */
+.term {
+    position: relative; cursor: help;
+    text-decoration: underline dotted var(--ink-3); text-underline-offset: 3px;
+}
+.term::after {
+    content: attr(data-tip);
+    position: absolute; left: 50%; bottom: calc(100% + 6px); z-index: 40;
+    box-sizing: border-box; width: max-content; max-width: min(280px, calc(100vw - 24px));
+    transform: translateX(calc(-50% + var(--tip-shift, 0px)));
+    padding: 6px 10px;
+    border: 1px solid var(--line-2); border-radius: var(--radius-md);
+    background: var(--surface); color: var(--ink-2); box-shadow: var(--shadow-2);
+    font: 400 13px/1.45 var(--sans); letter-spacing: 0; text-transform: none;
+    text-align: left; white-space: normal;
+    opacity: 0; visibility: hidden; pointer-events: none;
+    transition: opacity var(--fast), visibility var(--fast);
+}
+.term:hover::after, .term:focus::after { opacity: 1; visibility: visible; }
+
 /* ------------------------------------------------------------- пагинация */
 .pager { display: grid; gap: 12px; margin-top: 3em; }
 @media (min-width: 720px) { .pager { grid-template-columns: 1fr 1fr; } }

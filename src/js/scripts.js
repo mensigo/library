@@ -377,6 +377,30 @@ function initCopy() {
     });
 }
 
+// ------------------------------------------------- подсказки у терминов
+// Сама подсказка — это .term::after на чистом CSS. Здесь только поправка:
+// у края окна центрированная подсказка вылезла бы за экран, сдвигаем её обратно.
+function initTerms() {
+    const gap = 12;
+
+    function place(term) {
+        term.style.removeProperty('--tip-shift');
+        const box = term.getBoundingClientRect();
+        const half = parseFloat(getComputedStyle(term, '::after').width) / 2;
+        if (!half) return;
+
+        const mid = box.left + box.width / 2;
+        const over = Math.max(0, mid + half + gap - document.documentElement.clientWidth);
+        const under = Math.max(0, gap - (mid - half));
+        if (over || under) term.style.setProperty('--tip-shift', (under - over) + 'px');
+    }
+
+    document.querySelectorAll('.term').forEach(function (term) {
+        term.addEventListener('pointerenter', function () { place(term); });
+        term.addEventListener('focus', function () { place(term); });
+    });
+}
+
 // ------------------------------------------------- меню настроек
 function initConfig() {
     const btn = document.getElementById('cfg-toggle');
@@ -729,6 +753,7 @@ function init() {
     initScrollSpy();
     initProgress();
     initCopy();
+    initTerms();
     initTableSorting();
     initSearch();
     initConfig();

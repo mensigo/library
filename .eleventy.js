@@ -5,6 +5,7 @@ const markdownItAnchor = require("markdown-it-anchor");
 const markdownItAttrs = require("markdown-it-attrs");
 const markdownItContainer = require("markdown-it-container");
 const markdownItFootnote = require("markdown-it-footnote");
+const markdownItAbbr = require("markdown-it-abbr");
 
 // Тот же алгоритм, что и generateSlug в src/js/scripts.js: якоря,
 // сгенерированные на сборке, должны совпадать с теми, что ищет TOC в браузере.
@@ -127,6 +128,16 @@ function footnoteMarkup(md) {
     };
 }
 
+// Термины с пояснением: `*[CNCF]: расшифровка` внизу файла оборачивает каждое
+// вхождение слова в .term. Пояснение уходит в data-tip, а не в title — иначе
+// поверх нашей подсказки всплывала бы ещё и браузерная.
+function termMarkup(md) {
+    md.use(markdownItAbbr);
+
+    md.renderer.rules.abbr_open = (tokens, idx) => '<abbr class="term" tabindex="0" data-tip="'
+        + md.utils.escapeHtml(tokens[idx].attrGet('title') || '') + '">';
+}
+
 module.exports = function(eleventyConfig) {
     // Добавляем глобальные данные
     eleventyConfig.addGlobalData("pathPrefix", () => {
@@ -158,6 +169,7 @@ module.exports = function(eleventyConfig) {
         Object.keys(CALLOUTS).forEach(name => calloutPlugin(md, name));
 
         footnoteMarkup(md);
+        termMarkup(md);
 
         // Простые обёртки-контейнеры.
         md.use(markdownItContainer, 'split', {
