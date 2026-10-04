@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Библиотека · главная (pitch v4, кальянная)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="main.css">
+</head>
+<body>
+
+<header class="hero" id="hero">
+  <!-- Сцена держит пропорции кадра, поэтому свечение привязано к точкам картинки
+       (фонари, свеча на столе) и не уезжает при любом размере окна. -->
+  <div class="stage">
+    <img class="stage__img" src="img/Nocturnal%20Neon%20Hookah%20Lounge.png"
+         alt="Парень в худи с аниме-принтом полулежит на диване в кальянной и выдыхает дым; на столике кальян и чугунный чайник">
+    <!-- Свечение поверх источников света на кадре; --x/--y/--d заданы в долях кадра -->
+    <div class="glows" aria-hidden="true">
+      <i class="glow" style="--x:2.1%;--y:24.4%;--d:24%;--t:4.3s;--s:-1.2s"></i>
+      <i class="glow" style="--x:4.5%;--y:82.9%;--d:32%;--t:5.1s;--s:-3.4s"></i>
+      <i class="glow" style="--x:24.2%;--y:31.9%;--d:9%;--t:3.1s;--s:-0.6s"></i>
+      <i class="glow" style="--x:40.8%;--y:50.8%;--d:6%;--t:3.7s;--s:-2.1s"></i>
+      <i class="glow" style="--x:55%;--y:74.9%;--d:8%;--t:4.7s;--s:-2.8s"></i>
+      <i class="glow" style="--x:64%;--y:57.9%;--d:5%;--t:3.4s;--s:-1.7s"></i>
+      <i class="glow" style="--x:68.4%;--y:73.3%;--d:11%;--t:2.7s;--s:-0.3s"></i>
+    </div>
+  </div>
+  <div class="scrim"></div>
+
+  <div class="hud">
+    <span class="dot"></span>
+    <b>БИБЛИОТЕКА</b>
+    <span class="sep">/</span>
+    <span>главная</span>
+  </div>
+
+  <div class="panel">
+    <div class="panel__head">
+      <span class="kicker">Заметки и обзоры</span>
+      <h1>Сижу, смотрю,<br><span class="co">записываю.</span></h1>
+      <p class="sub">Аниме по ночам, Python до байткода, Сенека под чай.</p>
+    </div>
+
+    <nav class="cards" aria-label="Разделы">
+      <a class="card" href="notes.html" data-title="Заметки">
+        <span class="card__k">01 / заметки</span>
+        <span class="card__t">Заметки</span>
+        <span class="card__d">Python изнутри: от tuple до async.</span>
+        <span class="card__m"><b>7</b> заметок <i>→</i></span>
+      </a>
+      <a class="card" href="#reviews" data-title="Обзоры">
+        <span class="card__k">02 / обзоры</span>
+        <span class="card__t">Обзоры</span>
+        <span class="card__d">Аниме и философия. С оценкой и вердиктом.</span>
+        <span class="card__m"><b>3</b> обзора <i>→</i></span>
+      </a>
+      <a class="card" href="#cinema" data-title="Cinema">
+        <span class="card__k">03 / cinema</span>
+        <span class="card__t">Cinema</span>
+        <span class="card__d">Большие разборы с кадрами. Cowboy Bebop.</span>
+        <span class="card__m"><b>1</b> разбор <i>→</i></span>
+      </a>
+    </nav>
+  </div>
+
+  <div class="frameline">
+    <span>кальян дымит</span>
+    <span>утро подождет</span>
+  </div>
+</header>
+
+<!-- Дымовой переход: в питче просто показывает название раздела и рассеивается,
+     на сайте за ним будет настоящая навигация. -->
+<div class="fog" id="fog" aria-hidden="true">
+  <div class="fog__inner">
+    <span class="kicker">переход</span>
+    <strong id="fogTitle"></strong>
+  </div>
+</div>
+
+<script src="main.js"></script>
+</body>
+</html>

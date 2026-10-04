@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Библиотека · главная (pitch v4, вариант C: видео-петля)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="main.css">
+</head>
+<body>
+
+<header class="hero" id="hero">
+  <div class="stage">
+    <!-- Черновик 720p. Два одинаковых ролика: второй стартует за долю секунды до конца
+         первого и проявляется поверх него, так что стык петли не дает скачка яркости. -->
+    <video class="stage__img stage__loop" muted playsinline preload="auto" src="img/shisha-loop-draft.mp4"
+           aria-label="Парень в худи полулежит на диване в кальянной, подносит трубку ко рту, затягивается и выдыхает дым"></video>
+    <video class="stage__img stage__loop" muted playsinline preload="auto" src="img/shisha-loop-draft.mp4" aria-hidden="true"></video>
+    <!-- Заплатки поверх стоп-кадра в паузе. data-r: x, y, ширина, высота в долях кадра.
+         Первая — торс (дыхание), остальные — язычки пламени свечей. -->
+    <canvas class="patch patch--breath" data-r="0.12,0.43,0.19,0.28" aria-hidden="true"></canvas>
+    <canvas class="patch patch--flame" data-r="0.679,0.733,0.02,0.04" style="--t:1.7s" aria-hidden="true"></canvas>
+    <canvas class="patch patch--flame" data-r="0.274,0.446,0.022,0.046" style="--t:2.1s;--s:-.8s" aria-hidden="true"></canvas>
+    <canvas class="patch patch--flame" data-r="0.399,0.484,0.022,0.04" style="--t:1.5s;--s:-.3s" aria-hidden="true"></canvas>
+    <canvas class="patch patch--flame" data-r="0.632,0.546,0.025,0.052" style="--t:2.4s;--s:-1.2s" aria-hidden="true"></canvas>
+    <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+      <filter id="flame" x="-25%" y="-25%" width="150%" height="150%">
+        <feTurbulence type="fractalNoise" baseFrequency="0.04 0.09" numOctaves="2" seed="3" result="noise">
+          <animate attributeName="baseFrequency" dur="3.6s" repeatCount="indefinite"
+                   values="0.04 0.09; 0.05 0.11; 0.038 0.095; 0.04 0.09"/>
+        </feTurbulence>
+        <!-- Зеленый канал выровнен в 0.5: шум сдвигает пиксели только влево-вправо -->
+        <feColorMatrix in="noise" type="matrix" result="sideways"
+                       values="1 0 0 0 0  0 0 0 0 .5  0 0 1 0 0  0 0 0 0 1"/>
+        <feDisplacementMap in="SourceGraphic" in2="sideways" scale="3" xChannelSelector="R" yChannelSelector="G"/>
+      </filter>
+    </svg>
+    <!-- «Дыхание» сцены между затяжками: пульсация огней и струйка от углей.
+         Идет постоянно, поверх видео; --x/--y/--d заданы в долях кадра. -->
+    <div class="glows" aria-hidden="true">
+      <i class="glow" style="--x:2.3%;--y:25%;--d:22%;--t:4.3s;--s:-1.2s"></i>
+      <i class="glow" style="--x:5.2%;--y:80%;--d:30%;--t:5.1s;--s:-3.4s"></i>
+      <i class="glow" style="--x:24.2%;--y:33.1%;--d:8%;--t:3.1s;--s:-0.6s"></i>
+      <i class="glow" style="--x:28.5%;--y:47.7%;--d:4%;--t:2.9s;--s:-1.9s"></i>
+      <i class="glow" style="--x:40.9%;--y:50.9%;--d:5%;--t:3.7s;--s:-2.1s"></i>
+      <i class="glow glow--faint" style="--x:55.3%;--y:74.4%;--d:4.5%;--t:4.7s;--s:-2.8s"></i>
+      <i class="glow" style="--x:64.5%;--y:57.6%;--d:5%;--t:3.4s;--s:-1.7s"></i>
+      <i class="glow" style="--x:68.7%;--y:73.8%;--d:10%;--t:2.7s;--s:-0.3s"></i>
+    </div>
+    <canvas class="stage__smoke" id="smoke" data-exhale="off" data-coal="465,184" aria-hidden="true"></canvas>
+  </div>
+  <div class="scrim"></div>
+
+  <div class="hud">
+    <span class="dot"></span>
+    <b>БИБЛИОТЕКА</b>
+    <span class="sep">/</span>
+    <span>главная</span>
+  </div>
+
+  <div class="settings">
+    <button class="gear" id="gear" type="button" aria-label="Настройки" aria-expanded="false" aria-controls="settings">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    </button>
+    <div class="settings__pop" id="settings" hidden>
+      <span class="kicker">Настройки</span>
+      <div class="settings__row">
+        <span class="settings__label">Видео-анимация<small>Затяжка раз в 30 секунд</small></span>
+        <button class="switch" id="videoSwitch" type="button" role="switch" aria-checked="true" aria-label="Видео-анимация"></button>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel__head">
+      <span class="kicker">Заметки и обзоры</span>
+      <h1>Сижу, смотрю,<br><span class="co">записываю.</span></h1>
+      <p class="sub">Аниме по ночам, Python до байткода, Сенека под чай.</p>
+    </div>
+
+    <nav class="cards" aria-label="Разделы">
+      <a class="card" href="notes.html" data-title="Заметки">
+        <span class="card__k">01 / заметки</span>
+        <span class="card__t">Заметки</span>
+        <span class="card__d">Python изнутри: от tuple до async.</span>
+        <span class="card__m"><b>7</b> заметок <i>→</i></span>
+      </a>
+      <a class="card" href="#reviews" data-title="Обзоры">
+        <span class="card__k">02 / обзоры</span>
+        <span class="card__t">Обзоры</span>
+        <span class="card__d">Аниме и философия. С оценкой и вердиктом.</span>
+        <span class="card__m"><b>3</b> обзора <i>→</i></span>
+      </a>
+      <a class="card" href="#cinema" data-title="Cinema">
+        <span class="card__k">03 / cinema</span>
+        <span class="card__t">Cinema</span>
+        <span class="card__d">Большие разборы с кадрами. Cowboy Bebop.</span>
+        <span class="card__m"><b>1</b> разбор <i>→</i></span>
+      </a>
+    </nav>
+  </div>
+
+  <div class="frameline">
+    <span>кальян дымит</span>
+    <span>утро подождет</span>
+  </div>
+</header>
+
+<!-- Дымовой переход: в питче просто показывает название раздела и рассеивается,
+     на сайте за ним будет настоящая навигация. -->
+<div class="fog" id="fog" aria-hidden="true">
+  <div class="fog__inner">
+    <span class="kicker">переход</span>
+    <strong id="fogTitle"></strong>
+  </div>
+</div>
+
+<script src="main.js"></script>
+<script src="loop.js"></script>
+<script src="smoke.js"></script>
+</body>
+</html>

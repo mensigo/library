@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Библиотека · заметки (pitch v4)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="main.css">
+<link rel="stylesheet" href="notes.css">
+</head>
+<body>
+
+<!-- Та же комната, но кадр сжат до полосы: сцена остается над головой, пока читаешь список. -->
+<header class="band">
+  <img class="band__img" src="img/shisha-start.png" alt="">
+  <div class="scrim"></div>
+
+  <nav class="hud" aria-label="Хлебные крошки">
+    <span class="dot"></span>
+    <a href="index-c.html"><b>БИБЛИОТЕКА</b></a>
+    <span class="sep">/</span>
+    <span>заметки</span>
+  </nav>
+</header>
+
+<main class="wrap">
+  <div class="head">
+    <span class="kicker">01 / заметки</span>
+    <h1>Заметки</h1>
+    <p class="sub">Python изнутри: от tuple до async. Docker на подходе.</p>
+  </div>
+
+  <div class="layout">
+    <section class="list" aria-label="Все заметки">
+      <label class="find">
+        <span class="find__k">найти</span>
+        <input id="find" type="search" placeholder="slots, байт-код, await..." autocomplete="off">
+        <kbd>/</kbd>
+      </label>
+
+      <div id="rows">
+        <a class="row row--fresh" href="#" data-tags="asyncio,Конкурентность">
+          <span class="row__n">01</span>
+          <span class="row__body">
+            <span class="row__t">Async</span>
+            <span class="row__d">asyncio - конкурентный I/O в одном потоке. Функции выполняются по частям и переключаются в заранее заданных точках: пока одна ждет сеть или диск, работают другие.</span>
+            <span class="row__tags"><i>asyncio</i><i>Конкурентность</i></span>
+          </span>
+          <span class="row__m"><span><b>15</b> мин</span><span>26 сен</span></span>
+        </a>
+        <a class="row row--fresh" href="#" data-tags="Отладка,Тесты">
+          <span class="row__n">02</span>
+          <span class="row__body">
+            <span class="row__t">Assert</span>
+            <span class="row__d">Инструкция assert проверяет выражение на истинность и роняет программу с AssertionError, если проверка не прошла. Удобна для отладки и тестов, но опасна там, где на нее полагаются всерьез.</span>
+            <span class="row__tags"><i>Отладка</i><i>Тесты</i></span>
+          </span>
+          <span class="row__m"><span><b>5</b> мин</span><span>26 сен</span></span>
+        </a>
+        <a class="row row--fresh" href="#" data-tags="CPython,Байт-код,Модель данных">
+          <span class="row__n">03</span>
+          <span class="row__body">
+            <span class="row__t">Кортеж</span>
+            <span class="row__d">Три способа написать создание кортежа - и три совершенно разные истории на уровне байт-кода. В двух из них в рантайме не создается вообще ничего.</span>
+            <span class="row__tags"><i>CPython</i><i>Байт-код</i><i>Модель данных</i></span>
+          </span>
+          <span class="row__m"><span><b>20</b> мин</span><span>23 сен</span></span>
+        </a>
+        <a class="row row--fresh" href="#" data-tags="CPython,Байт-код">
+          <span class="row__n">04</span>
+          <span class="row__body">
+            <span class="row__t">Disassemble</span>
+            <span class="row__d">Модуль dis показывает байт-код Python - промежуточное представление кода между исходным и машинным кодом. Помогает понять, как Python интерпретирует и выполняет тот или иной код.</span>
+            <span class="row__tags"><i>CPython</i><i>Байт-код</i></span>
+          </span>
+          <span class="row__m"><span><b>8</b> мин</span><span>23 сен</span></span>
+        </a>
+        <a class="row" href="#" data-tags="CPython,Память,Модель данных">
+          <span class="row__n">05</span>
+          <span class="row__body">
+            <span class="row__t"><span class="dim">__</span>slots<span class="dim">__</span></span>
+            <span class="row__d">Механизм, который снимает с экземпляра словарь атрибутов и раскладывает поля по фиксированным ячейкам. Экономия видна там, где объектов миллионы - и почти незаметна там, где их сотни.</span>
+            <span class="row__tags"><i>CPython</i><i>Память</i><i>Модель данных</i></span>
+          </span>
+          <span class="row__m"><span><b>6</b> мин</span><span>22 июн</span></span>
+        </a>
+        <!-- Короткие заметки без lede и тегов: строка просто становится ниже -->
+        <a class="row" href="#" data-tags="">
+          <span class="row__n">06</span>
+          <span class="row__body">
+            <span class="row__t">Property</span>
+          </span>
+          <span class="row__m"><span><b>2</b> мин</span><span>22 июн</span></span>
+        </a>
+        <a class="row" href="#" data-tags="">
+          <span class="row__n">07</span>
+          <span class="row__body">
+            <span class="row__t">Classmethod / Staticmethod</span>
+          </span>
+          <span class="row__m"><span><b>2</b> мин</span><span>22 июн</span></span>
+        </a>
+      </div>
+
+      <p class="empty" id="empty" hidden>Пусто. Попробуй другое слово или сними тему.</p>
+    </section>
+
+    <aside class="side">
+      <div class="topics">
+        <span class="kicker">Темы</span>
+        <div class="topics__list" role="group" aria-label="Фильтр по теме">
+          <button class="topic" type="button" data-tag="" aria-pressed="true">все <b>7</b></button>
+          <button class="topic" type="button" data-tag="CPython" aria-pressed="false">CPython <b>3</b></button>
+          <button class="topic" type="button" data-tag="Байт-код" aria-pressed="false">Байт-код <b>2</b></button>
+          <button class="topic" type="button" data-tag="Модель данных" aria-pressed="false">Модель данных <b>2</b></button>
+          <button class="topic" type="button" data-tag="Конкурентность" aria-pressed="false">Конкурентность <b>1</b></button>
+          <button class="topic" type="button" data-tag="Отладка" aria-pressed="false">Отладка <b>1</b></button>
+          <button class="topic" type="button" data-tag="Память" aria-pressed="false">Память <b>1</b></button>
+        </div>
+      </div>
+
+      <!-- Черновики: еще не заметки, но уже видно, что на подходе -->
+      <div class="embers">
+        <span class="kicker">Тлеет</span>
+        <ul>
+          <li><span class="dot"></span><span class="embers__t">Docker</span><small>черновик · 2 окт</small></li>
+          <li><span class="dot"></span><span class="embers__t">GIL, субинтерпретаторы, free-threading</span><small>черновик · 30 сен</small></li>
+          <li><span class="dot"></span><span class="embers__t">Неограниченные int в Python</span><small>черновик · 17 авг</small></li>
+        </ul>
+      </div>
+    </aside>
+  </div>
+
+  <div class="frameline frameline--foot">
+    <span>кальян дымит</span>
+    <span>утро подождет</span>
+  </div>
+</main>
+
+<!-- Дым с главной рассеивается уже здесь: приход на страницу, а не уход с нее -->
+<div class="fog" id="fog" aria-hidden="true">
+  <div class="fog__inner">
+    <span class="kicker">переход</span>
+    <strong id="fogTitle">Заметки</strong>
+  </div>
+</div>
+
+<script src="notes.js"></script>
+</body>
+</html>
