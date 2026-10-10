@@ -1,10 +1,15 @@
 /* Вариант D: камера уезжает вправо к стене, на стене выбирают группу заметок.
-   Подключается после main.css. Стена здесь - заглушка на градиентах: на сайте ее
-   заменит дорисованное вправо продолжение кадра. */
+   Подключается после main.css. Стена - дорисованное вправо продолжение кадра
+   (img/wall-right.jpg, сжатая копия img/wall-right-source.png). */
 
 :root {
-  --edge: var(--sw);           /* правый край кадра: отсюда начинается стена */
-  --keep: 16vw;                /* сколько комнаты остается слева, когда камера у стены */
+  --edge: var(--sw);                                  /* правый край кадра в координатах мира */
+  --lap: calc(var(--sw) * .08);                       /* нахлест стены на кадр: там они перетекают друг в друга */
+  --wall-w: calc(var(--sw) / var(--ratio) * 2.3333);  /* стена той же высоты, что кадр; 2688x1152 */
+  --wall-x: calc(var(--edge) - var(--lap));
+  /* Где встает камера: правый край экрана на 92% длины стены. В кадре пустая стена,
+     фонари и решетка; ковер на стене и пуф остаются за краем. */
+  --cam: calc(var(--wall-x) + var(--wall-w) * .92 - 100vw);
   --pan-t: 1.7s;
   --pan-ease: cubic-bezier(.65, 0, .2, 1);
   --g-python: #f0a94a;         /* свет фонаря */
@@ -19,41 +24,57 @@
   transition: translate var(--pan-t) var(--pan-ease);
 }
 
-.at-wall .world { translate: calc(var(--keep) - var(--edge)) 0; }
+.at-wall .world { translate: calc(var(--cam) * -1) 0; }
 
 .wall {
   position: absolute;
-  top: 0;
   bottom: 0;
-  left: var(--edge);
-  width: calc(100vw - var(--keep));
-  z-index: 4;                  /* выше слоев сцены, иначе кадр перекроет тень на стыке */
-  /* Правый край кадра темный, поэтому стена начинается почти с черного и шва не видно */
-  background:
-    radial-gradient(60% 55% at 0% 78%, rgba(240, 169, 74, .13), transparent 70%),
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3'/%3E%3CfeColorMatrix values='0 0 0 0 1  0 0 0 0 .9  0 0 0 0 .8  0 0 0 .09 0'/%3E%3C/filter%3E%3Crect width='240' height='240' filter='url(%23n)'/%3E%3C/svg%3E"),
-    linear-gradient(to right, #08070a, #120f17 30%, #17121a);
+  left: var(--wall-x);
+  width: var(--wall-w);
+  height: calc(var(--sw) / var(--ratio));
+  z-index: 4;                  /* выше слоев сцены, иначе кадр перекроет нахлест */
+  background: url("img/wall-right.jpg") left center / cover no-repeat;
+  /* Левый край проявляется из кадра постепенно: диван и ковер совпадают по высоте, шва нет */
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 6.5%);
+  mask-image: linear-gradient(to right, transparent, #000 6.5%);
 }
 
-/* Край кадра уходит в тень стены, чтобы стык не читался вертикальной линией */
-.wall::before {
-  content: "";
+/* ---------- unblue ---------- */
+
+/* Диван в правой части кадра подсвечен холодным синим и выбивается из теплой комнаты.
+   Слой в режиме color отдает ему свой оттенок и насыщенность, а яркость оставляет
+   от кадра, поэтому работает и поверх видео. Края растушеваны маской. */
+.unblue {
   position: absolute;
-  top: 0;
-  bottom: 0;
-  right: 100%;
-  width: 14vw;
-  background: linear-gradient(to right, transparent, #08070a);
+  z-index: 3;
+  left: 72%;
+  top: 63%;
+  width: 28%;
+  height: 26%;
+  background: #6a4630;
+  opacity: .85;
+  mix-blend-mode: color;
+  -webkit-mask-image:
+    linear-gradient(to right, transparent, #000 26%),
+    linear-gradient(to bottom, transparent, #000 22%, #000 80%, transparent);
+  mask-image:
+    linear-gradient(to right, transparent, #000 26%),
+    linear-gradient(to bottom, transparent, #000 22%, #000 80%, transparent);
+  -webkit-mask-composite: source-in;
+  mask-composite: intersect;
 }
 
 /* ---------- sigils ---------- */
 
 .sigil {
   position: absolute;
-  left: 63%;
-  top: 52%;
-  width: min(58svh, 36vw);
-  translate: -50% -50%;
+  /* Посередине между списком групп и концом пустой стены (68% ее длины):
+     левый край экрана приходится на 92% - 100vw, список кончается у 7vw + 320px. */
+  left: calc(80% - 46.5vw + 160px);
+  /* И от низа: стена стоит на нижнем крае экрана, а сверху на широких окнах обрезана */
+  bottom: 57svh;
+  width: min(46svh, 29vw);
+  translate: -50% 50%;
   color: var(--g-python);
   opacity: 0;
   filter: drop-shadow(0 0 14px color-mix(in srgb, currentColor 55%, transparent));
@@ -114,8 +135,8 @@
   position: absolute;
   z-index: 4;
   top: clamp(76px, 13vh, 150px);
-  left: calc(var(--keep) + clamp(20px, 4vw, 64px));
-  width: min(360px, 28vw);
+  left: clamp(20px, 7vw, 110px);
+  width: min(320px, 26vw);
   opacity: 0;
   translate: 28px 0;
   pointer-events: none;
@@ -135,51 +156,53 @@
   font-weight: 600;
   line-height: 1.02;
   letter-spacing: -.01em;
+  white-space: nowrap;
 }
 
 .groups {
   display: flex;
   flex-direction: column;
-  margin-top: 30px;
-  border-bottom: 1px solid var(--line);
+  gap: 12px;
+  margin-top: 26px;
 }
 
+/* Те же стеклянные карточки, что на главной: темная подложка с размытием держит
+   текст на любом фоне - и на темной стене, и там, куда падает свет фонаря */
 .group {
   --g: var(--g-python);
-  position: relative;
   display: flex;
   flex-direction: column;
-  padding: 18px 0 20px;
-  border-top: 1px solid var(--line);
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: rgba(14, 11, 16, .56);
+  -webkit-backdrop-filter: blur(12px) saturate(1.2);
+  backdrop-filter: blur(12px) saturate(1.2);
   color: inherit;
   text-decoration: none;
   outline: none;
+  transition: border-color .35s var(--ease), background .35s var(--ease), box-shadow .35s var(--ease);
 }
 
 .group[data-g="docker"] { --g: var(--g-docker); }
 
-.group::before {
-  content: "";
-  position: absolute;
-  top: -1px;
-  left: 0;
-  width: 0;
-  height: 1px;
-  background: var(--g);
-  box-shadow: 0 0 10px var(--g);
-  transition: width .45s var(--ease);
+/* Выбранная группа светится своим цветом, как выбранная карточка на главной */
+.group.is-on {
+  border-color: color-mix(in srgb, var(--g) 62%, transparent);
+  background: rgba(24, 17, 14, .66);
+  box-shadow:
+    0 0 38px color-mix(in srgb, var(--g) 20%, transparent),
+    inset 0 0 30px color-mix(in srgb, var(--g) 8%, transparent);
 }
-
-.group.is-on::before { width: 100%; }
 
 .group__t {
-  font-size: clamp(30px, 3vw, 44px);
+  font-size: clamp(26px, 2.4vw, 34px);
   font-weight: 600;
   line-height: 1.05;
-  transition: color .3s var(--ease), translate .3s var(--ease);
+  transition: color .3s var(--ease);
 }
 
-.group.is-on .group__t { color: var(--g); translate: 6px 0; }
+.group.is-on .group__t { color: var(--g); }
 
 .group__d {
   margin-top: 6px;
@@ -195,7 +218,7 @@
   font: 500 11px/1 var(--mono);
   letter-spacing: .08em;
   text-transform: uppercase;
-  color: var(--ink-3);
+  color: var(--ink-2);
 }
 
 .group__m b { color: var(--g); font-size: 14px; }
@@ -209,9 +232,9 @@
 
 .group.is-on .group__m i { translate: 4px 0; }
 
-/* Группа из одних черновиков: знак рисуется, но перейти пока некуда */
-.group--draft { cursor: default; }
-.group--draft .group__t { color: var(--ink-2); }
+/* Группа из одних черновиков: знак рисуется, но перейти пока некуда.
+   Название не глушим - на светлом фоне серое терялось; о черновике говорит пунктир. */
+.group--draft { cursor: default; border-style: dashed; }
 
 .back {
   display: inline-flex;
@@ -311,9 +334,20 @@
 /* ---------- narrow screens ---------- */
 
 @media (max-width: 1100px) {
-  /* Камера уезжает на весь экран: край комнаты не остается.
-     Кадр на узком экране сдвинут влево на 5% своей ширины (см. .stage в main.css). */
-  :root { --edge: calc(var(--sw) * .95); --keep: 0vw; }
+  /* Кадр на узком экране сдвинут влево на 5% своей ширины (см. .stage в main.css).
+     Камера встает так, что фонари висят у правого края, а слева от них пустая стена. */
+  :root {
+    --edge: calc(var(--sw) * .95);
+    --cam: calc(var(--wall-x) + var(--wall-w) * .8 - 100vw);
+  }
+
+  /* Как и кадр, стена сверху растворяется в фоне под текстом */
+  .wall {
+    -webkit-mask-image: linear-gradient(to right, transparent, #000 6.5%), linear-gradient(to bottom, transparent, #000 28%);
+    mask-image: linear-gradient(to right, transparent, #000 6.5%), linear-gradient(to bottom, transparent, #000 28%);
+    -webkit-mask-composite: source-in;
+    mask-composite: intersect;
+  }
 
   .at-wall .panel { translate: -60vw 0; }
 
@@ -325,9 +359,9 @@
   }
 
   .sigil {
-    left: 50%;
-    top: 76%;
-    width: min(38svh, 62vw);
+    left: calc(80% - 66vw);
+    bottom: 36svh;
+    width: min(26svh, 52vw);
   }
 }
 

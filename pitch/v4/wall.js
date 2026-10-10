@@ -91,7 +91,8 @@
     if (!k || e.metaKey || e.ctrlKey || e.altKey) return;
     if (/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return;
     // Настройки открыты: стрелки и буквы принадлежат им
-    if (document.getElementById('gear').getAttribute('aria-expanded') === 'true') return;
+    var gear = document.getElementById('gear');
+    if (gear && gear.getAttribute('aria-expanded') === 'true') return;
     e.preventDefault();
     flash(k);
 
