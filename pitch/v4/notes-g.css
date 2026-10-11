@@ -108,6 +108,21 @@ body[data-g="docker"] .mark__dot { fill: currentColor; }
 .arriving .row:nth-child(n + 6) { --i: 7; }
 .arriving .side > * { --i: 4; }
 
+/* ---------- selected row ---------- */
+
+/* Строка, выбранная с W/S (notes-g.js), горит так же, как под курсором */
+.row.is-on { outline: none; }
+.row.is-on::before { width: 100%; }
+
+.row.is-on .row__t {
+  color: var(--acc);
+  translate: 6px 0;
+}
+
+/* Пока выбирают с клавиатуры, строка под курсором не горит: активна одна.
+   Класс снимается при первом движении мыши (notes-g.js). */
+.by-keys .row { pointer-events: none; }
+
 /* ---------- back ---------- */
 
 .back {
