@@ -1,0 +1,173 @@
+/* Страница группы заметок в варианте G. Подключается после main.css и notes.css.
+   Фон - та же стена img/wall-g.jpg, что в index-g.html, в том же месте, где встает
+   камера, поэтому при переходе со стены (vt.css) фон остается на месте. */
+
+:root {
+  --wall-w: calc(var(--sw) / var(--ratio) * 2.3333);  /* как в wall.css */
+  --cam-at: .95;                                      /* как --cam в g.css: правый край экрана на 95% стены */
+}
+
+/* Цвет группы: им светятся название, знак и все акценты страницы */
+body[data-g="python"] { --g: #f0a94a; }   /* свет фонаря */
+body[data-g="docker"] { --g: #4fd6c9; }   /* неон из окна */
+body { --acc: var(--g); --acc-soft: color-mix(in srgb, var(--g) 14%, transparent); }
+
+/* ---------- backdrop ---------- */
+
+.backdrop {
+  position: fixed;
+  z-index: -2;
+  bottom: 0;
+  right: calc(var(--wall-w) * (var(--cam-at) - 1));
+  width: var(--wall-w);
+  height: calc(var(--sw) / var(--ratio));
+  background: url("img/wall-g.jpg") left center / cover no-repeat;
+}
+
+/* Стена темнеет под список: слева, где текст, сильнее */
+.shade {
+  position: fixed;
+  z-index: -1;
+  inset: 0;
+  background:
+    linear-gradient(to right, rgba(7, 6, 10, .5), transparent 70%),
+    rgba(7, 6, 10, .7);
+}
+
+/* ---------- head ---------- */
+
+.hud { z-index: 2; }
+
+/* Заголовок стоит там же, где у стены стоял список групп (.wallui в wall.css) */
+.wrap {
+  max-width: 1320px;
+  margin: 0;
+  padding: clamp(76px, 13vh, 150px) clamp(20px, 5vw, 84px) 40px clamp(20px, 7vw, 110px);
+}
+
+.head {
+  display: flex;
+  align-items: flex-end;
+  gap: clamp(18px, 2.4vw, 36px);
+  margin-top: 0;
+}
+
+.head h1 {
+  width: fit-content;
+  color: var(--g);
+  view-transition-name: group-title;
+}
+
+.mark {
+  flex: none;
+  width: clamp(84px, 9vw, 132px);
+  aspect-ratio: 1;
+  margin-bottom: -6px;
+  color: var(--g);
+  opacity: .92;
+  filter: drop-shadow(0 0 14px color-mix(in srgb, currentColor 55%, transparent));
+  view-transition-name: sigil;
+}
+
+.mark path { stroke: currentColor; }
+.mark__brush { stroke-width: 15; }
+.mark__line  { stroke-width: 5; }
+.mark__thin  { stroke-width: 3.5; }
+.mark__dot   { fill: var(--bg); }
+
+body[data-g="docker"] .mark__dot { fill: currentColor; }
+
+/* ---------- arrival ---------- */
+
+/* Строки поднимаются по одной, пока знак доезжает со стены */
+@keyframes rise {
+  from { opacity: 0; translate: 0 16px; }
+}
+
+.arriving .sub,
+.arriving .find,
+.arriving .row,
+.arriving .side > * {
+  animation: rise .6s var(--ease) calc(.3s + var(--i, 0) * 55ms) backwards;
+}
+
+/* Знак приезжает со стены без ореола, свечение разгорается уже на месте */
+@keyframes glow-in {
+  from { filter: drop-shadow(0 0 0 color-mix(in srgb, var(--g) 0%, transparent)); }
+  to   { filter: drop-shadow(0 0 14px color-mix(in srgb, var(--g) 55%, transparent)); }
+}
+
+.arriving .mark { animation: glow-in .6s var(--ease) .8s backwards; }
+
+.arriving .find { --i: 1; }
+.arriving .row:nth-child(1) { --i: 2; }
+.arriving .row:nth-child(2) { --i: 3; }
+.arriving .row:nth-child(3) { --i: 4; }
+.arriving .row:nth-child(4) { --i: 5; }
+.arriving .row:nth-child(5) { --i: 6; }
+.arriving .row:nth-child(n + 6) { --i: 7; }
+.arriving .side > * { --i: 4; }
+
+/* ---------- back ---------- */
+
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  justify-self: start;
+  font: 500 11px/1 var(--mono);
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: var(--ink-3);
+  transition: color .25s var(--ease);
+}
+
+.back i { font-style: normal; transition: translate .35s var(--ease); }
+
+.back kbd {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  margin-left: 6px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  font: inherit;
+  letter-spacing: 0;
+}
+
+.back:hover,
+.back:focus-visible { color: var(--ink); outline: none; }
+
+.back:hover i { translate: -4px 0; }
+
+/* ---------- narrow screens ---------- */
+
+@media (max-width: 1100px) {
+  /* Как в wall.css: камера на узком экране встает на 80% стены, а стена кверху
+     растворяется в фоне */
+  :root { --cam-at: .8; }
+
+  .backdrop {
+    -webkit-mask-image: linear-gradient(to bottom, transparent, #000 28%);
+    mask-image: linear-gradient(to bottom, transparent, #000 28%);
+  }
+
+  .hud { top: 16px; left: 16px; }
+
+  .wrap { padding: 58px 16px 32px; }
+
+  .mark { width: 72px; }
+
+  .back { margin-top: 36px; }
+  .back kbd { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .arriving .sub,
+  .arriving .find,
+  .arriving .row,
+  .arriving .side > *,
+  .arriving .mark { animation: none; }
+}

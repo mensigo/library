@@ -10,7 +10,7 @@
     sessionStorage.removeItem('fog');
   } catch (e) {}
 
-  if (arrived) {
+  if (arrived && fog) {
     var inner = fog.querySelector('.fog__inner');
     fog.style.transition = inner.style.transition = 'none';
     fog.classList.add('on');

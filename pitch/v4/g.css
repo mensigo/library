@@ -78,3 +78,74 @@
     width: min(24svh, 52vw);
   }
 }
+
+/* ---------- уход на страницу группы (g.js, vt.css) ---------- */
+
+/* Что переезжает на страницу группы: знак выбранной группы и ее название.
+   Название ужато до своего текста, иначе при переезде оно растянется. */
+.sigil.on { view-transition-name: sigil; }
+.group__t { align-self: flex-start; }
+.group.is-on .group__t { view-transition-name: group-title; }
+
+/* Пауза перед уходом: остальное гаснет */
+.wallui h2,
+.wallui .kicker,
+.group,
+.back { transition-property: opacity, border-color, background, box-shadow, color; }
+
+.is-going .wallui h2,
+.is-going .group:not(.is-going),
+.is-going .back { opacity: .22; transition-duration: .35s; }
+
+/* Цвет ореола в анимациях задан переменной --c, а не через currentColor: с ним
+   браузер не умеет плавно переходить от кадра к кадру и ореол мигает скачком. */
+.sigil {
+  --c: var(--g-python);
+  --done: 1.6s;
+  /* Ореол в покое: нижняя точка дыхания, ниже нее свечение не опускается */
+  filter: drop-shadow(0 0 16px color-mix(in srgb, var(--c) 70%, transparent));
+}
+.sigil[data-g="docker"] { --c: var(--g-docker); --done: 2.4s; }
+
+/* Дорисованный знак дышит: ореол за ним мерно разгорается и спадает, пока группа
+   выбрана. --done - когда дорисован последний штрих (задержки штрихов заданы в
+   index-g.html), до этого знак не пульсирует. */
+.sigil.on { animation: sigil-breathe 3.2s ease-in-out var(--done) infinite; }
+
+@keyframes sigil-breathe {
+  0%, 100% { filter: drop-shadow(0 0 16px color-mix(in srgb, var(--c) 70%, transparent)); }
+  50%      { filter: drop-shadow(0 0 19px color-mix(in srgb, var(--c) 95%, transparent)); }
+}
+
+/* Импульс перед уходом: ореол сначала гаснет совсем, затем один раз вспыхивает
+   (разгорается и втягивается обратно в линию). Сам знак цвета не меняет. На страницу
+   группы он переезжает уже без ореола. Длительность та же, что пауза в g.js. */
+.is-going .sigil.on { animation: sigil-pulse .35s ease-in-out forwards; }
+
+@keyframes sigil-pulse {
+  0%   { filter: drop-shadow(0 0 16px color-mix(in srgb, var(--c) 70%, transparent)); }
+  30%  { filter: drop-shadow(0 0 0 color-mix(in srgb, var(--c) 0%, transparent)); }
+  65%  { filter: drop-shadow(0 0 17px color-mix(in srgb, var(--c) 95%, transparent)); }
+  100% { filter: drop-shadow(0 0 0 color-mix(in srgb, var(--c) 0%, transparent)); }
+}
+
+/* На вспышке знак моргает: глаз сжимается в щелку и раскрывается обратно. Закрыт он
+   в тот же момент, когда ореол ярче всего (65%). */
+.sigil__dot { transform-box: fill-box; transform-origin: center; }
+.is-going .sigil.on .sigil__dot { animation: sigil-blink .35s ease-in-out; }
+
+@keyframes sigil-blink {
+  0%, 40%, 90%, 100% { scale: 1 1; }
+  65%                { scale: 1 .1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sigil.on,
+  .is-going .sigil.on,
+  .is-going .sigil.on .sigil__dot { animation: none; }
+}
+
+/* Возврат со страницы группы: знак стоит на стене сразу, без рисования */
+.is-instant .sigil,
+.is-instant .sigil path,
+.is-instant .sigil__dot { transition: none !important; }

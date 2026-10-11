@@ -1,0 +1,26 @@
+/* Переход между стеной (index-g.html) и страницей группы (notes-python.html).
+   Подключается на обеих страницах: браузер сам сводит элементы с одинаковым
+   view-transition-name. Имена раздаются в g.css и notes-g.css:
+   sigil - знак группы, group-title - ее название.
+   Где переходов между документами нет, страница просто открывается: фон у обеих
+   один и тот же, поэтому место не меняется. */
+
+@view-transition { navigation: auto; }
+
+/* Все, что без имени (список групп, строки заметок, затемнение стены), перетекает */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: .55s;
+  animation-timing-function: cubic-bezier(.2, .7, .2, 1);
+}
+
+/* Знак и название едут тем же ходом, что и камера к стене */
+::view-transition-group(sigil),
+::view-transition-group(group-title) {
+  animation-duration: .8s;
+  animation-timing-function: cubic-bezier(.65, 0, .2, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  @view-transition { navigation: none; }
+}

@@ -10,6 +10,10 @@
 <link rel="stylesheet" href="main.css">
 <link rel="stylesheet" href="wall.css">
 <link rel="stylesheet" href="g.css">
+<link rel="stylesheet" href="vt.css">
+<!-- Первый кадр ждет скриптов внизу страницы: при возврате со страницы группы
+     камера уже должна стоять у стены, а знак - быть на ней -->
+<link rel="expect" blocking="render" href="#ready">
 </head>
 <body>
 
@@ -94,7 +98,7 @@
     <span class="kicker">01 / заметки</span>
     <h2>Что почитать?</h2>
     <nav class="groups" aria-label="Группы заметок">
-      <a class="group" href="notes.html" data-g="python">
+      <a class="group" href="notes-python.html" data-g="python">
         <span class="group__t">Python</span>
         <span class="group__d">Изнутри: от tuple до async.</span>
         <span class="group__m"><b>7</b> заметок <i>→</i></span>
@@ -138,6 +142,8 @@
 
 <script src="main.js"></script>
 <script src="wall.js"></script>
+<script src="g.js"></script>
 <script src="smoke.js"></script>
+<i id="ready" hidden></i>
 </body>
 </html>
