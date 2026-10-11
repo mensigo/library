@@ -2,6 +2,9 @@
    Подключается на обеих страницах: браузер сам сводит элементы с одинаковым
    view-transition-name. Имена раздаются в g.css и notes-g.css:
    sigil - знак группы, group-title - ее название.
+   Между страницей группы и заметкой (note-async.html) те же два имени уводят знак
+   и название группы в крошки, и добавляется еще одно из notes-g.css и note-g.css:
+   note-title - название заметки.
    Где переходов между документами нет, страница просто открывается: фон у обеих
    один и тот же, поэтому место не меняется. */
 
@@ -18,6 +21,12 @@
 ::view-transition-group(sigil),
 ::view-transition-group(group-title) {
   animation-duration: .8s;
+  animation-timing-function: cubic-bezier(.65, 0, .2, 1);
+}
+
+/* Название заметки едет чуть быстрее: путь у него короче */
+::view-transition-group(note-title) {
+  animation-duration: .7s;
   animation-timing-function: cubic-bezier(.65, 0, .2, 1);
 }
 

@@ -123,6 +123,46 @@ body[data-g="docker"] .mark__dot { fill: currentColor; }
    Класс снимается при первом движении мыши (notes-g.js). */
 .by-keys .row { pointer-events: none; }
 
+/* ---------- leaving for a note ---------- */
+
+/* Название едет в заголовок заметки: рамка по тексту, иначе его сожмет по ширине */
+.row.is-open .row__t {
+  width: fit-content;
+  color: var(--acc);
+  translate: 6px 0;
+  view-transition-name: note-title;
+}
+
+/* Пауза перед уходом (notes-g.js): гаснет все, кроме того, что поедет на страницу
+   заметки - названия открытой строки, названия группы и знака */
+.head .kicker,
+.sub,
+.find,
+.row,
+.side,
+.row__n,
+.row__d,
+.row__tags,
+.row__m { transition: opacity .3s var(--ease); }
+
+.is-going .head .kicker,
+.is-going .sub,
+.is-going .find,
+.is-going .side,
+.is-going .row:not(.is-open) { opacity: .2; }
+
+/* Линия выбора и черта над открытой строкой гаснут вместе с остальным */
+.row { transition: opacity .3s var(--ease), border-color .3s var(--ease); }
+.row::before { transition: width .45s var(--ease), opacity .3s var(--ease); }
+
+.is-going .row.is-open { border-color: transparent; }
+.is-going .row.is-open::before { opacity: 0; }
+
+.is-going .row.is-open .row__n,
+.is-going .row.is-open .row__d,
+.is-going .row.is-open .row__tags,
+.is-going .row.is-open .row__m { opacity: 0; }
+
 /* ---------- back ---------- */
 
 .back {
@@ -185,4 +225,7 @@ body[data-g="docker"] .mark__dot { fill: currentColor; }
   .arriving .row,
   .arriving .side > *,
   .arriving .mark { animation: none; }
+
+  .head .kicker, .sub, .find, .row, .row::before, .side,
+  .row__n, .row__d, .row__tags, .row__m { transition: none; }
 }

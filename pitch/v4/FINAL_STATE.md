@@ -29,6 +29,21 @@ and what ties them together.
 `notes.js` (filter and search) and `notes-g.js` (back to the wall on A, Left, Escape).
 `notes.html` is the older all-notes page and is no longer linked from G.
 
+`note-async.html` is the target of the Async row, the only row with a page so far. It
+loads `main.css`, `notes.css`, `notes-g.css`, `note-g.css` (faint wall behind the header,
+reading text, progress line, contents), `vt.css` and `note-g.js` (progress, contents
+highlight, W/S between sections, back to the list on A, Left, Escape). Its text is a
+shortened hand copy of `src/notes/python/async.md`.
+
+`note-slots.html` is the target of the `__slots__` row and the page for checking every
+note element. Its body is the built markup from `_site/notes/python/slots/` pasted as is,
+plus a section "Чего в этой заметке нет" with fragments from the built Assert, Async and
+docker-1 pages (version badge, bytecode output, note callout, collapsible block, flow,
+term). It also loads `prose.css`, which styles that real markup: code bar, highlighted
+lines, output, figures and diagram colours, callouts, table, verdict, footnotes, finale.
+The page was assembled once by a throwaway script; after a change in the source note it
+has to be pasted again.
+
 ## Wall to group page
 
 - **Same backdrop.** `notes-g.css` places `img/wall-g.jpg` exactly where the camera stops
@@ -56,6 +71,29 @@ and what ties them together.
   the mark.
 - Cross-document view transitions need http: on `file://` the page just opens. Serve
   from the repo root (`python3 -m http.server`), since the font lives in `src/fonts/`.
+
+## Group page to note
+
+- **Keys on the group page** (`notes-g.js`). W/S (and Up/Down) move the selection through
+  the visible rows, D opens the selected one. The selected row is the focused one plus
+  `.is-on`. While keys are in use `body.by-keys` switches hover off on the rows, so only
+  one row is lit; the first real mouse move hands the selection back to the cursor.
+- **Shared names.** `note-title`: `.row.is-open .row__t` and the note's `h1`. `sigil` and
+  `group-title` continue from the wall: on the note they are the small mark and `python`
+  in the breadcrumbs.
+- **Leaving.** `notes-g.js` holds the click for 300 ms (`body.is-going`): everything dims except
+  what travels: the open row's title, the group title and the sigil. The selection line
+  and the rule above the open row fade out too.
+  The transition on those elements in `notes-g.css` has to match the delay.
+- **Progress line.** `.progress` at the top of the note; `note-g.js` drives its length
+  through `--p`, never below `.012`. Tried and rejected: the row's ember line travelling
+  up to become it (too much going on at once).
+- **Wall on the note.** `.sky` is one screen tall and absolute, so the wall sits where
+  the camera stopped, darkened to .86, and scrolls away with the header.
+- **Returning.** From the list, back is `history.back()` and the row is still selected.
+  On a direct visit it is a link to `notes-python.html`; `sessionStorage.note` tells
+  `notes-g.js` which row to open and select. `.is-open` is dropped 1 s after the return.
+- **A new note** needs its own page and the row's `href`; rows with `href="#"` do nothing.
 
 ## JPEG conversion
 
@@ -109,6 +147,12 @@ Sizes stay the same: 1672x941 for the room, 2688x1152 for the wall.
   captured mid-transition, both directions). Not watched in motion, not opened in Safari
   or Firefox. The group page at 420 px was checked as a still, the transition there was not.
 - The pulse before leaving the wall was sampled in headless Chrome, never judged in motion.
+- The group page to note transition was checked in headless Chrome only (1600x900, frames
+  captured mid-transition, both directions). Not watched in motion. The note page was
+  not opened under 1100 px.
+- `note-slots.html` was checked as stills at 1400 px only. Not checked: under 1100 px, the
+  term tooltip on hover, the copy button, the collapsed state of the collapsible block.
+- `note-async.html` still uses its own hand markup, not the real one that `prose.css` styles.
 - The prompts for the current window view and the current wall are not written down.
 - `img/` is not tracked by git: `room-g.jpg` and `wall-g.jpg` are untracked and the PNG
   sources are gitignored, so a fresh checkout shows the page without the room or the wall.

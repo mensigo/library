@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Библиотека · заметки · Python · Async (pitch v4, вариант G)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap">
+<link rel="preload" as="image" href="img/wall-g.jpg">
+<link rel="stylesheet" href="main.css">
+<link rel="stylesheet" href="notes.css">
+<link rel="stylesheet" href="notes-g.css">
+<link rel="stylesheet" href="note-g.css">
+<link rel="stylesheet" href="vt.css">
+</head>
+<!-- data-g задает цвет группы; класс arriving держит появление текста и снимается в note-g.js -->
+<body class="arriving" data-g="python">
+
+<!-- Та же стена, что на странице группы, но только за шапкой заметки: она почти
+     погасла и уходит вверх вместе с шапкой, текст ниже лежит на ровном фоне. -->
+<div class="sky" aria-hidden="true">
+  <div class="backdrop"></div>
+  <div class="shade"></div>
+</div>
+
+<!-- Линия прочитанного -->
+<div class="progress" id="progress" aria-hidden="true"></div>
+
+<nav class="hud" id="bar" aria-label="Хлебные крошки">
+  <span class="dot"></span>
+  <a href="index-g.html"><b>БИБЛИОТЕКА</b></a>
+  <span class="sep">/</span>
+  <a class="hud__opt" href="index-g.html#notes">заметки</a>
+  <span class="sep hud__opt">/</span>
+  <!-- Знак и название группы со страницы группы: уменьшились и встали в крошки -->
+  <a class="hud__g" href="notes-python.html" data-back>
+    <svg class="mark" viewBox="0 0 400 400" fill="none" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path class="mark__brush" d="M60 322 C150 362 252 332 236 270 C222 218 108 236 120 174 C131 114 292 150 290 94 C289 60 250 44 214 60"/>
+      <path class="mark__thin" d="M202 64 L180 71 L167 62 M180 71 L170 82"/>
+      <circle class="mark__dot" cx="228" cy="57" r="3.2"/>
+    </svg>
+    <span class="hud__gt">python</span>
+  </a>
+  <span class="sep">/</span>
+  <span>async</span>
+</nav>
+
+<main class="wrap">
+  <header class="nhead">
+    <span class="kicker">01 / python</span>
+    <h1>Async</h1>
+    <p class="meta"><span><b>15</b> мин</span><span>26 сен</span><i>asyncio</i><i>Конкурентность</i></p>
+  </header>
+
+  <div class="layout">
+    <article class="note">
+      <p class="lede">asyncio - конкурентный I/O в одном потоке. Функции выполняются по частям и переключаются в заранее заданных точках: пока одна ждет сеть или диск, работают другие.</p>
+
+      <ul class="tldr">
+        <li><b>Корутина.</b> Вызов <code>async def</code>-функции не выполняет ее тело, а возвращает объект <code>coroutine</code>.</li>
+        <li><b>Цикл событий.</b> Один поток, одна очередь: цикл берет готовую задачу, продвигает ее до ближайшего <code>await</code>, переходит к следующей.</li>
+        <li><b>Остановка.</b> Корутина отдает управление циклу только на <code>await</code>, и только если дошла до неготовой <code>Future</code>. Код между <code>await</code> выполняется без переключений.</li>
+        <li><b>Главное.</b> Конкурентность появляется, только когда несколько корутин отданы циклу одновременно. <code>await</code> подряд - это последовательный код.</li>
+        <li><b>Когда нужен.</b> asyncio ускоряет ожидание (I/O), а не вычисления. Тяжелый расчет или блокирующий вызов внутри <code>async def</code> останавливает весь цикл.</li>
+      </ul>
+
+      <section>
+        <h2 id="intro"><span class="h__n">01</span>Интро</h2>
+        <p>Модуль <b>asyncio</b> появился в Python 3.4 (март 2014) по PEP 3156 - проект Гвидо ван Россума под кодовым именем Tulip. До него асинхронный I/O в Python жил в сторонних библиотеках: Twisted, Tornado, gevent. Первые версии asyncio были в статусе provisional, API менялся от релиза к релизу.</p>
+        <table class="tbl">
+          <thead><tr><th>Версия</th><th>Что появилось</th></tr></thead>
+          <tbody>
+            <tr><td>3.4</td><td>модуль <code>asyncio</code>, корутины на генераторах: <code>@asyncio.coroutine</code> + <code>yield from</code></td></tr>
+            <tr><td>3.5</td><td><code>async def</code> / <code>await</code> - нативные корутины (PEP 492)</td></tr>
+            <tr><td>3.6</td><td>asyncio больше не provisional; асинхронные генераторы (PEP 525)</td></tr>
+            <tr><td>3.7</td><td><code>async</code> и <code>await</code> - зарезервированные слова; <code>asyncio.run()</code>, <code>asyncio.create_task()</code></td></tr>
+            <tr><td>3.8</td><td>REPL с верхнеуровневым <code>await</code>: <code>python -m asyncio</code></td></tr>
+            <tr><td>3.11</td><td><code>TaskGroup</code>, <code>asyncio.timeout()</code>; <code>@asyncio.coroutine</code> удален</td></tr>
+          </tbody>
+        </table>
+        <p>Архитектура держится на трех вещах:</p>
+        <ul>
+          <li><b>асинхронная функция</b> - функция, объявленная через <code>async def</code>. Внутри нее можно писать <code>await</code>;</li>
+          <li><b>корутина</b> - объект, который возвращает вызов асинхронной функции. Позволяет выполнять тело функции по частям: на <code>await</code> корутина может приостановиться и отдать управление циклу событий, а не заблокировать весь поток, как <code>time.sleep</code>;</li>
+          <li><b>цикл событий</b> (event loop) - запускает, останавливает и будит корутины.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2 id="coroutine"><span class="h__n">02</span>Корутина</h2>
+        <p>Функция, объявленная через <code>async def</code> (в документации - coroutine function), при вызове не выполняет свое тело. Она возвращает объект-корутину:</p>
+        <figure class="code">
+          <figcaption><span>hello.py</span><span>python</span></figcaption>
+<pre><b>async def</b> hello():
+    print(<q>"hi"</q>)
+    <b>return</b> 42
+
+c = hello()
+print(c)
+print(type(c))</pre>
+<pre class="out">&lt;coroutine object hello at 0x104000940&gt;
+&lt;class 'coroutine'&gt;
+sys:1: RuntimeWarning: coroutine 'hello' was never awaited</pre>
+        </figure>
+        <p><code>hi</code> не напечаталось - тело функции не запускалось. А при сборке мусора интерпретатор заметил, что корутину создали и бросили, и выдал предупреждение. Это самая частая ошибка в async-коде: забытый <code>await</code> перед вызовом.</p>
+        <p>Корутину можно продвинуть вручную - тем же методом <code>send</code>, что и у генератора:</p>
+        <figure class="code">
+          <figcaption><span>hello_send.py</span><span>python</span></figcaption>
+<pre><b>async def</b> hello():
+    print(<q>"hi"</q>)
+    <b>return</b> 42
+
+c = hello()
+<b>try</b>:
+    c.send(<b>None</b>)
+<b>except</b> StopIteration <b>as</b> e:
+    print(<q>"result:"</q>, e.value)</pre>
+<pre class="out">hi
+result: 42</pre>
+        </figure>
+        <p><code>send(None)</code> выполняет тело до ближайшей точки остановки. Здесь остановок нет, поэтому корутина доходит до конца, а возвращаемое значение уезжает наружу внутри <code>StopIteration</code> - ровно как у генератора. Никакого asyncio для этого не понадобилось.</p>
+        <aside class="callout">
+          <b>Заметка</b>
+          <p>Корутины выросли из генераторов: в 3.4 они и были генераторами с <code>yield from</code>. <code>async def</code> дал им отдельный тип и синтаксис, но механика продвижения через <code>send</code> осталась той же.</p>
+        </aside>
+      </section>
+
+      <section>
+        <h2 id="loop"><span class="h__n">03</span>Цикл событий</h2>
+        <p>Если в корутине есть <code>await</code> на чем-то, что еще не готово (таймер, сокет), <code>send</code> вернет управление посреди тела. Кто-то должен запомнить эту корутину и позвать <code>send</code> снова, когда ожидание закончится. Этим и занимается цикл событий:</p>
+        <p class="flow">взять готовую задачу <i>→</i> <code>send</code> до ближайшего <code>await</code> <i>→</i> отложить до готовности <i>→</i> следующая задача <i>→</i> ничего не готово? ждать I/O или таймер</p>
+        <p>Цикл работает в одном потоке. Переключение между корутинами происходит только в точках <code>await</code> - корутина сама отдает управление, никто ее не прерывает. Поэтому модель называют кооперативной многозадачностью.</p>
+        <p>Точка входа - <code>asyncio.run()</code>: создает цикл, запускает в нем корутину, ждет ее завершения и закрывает цикл.</p>
+        <figure class="code">
+          <figcaption><span>workers.py</span><span>python</span></figcaption>
+<pre><b>import</b> asyncio
+<b>import</b> time
+
+<b>async def</b> worker(name, delay):
+    print(<q>f"{name}: start"</q>)
+    <b>await</b> asyncio.sleep(delay)
+    print(<q>f"{name}: done"</q>)
+    <b>return</b> name
+
+<b>async def</b> main():
+    t0 = time.perf_counter()
+    <b>await</b> worker(<q>"A"</q>, 1)
+    <b>await</b> worker(<q>"B"</q>, 1)
+    print(<q>f"подряд: {time.perf_counter() - t0:.1f}s"</q>)
+
+    t0 = time.perf_counter()
+    results = <b>await</b> asyncio.gather(worker(<q>"A"</q>, 1), worker(<q>"B"</q>, 1))
+    print(results, <q>f"gather: {time.perf_counter() - t0:.1f}s"</q>)
+
+asyncio.run(main())</pre>
+<pre class="out">A: start
+A: done
+B: start
+B: done
+подряд: 2.0s
+A: start
+B: start
+A: done
+B: done
+['A', 'B'] gather: 1.0s</pre>
+        </figure>
+        <p>Первый блок - два <code>await</code> подряд. <code>main</code> ждет, пока закончится <code>A</code>, и только потом создает <code>B</code>. Цикл все это время простаивает: у него одна задача, и она спит.</p>
+        <p>Второй блок - <code>gather</code> оборачивает обе корутины в задачи (<code>Task</code>) и отдает циклу сразу. <code>A</code> доходит до <code>sleep</code> и отдает управление, цикл тут же запускает <code>B</code>, та тоже засыпает. Через секунду таймеры срабатывают, цикл будит обе. Итого секунда вместо двух.</p>
+        <aside class="callout callout--warn">
+          <b>Осторожно</b>
+          <p><code>await</code> не делает код параллельным. Он значит «выполни и дождись». Конкурентность появляется, только когда циклу отдано несколько задач одновременно: <code>gather</code>, <code>create_task</code>, <code>TaskGroup</code>.</p>
+        </aside>
+      </section>
+
+      <section>
+        <h2 id="deeper"><span class="h__n">04</span>Чуть подробнее</h2>
+        <h3>Future</h3>
+        <p><code>asyncio.Future</code> - заглушка для результата, которого еще нет. Создается пустой (pending), позже кто-то кладет в нее значение (<code>set_result</code>) или исключение (<code>set_exception</code>). Тот, кто сделал <code>await</code> на Future, ждет, пока это произойдет.</p>
+        <p>Именно на Future корутина и останавливается. Упрощенно <code>Future.__await__</code> устроен так:</p>
+        <figure class="code">
+          <figcaption><span></span><span>python</span></figcaption>
+<pre><b>def</b> __await__(self):
+    <b>if not</b> self.done():
+        <b>yield</b> self
+    <b>return</b> self.result()</pre>
+        </figure>
+        <p><code>yield self</code> пробрасывается вверх через всю цепочку <code>await</code> до цикла событий. Цикл вешает на Future колбэк «когда будет готово - разбудить задачу» и переходит к другим задачам. Так устроен <code>asyncio.sleep</code>: создает Future, ставит таймер на <code>set_result</code> и ждет.</p>
+        <h3>Task</h3>
+        <p><code>asyncio.Task</code> - подкласс Future, который заполняет себя сам: продвигает корутину через <code>send</code>, а когда та вернула значение, вызывает на себе <code>set_result</code>. Поэтому задачу можно ждать через <code>await</code>, отменять, проверять <code>done()</code>.</p>
+        <p>Главное отличие от голой корутины: <code>create_task</code> сразу ставит задачу в очередь цикла. Она начнет выполняться на ближайшей остановке вызывающего кода, не дожидаясь, пока ее результат кому-то понадобится.</p>
+        <h3>TaskGroup</h3>
+        <p><code>asyncio.TaskGroup</code> (3.11) - контекстный менеджер для задач, которые живут и умирают вместе:</p>
+        <ul>
+          <li>из блока <code>async with</code> нельзя выйти, пока не завершились все задачи группы;</li>
+          <li>если одна задача упала, остальные отменяются, а ошибки выбрасываются одним <code>ExceptionGroup</code>;</li>
+          <li>задачи можно добавлять на ходу, например по одной на каждый входящий элемент.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2 id="when"><span class="h__n">05</span>О применимости</h2>
+        <p>asyncio ускоряет программы, которые большую часть времени ждут: ответа сервера, базы, диска, таймера. Пока одна корутина ждет, цикл продвигает другие. Такие задачи называют I/O-bound.</p>
+        <p>Вычисления (CPU-bound) asyncio не ускоряет: цикл работает в одном потоке, на одном ядре. Хуже того, долгий расчет внутри <code>async def</code> останавливает весь цикл. Переключение возможно только на <code>await</code>, а в цикле вычислений его нет - остальные задачи замирают, пока расчет не закончится.</p>
+      </section>
+    </article>
+
+    <aside class="side">
+      <nav class="toc" aria-label="Содержание">
+        <span class="kicker">Содержание</span>
+        <ol>
+          <li><a href="#intro"><span>01</span>Интро</a></li>
+          <li><a href="#coroutine"><span>02</span>Корутина</a></li>
+          <li><a href="#loop"><span>03</span>Цикл событий</a></li>
+          <li><a href="#deeper"><span>04</span>Чуть подробнее</a></li>
+          <li><a href="#when"><span>05</span>О применимости</a></li>
+        </ol>
+        <p class="tockeys"><kbd>W</kbd><kbd>S</kbd> по разделам</p>
+      </nav>
+
+      <a class="back" href="notes-python.html" data-back><i>←</i> к списку <kbd>A</kbd></a>
+    </aside>
+  </div>
+
+  <div class="frameline frameline--foot">
+    <span>кальян дымит</span>
+    <span>утро подождет</span>
+  </div>
+</main>
+
+<script src="note-g.js"></script>
+</body>
+</html>

@@ -7,9 +7,76 @@
   // Пришли со стены: возвращаемся по истории, а не кладем в нее стену второй раз
   var fromWall = /index-g\.html/.test(document.referrer);
 
+  var still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
   // Строки появляются по одной только при входе, а не каждый раз, когда фильтр
   // возвращает их в список
   setTimeout(function () { document.body.classList.remove('arriving'); }, 1600);
+
+  // ---------- уход в заметку ----------
+
+  // Сам переход делает браузер (vt.css): у открытой строки (.is-open в notes-g.css)
+  // название получает имя, под которым его ждет страница заметки.
+  var opened = null;
+
+  function open(row) {
+    if (opened) opened.classList.remove('is-open');
+    opened = row;
+    row.classList.add('is-open');
+  }
+
+  // Переход назад сводит заметку с открытой строкой; после него имя больше не нужно
+  function settle() {
+    document.body.classList.remove('is-going');
+    setTimeout(function () {
+      if (opened && !document.body.classList.contains('is-going')) {
+        opened.classList.remove('is-open');
+        opened = null;
+      }
+    }, 1000);
+  }
+
+  Array.prototype.forEach.call(document.querySelectorAll('.row'), function (row) {
+    row.addEventListener('click', function (e) {
+      // Заметки, которых в пробе еще нет
+      if (row.getAttribute('href') === '#') { e.preventDefault(); return; }
+      // Открытие в новой вкладке остается обычной ссылкой
+      if (e.metaKey || e.ctrlKey || e.shiftKey || e.button) return;
+      e.preventDefault();
+      if (document.body.classList.contains('is-going')) return;
+      open(row);
+      // Пауза перед уходом: остальные строки гаснут, у открытой остается название
+      // и уголек во всю ширину (.is-going в notes-g.css, длительность та же)
+      document.body.classList.add('is-going');
+      setTimeout(function () { location.href = row.href; }, still ? 0 : 300);
+    });
+  });
+
+  // Возврат кнопкой «назад»: страница достается из кеша такой, какой с нее ушли
+  window.addEventListener('pageshow', function (e) {
+    if (e.persisted) settle();
+  });
+
+  // Возврат по ссылке с заметки: строка заново получает имена и выбор
+  var note = null;
+  try {
+    note = sessionStorage.getItem('note');
+    sessionStorage.removeItem('note');
+  } catch (err) {}
+
+  if (note) {
+    var row = document.querySelector('.row[href="' + note + '"]');
+    if (row) {
+      document.body.classList.remove('arriving');
+      document.body.classList.add('by-keys');
+      open(row);
+      row.focus({ focusVisible: true });
+      row.classList.add('is-on');
+      settle();
+    }
+  }
+
+  // ---------- возврат к стене ----------
 
   function leave(e) {
     if (e.metaKey || e.ctrlKey || e.shiftKey || e.button) return;

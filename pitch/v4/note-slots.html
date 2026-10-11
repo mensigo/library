@@ -1,0 +1,425 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Библиотека · заметки · Python · __slots__ (pitch v4, вариант G)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap">
+<link rel="preload" as="image" href="img/wall-g.jpg">
+<link rel="stylesheet" href="main.css">
+<link rel="stylesheet" href="notes.css">
+<link rel="stylesheet" href="notes-g.css">
+<link rel="stylesheet" href="note-g.css">
+<link rel="stylesheet" href="prose.css">
+<link rel="stylesheet" href="vt.css">
+</head>
+<!-- data-g задает цвет группы; класс arriving держит появление текста и снимается в note-g.js -->
+<body class="arriving" data-g="python">
+
+<!-- Та же стена, что на странице группы, но только за шапкой заметки: она почти
+     погасла и уходит вверх вместе с шапкой, текст ниже лежит на ровном фоне. -->
+<div class="sky" aria-hidden="true">
+  <div class="backdrop"></div>
+  <div class="shade"></div>
+</div>
+
+<!-- Линия прочитанного -->
+<div class="progress" id="progress" aria-hidden="true"></div>
+
+<nav class="hud" id="bar" aria-label="Хлебные крошки">
+  <span class="dot"></span>
+  <a href="index-g.html"><b>БИБЛИОТЕКА</b></a>
+  <span class="sep">/</span>
+  <a class="hud__opt" href="index-g.html#notes">заметки</a>
+  <span class="sep hud__opt">/</span>
+  <!-- Знак и название группы со страницы группы: уменьшились и встали в крошки -->
+  <a class="hud__g" href="notes-python.html" data-back>
+    <svg class="mark" viewBox="0 0 400 400" fill="none" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path class="mark__brush" d="M60 322 C150 362 252 332 236 270 C222 218 108 236 120 174 C131 114 292 150 290 94 C289 60 250 44 214 60"/>
+      <path class="mark__thin" d="M202 64 L180 71 L167 62 M180 71 L170 82"/>
+      <circle class="mark__dot" cx="228" cy="57" r="3.2"/>
+    </svg>
+    <span class="hud__gt">python</span>
+  </a>
+  <span class="sep">/</span>
+  <span>slots</span>
+</nav>
+
+<main class="wrap">
+  <header class="nhead">
+    <span class="kicker">05 / python</span>
+    <h1><span class="u-dim">__</span>slots<span class="u-dim">__</span></h1>
+    <p class="meta"><span><b>6</b> мин</span><span>22 июн</span><i>CPython</i><i>Память</i><i>Модель данных</i></p>
+  </header>
+
+  <div class="layout">
+    <!-- Тело заметки - разметка из _site/notes/python/slots/ как есть, плюс раздел
+         «Чего в этой заметке нет» с элементами из других заметок (prose.css) -->
+    <article class="note prose">
+      <p class="lede">Механизм, который снимает с экземпляра словарь атрибутов и раскладывает поля по фиксированным ячейкам. Экономия видна там, где объектов миллионы — и почти незаметна там, где их сотни.</p>
+
+      <ul class="tldr">
+        <li><b>Что делает.</b> Заменяет <code>__dict__</code> экземпляра фиксированным набором ячеек, объявленных в классе.</li>
+        <li><b>Что дает.</b> Меньше памяти на экземпляр; иногда чуть более быстрый доступ к атрибутам.</li>
+        <li><b>Чем платим.</b> Нельзя добавлять незаявленные атрибуты, weakref нужно просить явно, наследование усложняется.</li>
+        <li><b>Когда брать.</b> Когда однотипных объектов миллионы и профиль показал, что память уходит именно туда.</li>
+      </ul>
+
+<h2 id="где-живут-атрибуты">Где живут атрибуты <a class="anchor" href="#где-живут-атрибуты" aria-label="Ссылка на раздел">#</a></h2>
+<p>По умолчанию каждый<a class="fnref" href="#fn1" id="fnref1">1</a> экземпляр держит свои атрибуты в <code>__dict__</code> — обычном словаре,
+который висит на объекте отдельным указателем.</p>
+<div class="code"><div class="code__bar"><span class="code__dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="code__name">plain_user.py</span><span class="code__lang">python</span><button class="copy" type="button"><svg class="ico-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg><svg class="ico-done" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" aria-hidden="true"><path d="m5 13 4 4L19 7"/></svg><span class="copy__label">Копировать</span></button></div><pre class="language-python"><code class="language-python"><span class="token keyword">class</span> <span class="token class-name">User</span><span class="token punctuation">:</span>
+    <span class="token keyword">def</span> <span class="token function">__init__</span><span class="token punctuation">(</span>self<span class="token punctuation">,</span> name<span class="token punctuation">,</span> age<span class="token punctuation">)</span><span class="token punctuation">:</span>
+        self<span class="token punctuation">.</span>name <span class="token operator">=</span> name
+        self<span class="token punctuation">.</span>age <span class="token operator">=</span> age
+
+User<span class="token punctuation">(</span><span class="token string">"Alice"</span><span class="token punctuation">,</span> <span class="token number">20</span><span class="token punctuation">)</span><span class="token punctuation">.</span>__dict__</code></pre>
+</div>
+<div class="code__out"><b aria-hidden="true">stdout</b><span class="u-sr">вывод</span>
+<p>{'name': 'Alice', 'age': 20}</p>
+</div>
+<p>Это удобно: атрибуты можно добавлять на ходу, объект легко сериализовать и осмотреть в отладчике.
+Но словарь — это хеш-таблица, а хеш-таблица всегда держит запас пустых ячеек. Пока объектов сотни,
+накладные расходы не видны. Когда их миллионы — видны только они.</p>
+<figure class="fig">
+  <div class="fig__frame">
+    <svg viewBox="0 0 620 268" role="img" aria-labelledby="fig1-t">
+      <title id="fig1-t">Слева экземпляр со ссылкой на отдельный словарь атрибутов, справа экземпляр с полями, уложенными прямо в объект</title>
+      <g font-size="10.5">
+        <!-- ---------------- левая панель ---------------- -->
+        <text class="d-dim" x="10" y="14" letter-spacing="1.4">БЕЗ __SLOTS__</text>
+        <rect class="d-fill d-line" x="10" y="30" width="126" height="104" rx="6" stroke-width="1"/>
+        <text class="d-txt" x="22" y="49" font-size="11">User obj</text>
+        <line class="d-line" x1="10" y1="58" x2="136" y2="58" stroke-width="1"/>
+        <text class="d-dim" x="22" y="77">PyObject_HEAD</text>
+        <text class="d-acc" x="22" y="97">__dict__  *</text>
+        <text class="d-dim" x="22" y="117">__weakref__ *</text>
+        <path class="d-acc-s" d="M140 92 H172" stroke-width="1.4" fill="none" marker-end="url(#ar)"/>
+        <rect class="d-fill-2 d-line" x="182" y="30" width="112" height="150" rx="6" stroke-width="1"/>
+        <text class="d-txt" x="192" y="49" font-size="11">dict</text>
+        <line class="d-line" x1="182" y1="58" x2="294" y2="58" stroke-width="1"/>
+        <rect class="d-acc-bg" x="192" y="66" width="92" height="15" rx="3"/>
+        <text class="d-acc" x="197" y="77" font-size="9.5">'name' → …</text>
+        <rect class="d-fill d-line" x="192" y="85" width="92" height="15" rx="3" stroke-width=".8" stroke-dasharray="2 2"/>
+        <rect class="d-acc-bg" x="192" y="104" width="92" height="15" rx="3"/>
+        <text class="d-acc" x="197" y="115" font-size="9.5">'age' → …</text>
+        <rect class="d-fill d-line" x="192" y="123" width="92" height="15" rx="3" stroke-width=".8" stroke-dasharray="2 2"/>
+        <rect class="d-fill d-line" x="192" y="142" width="92" height="15" rx="3" stroke-width=".8" stroke-dasharray="2 2"/>
+        <text class="d-dim" x="192" y="171" font-size="9">запас пустых ячеек</text>
+        <text class="d-dim" x="10" y="205" font-size="9.5">объект + отдельный словарь</text>
+        <text class="d-dim" x="10" y="221" font-size="9.5">на каждый экземпляр</text>
+        <!-- разделитель -->
+        <line class="d-line" x1="312" y1="24" x2="312" y2="236" stroke-width="1" stroke-dasharray="3 4"/>
+        <!-- ---------------- правая панель ---------------- -->
+        <text class="d-dim" x="330" y="14" letter-spacing="1.4">С __SLOTS__</text>
+        <rect class="d-fill d-line" x="330" y="30" width="150" height="124" rx="6" stroke-width="1"/>
+        <text class="d-txt" x="342" y="49" font-size="11">User obj</text>
+        <line class="d-line" x1="330" y1="58" x2="480" y2="58" stroke-width="1"/>
+        <text class="d-dim" x="342" y="77">PyObject_HEAD</text>
+        <rect class="d-acc-bg" x="338" y="85" width="134" height="17" rx="3"/>
+        <text class="d-acc" x="344" y="97" font-size="9.5">[0] 'Alice'</text>
+        <rect class="d-acc-bg" x="338" y="108" width="134" height="17" rx="3"/>
+        <text class="d-acc" x="344" y="120" font-size="9.5">[1] 20</text>
+        <text class="d-dim" x="342" y="143" font-size="9">нет __dict__</text>
+        <rect class="d-fill-2 d-line" x="504" y="46" width="106" height="80" rx="6" stroke-width="1" stroke-dasharray="3 3"/>
+        <text class="d-txt" x="514" y="65" font-size="10.5">class User</text>
+        <line class="d-line" x1="504" y1="73" x2="610" y2="73" stroke-width="1"/>
+        <text class="d-dim" x="514" y="90" font-size="9">name → [0]</text>
+        <text class="d-dim" x="514" y="106" font-size="9">age  → [1]</text>
+        <text class="d-dim" x="514" y="120" font-size="8.5">дескрипторы</text>
+        <path class="d-line" d="M504 90 H484" stroke-width="1" fill="none" stroke-dasharray="2 2"/>
+        <path class="d-line" d="M504 106 H484" stroke-width="1" fill="none" stroke-dasharray="2 2"/>
+        <text class="d-dim" x="330" y="205" font-size="9.5">поля лежат внутри самого объекта,</text>
+        <text class="d-dim" x="330" y="221" font-size="9.5">имена — один раз в классе</text>
+      </g>
+      <defs>
+        <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+          <path d="M0 0 L10 5 L0 10 z" class="d-acc"/>
+        </marker>
+      </defs>
+    </svg>
+  </div>
+  <figcaption><b>Схема</b><span>Словарь на экземпляр против ячеек в самом объекте. Имена атрибутов при <code>__slots__</code> хранятся один раз — в классе, в виде дескрипторов.</span></figcaption>
+</figure>
+<h2 id="как-это-выглядит-в-коде">Как это выглядит в коде <a class="anchor" href="#как-это-выглядит-в-коде" aria-label="Ссылка на раздел">#</a></h2>
+<p>Решение — объявить в теле класса атрибут <code>__slots__</code> с коллекцией имен
+(обычно кортеж или список<a class="fnref" href="#fn2" id="fnref2">2</a>):</p>
+<div class="split">
+<div class="code"><div class="code__bar"><span class="code__dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="code__name">было</span><span class="code__lang">python</span><button class="copy" type="button"><svg class="ico-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg><svg class="ico-done" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" aria-hidden="true"><path d="m5 13 4 4L19 7"/></svg><span class="copy__label">Копировать</span></button></div><pre class="language-python"><code class="language-python"><span class="token keyword">class</span> <span class="token class-name">User</span><span class="token punctuation">:</span>
+
+    <span class="token keyword">def</span> <span class="token function">__init__</span><span class="token punctuation">(</span>self<span class="token punctuation">,</span> name<span class="token punctuation">,</span> age<span class="token punctuation">)</span><span class="token punctuation">:</span>
+        self<span class="token punctuation">.</span>name <span class="token operator">=</span> name
+        self<span class="token punctuation">.</span>age <span class="token operator">=</span> age</code></pre>
+</div>
+<div class="code"><div class="code__bar"><span class="code__dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="code__name">стало</span><span class="code__lang">python</span><button class="copy" type="button"><svg class="ico-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg><svg class="ico-done" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" aria-hidden="true"><path d="m5 13 4 4L19 7"/></svg><span class="copy__label">Копировать</span></button></div><pre class="language-python"><code class="language-python"><span class="highlight-line"><span class="token keyword">class</span> <span class="token class-name">User</span><span class="token punctuation">:</span></span>
+<mark class="highlight-line highlight-line-active">    __slots__ <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token string">"name"</span><span class="token punctuation">,</span> <span class="token string">"age"</span><span class="token punctuation">)</span></mark>
+<span class="highlight-line">    <span class="token keyword">def</span> <span class="token function">__init__</span><span class="token punctuation">(</span>self<span class="token punctuation">,</span> name<span class="token punctuation">,</span> age<span class="token punctuation">)</span><span class="token punctuation">:</span></span>
+<span class="highlight-line">        self<span class="token punctuation">.</span>name <span class="token operator">=</span> name</span>
+<span class="highlight-line">        self<span class="token punctuation">.</span>age <span class="token operator">=</span> age</span></code></pre>
+</div>
+</div>
+<p>Снаружи ничего не изменилось: <code>user.name</code> и <code>user.age</code> читаются и пишутся как прежде.
+Изменился способ хранения — вместо записи в словарь это теперь дескриптор, который кладет
+значение в конкретную ячейку экземпляра.</p>
+<div class="callout callout--tip"><div class="callout__ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.5 10.9c.3.3.5.7.5 1.1h6c0-.4.2-.8.5-1.1A6 6 0 0 0 12 3Z"/></svg></div><div class="callout__body"><b>Проверьте на своих данных</b>
+<p>Цифры экономии сильно зависят от версии CPython, числа полей и того, что лежит внутри.
+Полезнее один раз замерить свой класс, чем опираться на чужие числа.</p>
+</div></div>
+<div class="code"><div class="code__bar"><span class="code__dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="code__name">measure.py</span><span class="code__lang">python</span><button class="copy" type="button"><svg class="ico-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg><svg class="ico-done" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" aria-hidden="true"><path d="m5 13 4 4L19 7"/></svg><span class="copy__label">Копировать</span></button></div><pre class="language-python"><code class="language-python"><span class="token keyword">import</span> tracemalloc
+
+<span class="token keyword">def</span> <span class="token function">measure</span><span class="token punctuation">(</span>cls<span class="token punctuation">,</span> n<span class="token operator">=</span><span class="token number">200_000</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+    tracemalloc<span class="token punctuation">.</span>start<span class="token punctuation">(</span><span class="token punctuation">)</span>
+    items <span class="token operator">=</span> <span class="token punctuation">[</span>cls<span class="token punctuation">(</span><span class="token string">"Alice"</span><span class="token punctuation">,</span> <span class="token number">20</span><span class="token punctuation">)</span> <span class="token keyword">for</span> _ <span class="token keyword">in</span> <span class="token builtin">range</span><span class="token punctuation">(</span>n<span class="token punctuation">)</span><span class="token punctuation">]</span>
+    peak <span class="token operator">=</span> tracemalloc<span class="token punctuation">.</span>get_traced_memory<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">]</span>
+    tracemalloc<span class="token punctuation">.</span>stop<span class="token punctuation">(</span><span class="token punctuation">)</span>
+    <span class="token keyword">return</span> peak <span class="token operator">/</span> n   <span class="token comment"># байт на экземпляр</span>
+
+<span class="token keyword">print</span><span class="token punctuation">(</span>measure<span class="token punctuation">(</span>User<span class="token punctuation">)</span><span class="token punctuation">,</span> measure<span class="token punctuation">(</span>SlottedUser<span class="token punctuation">)</span><span class="token punctuation">)</span></code></pre>
+</div>
+<div class="code__out"><b>идея</b>
+<p>сравнивать не абсолютные числа, а отношение между двумя своими классами</p>
+</div>
+<figure class="fig">
+  <div class="fig__frame">
+    <svg viewBox="0 0 620 152" role="img" aria-labelledby="fig2-t">
+      <title id="fig2-t">Столбчатое сравнение памяти на экземпляр: вариант со словарем заметно выше варианта со слотами</title>
+      <g font-size="10.5">
+        <text class="d-dim" x="10" y="14" letter-spacing="1.4">ПАМЯТЬ НА ЭКЗЕМПЛЯР · ПОРЯДОК ВЕЛИЧИН</text>
+        <text class="d-txt" x="10" y="50" font-size="11">__dict__</text>
+        <rect class="d-fill-2 d-line" x="118" y="36" width="420" height="22" rx="4" stroke-width="1"/>
+        <rect class="d-warn" x="118" y="36" width="420" height="22" rx="4" opacity=".22"/>
+        <rect class="d-warn" x="118" y="36" width="3" height="22"/>
+        <text class="d-warn" x="548" y="51" font-size="11">×1.0</text>
+        <text class="d-txt" x="10" y="96" font-size="11">__slots__</text>
+        <rect class="d-fill-2 d-line" x="118" y="82" width="420" height="22" rx="4" stroke-width="1"/>
+        <rect class="d-acc-bg" x="118" y="82" width="152" height="22" rx="4"/>
+        <rect class="d-acc" x="118" y="82" width="152" height="22" rx="4" opacity=".28"/>
+        <rect class="d-acc" x="118" y="82" width="3" height="22"/>
+        <text class="d-acc" x="548" y="97" font-size="11">≈ ×0.35</text>
+        <line class="d-line" x1="118" y1="118" x2="538" y2="118" stroke-width="1"/>
+        <text class="d-dim" x="118" y="136" font-size="9">класс из двух полей · CPython 3.12 · x86-64 · замер через tracemalloc</text>
+      </g>
+    </svg>
+  </div>
+  <figcaption><b>Замер</b><span>Иллюстративное отношение для класса из двух полей. У класса с двадцатью полями или с key-sharing-словарями картина будет другой — поэтому в фигуре отношение, а не мегабайты.</span></figcaption>
+</figure>
+<h2 id="за-что-платим">За что платим <a class="anchor" href="#за-что-платим" aria-label="Ссылка на раздел">#</a></h2>
+<h3 id="новые-атрибуты">Новые атрибуты <a class="anchor" href="#новые-атрибуты" aria-label="Ссылка на раздел">#</a></h3>
+<p>Присвоить экземпляру поле, которого нет в <code>__slots__</code>, больше нельзя —
+прилетит <code>AttributeError</code>. Это ровно та динамика, которую мы обменяли на память.</p>
+<div class="code"><div class="code__bar"><span class="code__dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="code__name">strict.py</span><span class="code__lang">python</span><button class="copy" type="button"><svg class="ico-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg><svg class="ico-done" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" aria-hidden="true"><path d="m5 13 4 4L19 7"/></svg><span class="copy__label">Копировать</span></button></div><pre class="language-python"><code class="language-python"><span class="highlight-line">user <span class="token operator">=</span> User<span class="token punctuation">(</span><span class="token string">"Alice"</span><span class="token punctuation">,</span> <span class="token number">20</span><span class="token punctuation">)</span></span>
+<span class="highlight-line">user<span class="token punctuation">.</span>name <span class="token operator">=</span> <span class="token string">"Bob"</span>        <span class="token comment"># ок, имя объявлено</span></span>
+<del class="highlight-line highlight-line-remove">user<span class="token punctuation">.</span>email <span class="token operator">=</span> <span class="token string">"a@b.c"</span>     <span class="token comment"># AttributeError</span></del>
+<span class="highlight-line"></span>
+<span class="highlight-line"><span class="token comment"># если поля все-таки нужно добавлять — просим словарь обратно:</span></span>
+<span class="highlight-line"><span class="token keyword">class</span> <span class="token class-name">User</span><span class="token punctuation">:</span></span>
+<span class="highlight-line">    __slots__ <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token string">"name"</span><span class="token punctuation">,</span> <span class="token string">"age"</span><span class="token punctuation">,</span> <span class="token string">"__dict__"</span><span class="token punctuation">)</span></span></code></pre>
+</div>
+<div class="code__out"><b>но</b>
+<p>с <code>__dict__</code> в слотах экономия во многом теряется — это осознанный компромисс,
+а не «лучшее из двух»</p>
+</div>
+<h3 id="weak-references">Weak references <a class="anchor" href="#weak-references" aria-label="Ссылка на раздел">#</a></h3>
+<p>Слот <code>__weakref__</code> тоже нужно запрашивать явно, иначе <code>weakref.ref(obj)</code>
+поднимет <code>TypeError</code>.</p>
+<div class="callout callout--warn"><div class="callout__ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.3 3.9 1.9 18a2 2 0 0 0 1.7 3h16.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4M12 17h.01"/></svg></div><div class="callout__body"><b>Ломается тише, чем кажется</b>
+<p>На weak refs держатся кэши, observer-механизмы и часть библиотек — так они не удерживают
+объект от сборки. Без <code>__weakref__</code> такой объект просто нельзя туда положить,
+и узнаете вы об этом из чужого стека вызовов.</p>
+</div></div>
+<div class="code"><div class="code__bar"><span class="code__dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="code__name">weak.py</span><span class="code__lang">python</span><button class="copy" type="button"><svg class="ico-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg><svg class="ico-done" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" aria-hidden="true"><path d="m5 13 4 4L19 7"/></svg><span class="copy__label">Копировать</span></button></div><pre class="language-python"><code class="language-python"><span class="highlight-line"><span class="token keyword">import</span> weakref</span>
+<span class="highlight-line"></span>
+<span class="highlight-line"><span class="token keyword">class</span> <span class="token class-name">Node</span><span class="token punctuation">:</span></span>
+<mark class="highlight-line highlight-line-active">    __slots__ <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token string">"value"</span><span class="token punctuation">,</span> <span class="token string">"__weakref__"</span><span class="token punctuation">)</span></mark>
+<span class="highlight-line">    <span class="token keyword">def</span> <span class="token function">__init__</span><span class="token punctuation">(</span>self<span class="token punctuation">,</span> value<span class="token punctuation">)</span><span class="token punctuation">:</span></span>
+<span class="highlight-line">        self<span class="token punctuation">.</span>value <span class="token operator">=</span> value</span>
+<span class="highlight-line"></span>
+<span class="highlight-line">weakref<span class="token punctuation">.</span>ref<span class="token punctuation">(</span>Node<span class="token punctuation">(</span><span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">)</span>   <span class="token comment"># теперь работает</span></span></code></pre>
+</div>
+<h3 id="наследование">Наследование <a class="anchor" href="#наследование" aria-label="Ссылка на раздел">#</a></h3>
+<p>Самое неприятное место. Слоты не наследуются как «сумма» автоматически: их поведение зависит
+от того, что объявлено у каждого класса в цепочке. Достаточно одного наследника без
+<code>__slots__</code> — и словарь возвращается всем его экземплярам.</p>
+<figure class="fig">
+  <div class="fig__frame">
+    <svg viewBox="0 0 620 210" role="img" aria-labelledby="fig3-t">
+      <title id="fig3-t">Базовый класс со слотами и два наследника: с пустыми слотами словарь не появляется, без объявления слотов появляется</title>
+      <g font-size="10.5">
+        <rect class="d-fill d-line" x="228" y="14" width="164" height="52" rx="8" stroke-width="1"/>
+        <text class="d-txt" x="242" y="34" font-size="11">Base</text>
+        <text class="d-acc" x="242" y="52" font-size="9.5">__slots__ = ("a",)</text>
+        <path class="d-line" d="M290 66 V92 H150 V116" stroke-width="1" fill="none"/>
+        <path class="d-line" d="M330 66 V92 H470 V116" stroke-width="1" fill="none"/>
+        <rect class="d-fill d-line" x="58" y="116" width="184" height="72" rx="8" stroke-width="1"/>
+        <text class="d-txt" x="72" y="136" font-size="11">ChildA</text>
+        <text class="d-acc" x="72" y="154" font-size="9.5">__slots__ = ()</text>
+        <text class="d-acc" x="72" y="174" font-size="9.5">✓ __dict__ по-прежнему нет</text>
+        <rect class="d-fill d-line" x="378" y="116" width="184" height="72" rx="8" stroke-width="1" stroke-dasharray="4 3"/>
+        <text class="d-txt" x="392" y="136" font-size="11">ChildB</text>
+        <text class="d-dim" x="392" y="154" font-size="9.5">(слоты не объявлены)</text>
+        <text class="d-warn" x="392" y="174" font-size="9.5">✗ __dict__ вернулся</text>
+      </g>
+    </svg>
+  </div>
+  <figcaption><b>Схема</b><span>Пустой кортеж <code>__slots__ = ()</code> у наследника — способ сказать «своих полей не добавляю», не возвращая словарь.</span></figcaption>
+</figure>
+<div class="tablewrap"><table class="tbl">
+<thead>
+<tr>
+<th>Ситуация</th>
+<th>Что получаем</th>
+<th>Экономия</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Класс со <code>__slots__</code>, базовый — <code>object</code></td>
+<td>только ячейки</td>
+<td class="ok">полная</td>
+</tr>
+<tr>
+<td>Наследник объявил <code>__slots__ = ()</code></td>
+<td>ячейки родителя</td>
+<td class="ok">полная</td>
+</tr>
+<tr>
+<td>Наследник объявил свои слоты</td>
+<td>ячейки родителя + свои</td>
+<td class="ok">полная</td>
+</tr>
+<tr>
+<td>Наследник не объявил ничего</td>
+<td>ячейки + <code>__dict__</code></td>
+<td class="no">потеряна</td>
+</tr>
+<tr>
+<td>Одно имя объявлено дважды в цепочке</td>
+<td>дублирующая ячейка</td>
+<td class="no">частично теряется</td>
+</tr>
+</tbody>
+</table></div>
+<div class="callout callout--stop"><div class="callout__ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m15 9-6 6M9 9l6 6"/></svg></div><div class="callout__body"><b>Множественное наследование</b>
+<p>Два родителя, у каждого непустые <code>__slots__</code> — и класс просто не создастся:
+<code>TypeError: multiple bases have instance lay-out conflict</code>.
+Непустые слоты плохо сочетаются с миксинами.</p>
+</div></div>
+<h2 id="когда-это-оправдано">Когда это оправдано <a class="anchor" href="#когда-это-оправдано" aria-label="Ссылка на раздел">#</a></h2>
+<div class="verdict">
+<div class="verdict__col verdict--yes"><h4><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg>Стоит брать</h4>
+<ul>
+<li>Миллионы однотипных объектов: точки, события, строки лога, узлы дерева.</li>
+<li>Профилировщик показал, что память уходит именно в экземпляры.</li>
+<li>Набор полей стабилен и известен заранее.</li>
+<li>Хочется, чтобы опечатка в имени поля падала, а не создавала мусорный атрибут.</li>
+</ul>
+</div>
+<div class="verdict__col verdict--no"><h4><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m9 9 6 6M15 9l-6 6"/></svg>Не стоит</h4>
+<ul>
+<li>Объектов десятки или сотни — выигрыш утонет в шуме.</li>
+<li>Классу нужны миксины с собственными слотами.</li>
+<li>Код или библиотеки дописывают атрибуты снаружи.</li>
+<li>Ставить «на всякий случай», без замера до и после.</li>
+</ul>
+</div>
+</div>
+<p>Отдельно про скорость: доступ к полю через слот часто чуть быстрее словарного, но выигрыш
+легко оказывается нулевым<a class="fnref" href="#fn3" id="fnref3">3</a>. Оптимизировать ради него в отрыве от памяти смысла нет.</p>
+<h2 id="чего-здесь-нет">Чего в этой заметке нет <a class="anchor" href="#чего-здесь-нет" aria-label="Ссылка на раздел">#</a></h2>
+<p>Элементы из других заметок, собранные здесь, чтобы посмотреть на них в одном месте.</p>
+<h3 id="версия-и-байт-код">Версия и байт-код <a class="anchor" href="#версия-и-байт-код" aria-label="Ссылка на раздел">#</a></h3>
+<p>Значок версии рядом с языком и вывод с отступами (из заметки Assert):</p>
+<div class="code"><div class="code__bar"><span class="code__dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="code__name">assert_dis.py</span><span class="code__lang">python</span><span class="code__lang code__ver">3.12</span><button class="copy" type="button"><svg class="ico-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg><svg class="ico-done" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" aria-hidden="true"><path d="m5 13 4 4L19 7"/></svg><span class="copy__label">Копировать</span></button></div><pre class="language-python"><code class="language-python"><span class="token keyword">import</span> dis
+
+<span class="token keyword">def</span> <span class="token function">check</span><span class="token punctuation">(</span>x<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token keyword">assert</span> x <span class="token operator">></span> <span class="token number">0</span><span class="token punctuation">,</span> <span class="token string">"x must be positive"</span>
+
+dis<span class="token punctuation">.</span>dis<span class="token punctuation">(</span>check<span class="token punctuation">)</span></code></pre>
+</div>
+<div class="code__out"><b aria-hidden="true">stdout</b><span class="u-sr">вывод</span>
+<pre><code># python assert_dis.py
+  3           0 RESUME                   0
+
+  4           2 LOAD_FAST                0 (x)
+              4 LOAD_CONST               1 (0)
+              6 COMPARE_OP              68 (&gt;)
+             10 POP_JUMP_IF_TRUE         7 (to 26)
+             12 LOAD_ASSERTION_ERROR
+             14 LOAD_CONST               2 ('x must be positive')
+             16 CALL                     0
+             24 RAISE_VARARGS            1
+        &gt;&gt;   26 RETURN_CONST             0 (None)
+
+# python -O assert_dis.py
+  3           0 RESUME                   0
+              2 RETURN_CONST             0 (None)
+</code></pre>
+</div>
+<h3 id="выноска-note">Выноска note <a class="anchor" href="#выноска-note" aria-label="Ссылка на раздел">#</a></h3>
+<div class="callout"><div class="callout__ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg></div><div class="callout__body"><b>Заметка</b>
+<p>Корутины выросли из генераторов: в 3.4 они и были генераторами с <code>yield from</code>. <code>async def</code> дал им отдельный тип и синтаксис, но механика продвижения через <code>send</code> осталась той же.</p>
+</div></div>
+<h3 id="сворачиваемый-блок">Сворачиваемый блок <a class="anchor" href="#сворачиваемый-блок" aria-label="Ссылка на раздел">#</a></h3>
+<details class="more"><summary>Версии (язык, stdlib, CPython)</summary><div class="more__body">
+<p>Номера в таблице - версии Python, а не конкретной реализации. Но изменения живут на разных уровнях:</p>
+<ul>
+<li><strong>язык</strong> - <code>async def</code>, <code>await</code>, асинхронные генераторы, методы корутины (<code>send</code>, <code>throw</code>, <code>close</code>). Обязательны для любой реализации этой версии;</li>
+<li><strong>стандартная библиотека</strong> - сам <code>asyncio</code>: <code>run</code>, <code>TaskGroup</code>, <code>timeout</code>. Формально тоже часть спецификации, но фактически ее определяет CPython;</li>
+<li><strong>только CPython</strong> - C-ускоритель <code>_asyncio</code> (<code>Task</code> и <code>Future</code> на C, с 3.6) и момент появления предупреждения <code>never awaited</code>: CPython выдает его сразу, как только счетчик ссылок падает до нуля.</li>
+</ul>
+<p>CPython - эталонная реализация: версии языка выходят вместе с его релизами. PyPy везет тот же asyncio (в основном на чистом Python), но отстает на версию-две, а предупреждение о забытой корутине там может прийти позже, при сборке мусора. У MicroPython свой урезанный <code>asyncio</code> (бывший <code>uasyncio</code>), таблица к нему не относится.</p>
+</div></details>
+<h3 id="цепочка">Цепочка <a class="anchor" href="#цепочка" aria-label="Ссылка на раздел">#</a></h3>
+<div class="flow">
+взять готовую задачу <i>→</i> <code>send</code> до ближайшего <code>await</code> <i>→</i> отложить до готовности <i>→</i> следующая задача <i>→</i> ничего не готово? ждать I/O или таймер
+</div>
+<h3 id="термин">Термин с расшифровкой <a class="anchor" href="#термин" aria-label="Ссылка на раздел">#</a></h3>
+<ul>
+<li><strong>Слоеные образы.</strong> Файловая система собирается из сложенных друг на друга слоев (изначально на <abbr class="term" tabindex="0" data-tip="union-файловая система Linux: накладывает несколько каталогов друг на друга и показывает их как один">AUFS</abbr>). Слои кешируются и переиспользуются, поэтому пересборка и скачивание затрагивают только изменившееся.</li>
+</ul>
+<h2 id="вывод">Вывод <a class="anchor" href="#вывод" aria-label="Ссылка на раздел">#</a></h2>
+<div class="finale"><h2 class="u-kicker">Итог</h2>
+<p><code>__slots__</code> — не стилевое улучшение и не «правильный способ писать классы».
+Это точечный обмен гибкости на память.</p>
+<p>Есть миллионы одинаковых экземпляров, съедающих доступную память — берите.
+Нет замера, показывающего проблему — не берите.</p>
+</div>
+<section class="notes-block" aria-labelledby="fn-h"><h2 class="u-kicker" id="fn-h">Примечания</h2><ol>
+<li id="fn1"><p>Ладно, не каждый: многие built-in и extension types обычного instance <code>__dict__</code> не имеют вовсе — <code>tuple</code>, <code>int</code>, часть типов из C-расширений. Здесь речь про экземпляры обычных пользовательских классов без <code>__slots__</code>. <a class="back" href="#fnref1" aria-label="Вернуться к тексту">↩</a></p>
+</li>
+<li id="fn2"><p>Допустима и просто строка, если имя одно: <code>__slots__ = &quot;name&quot;</code>. <a class="back" href="#fnref2" aria-label="Вернуться к тексту">↩</a></p>
+</li>
+<li id="fn3"><p>Зависит от версии Python и профиля нагрузки. В горячем цикле разница иногда видна, в обычном коде — почти никогда. <a class="back" href="#fnref3" aria-label="Вернуться к тексту">↩</a></p>
+</li>
+</ol></section>
+    </article>
+
+    <aside class="side">
+      <nav class="toc" aria-label="Содержание">
+        <span class="kicker">Содержание</span>
+        <ol>
+          <li><a href="#где-живут-атрибуты"><span>01</span>Где живут атрибуты</a></li>
+          <li><a href="#как-это-выглядит-в-коде"><span>02</span>Как это выглядит в коде</a></li>
+          <li><a href="#за-что-платим"><span>03</span>За что платим</a></li>
+          <li><a href="#когда-это-оправдано"><span>04</span>Когда это оправдано</a></li>
+          <li><a href="#чего-здесь-нет"><span>05</span>Чего в этой заметке нет</a></li>
+          <li><a href="#вывод"><span>06</span>Вывод</a></li>
+        </ol>
+        <p class="tockeys"><kbd>W</kbd><kbd>S</kbd> по разделам</p>
+      </nav>
+
+      <a class="back" href="notes-python.html" data-back><i>←</i> к списку <kbd>A</kbd></a>
+    </aside>
+  </div>
+
+  <div class="frameline frameline--foot">
+    <span>кальян дымит</span>
+    <span>утро подождет</span>
+  </div>
+</main>
+
+<script src="note-g.js"></script>
+</body>
+</html>

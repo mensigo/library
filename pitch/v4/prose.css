@@ -1,0 +1,553 @@
+/* Элементы заметки в варианте G для настоящей разметки сайта: того, что отдает
+   markdown-конвейер из .eleventy.js (код, вывод, схемы, сноски, выноски, вердикт,
+   финал). Подключается после note-g.css; статья размечена как .note.prose.
+   Цвета выносок и подсветки - источники света в комнате: фонарь, неон из окна, угли. */
+
+.prose {
+  --amber: var(--acc);        /* фонарь */
+  --neon: #6fbfb3;            /* неон из окна, приглушенный: на стене он #4fd6c9, но в тексте не должен быть ярче фонаря */
+  --coal: #e8745a;            /* угли */
+  --paper: #b9a98f;           /* свиток на стене */
+  counter-reset: h2;
+}
+
+.prose > p,
+.prose li { color: var(--ink-2); }
+
+.prose strong { color: var(--ink); font-weight: 600; }
+
+.prose a:not([class]) {
+  color: var(--ink);
+  text-decoration: underline;
+  text-decoration-color: var(--acc);
+  text-underline-offset: 4px;
+}
+
+/* ---------- headings ---------- */
+
+/* Номер раздела на поле слева, как номер строки в списке */
+.prose h2:not(.u-kicker) { counter-increment: h2; }
+
+.prose h2:not(.u-kicker)::before {
+  content: counter(h2, decimal-leading-zero);
+  position: absolute;
+  right: 100%;
+  bottom: .5em;
+  margin-right: 18px;
+  font: 500 11px/1 var(--mono);
+  letter-spacing: .1em;
+  color: var(--ink-3);
+}
+
+.prose h4 {
+  margin: 28px 0 0;
+  font-size: 19px;
+  font-weight: 600;
+}
+
+/* Якорь раздела виден, только когда на заголовок навели */
+.anchor {
+  margin-left: 8px;
+  font: 500 .5em/1 var(--mono);
+  color: var(--ink-3);
+  text-decoration: none;
+  opacity: 0;
+  transition: opacity .25s var(--ease), color .25s var(--ease);
+}
+
+:is(h2, h3):hover .anchor,
+.anchor:focus-visible { opacity: 1; outline: none; }
+
+.anchor:hover { color: var(--acc); }
+
+.u-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.u-dim { color: var(--ink-3); }
+
+/* ---------- code ---------- */
+
+.code__bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px 8px 16px;
+  border-bottom: 1px solid var(--line);
+  font: 500 10px/1 var(--mono);
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.code__dots { display: none; }
+
+.code__name {
+  font-size: 12px;
+  letter-spacing: .02em;
+  text-transform: none;
+  color: var(--ink-2);
+}
+
+.code__lang { margin-left: auto; }
+
+/* Версия Python, с которой код работает */
+.code__ver {
+  margin-left: 0;
+  padding: 3px 6px;
+  border: 1px solid color-mix(in srgb, var(--acc) 45%, transparent);
+  border-radius: 4px;
+  letter-spacing: .06em;
+  color: var(--acc);
+}
+
+.copy {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 0;
+  border-radius: 5px;
+  background: none;
+  color: var(--ink-3);
+  cursor: pointer;
+  transition: color .25s var(--ease);
+}
+
+.copy svg { width: 14px; height: 14px; stroke-width: 1.8; }
+.copy__label, .copy .ico-done { display: none; }
+
+.copy:hover,
+.copy:focus-visible { color: var(--ink); outline: none; }
+
+.copy.is-done { color: var(--neon); }
+.copy.is-done .ico-copy { display: none; }
+.copy.is-done .ico-done { display: block; }
+
+.prose pre code {
+  display: block;
+  padding: 0;
+  border-radius: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+}
+
+/* Подсветка: ключевые слова - фонарь, строки - неон, числа - угли */
+.token.keyword, .token.selector, .token.tag, .token.atrule { color: var(--amber); }
+.token.string, .token.attr-value, .token.char, .token.regex { color: #9fcfc6; }
+.token.number, .token.boolean, .token.constant { color: #e9987c; }
+.token.function, .token.class-name { color: #f0deb0; }
+.token.comment, .token.prolog, .token.doctype, .token.cdata { color: var(--ink-3); font-style: italic; }
+.token.builtin { color: #d8b9a2; }
+.token.decorator, .token.important, .token.namespace { color: var(--paper); }
+.token.punctuation, .token.operator { color: rgba(243, 236, 228, .58); }
+
+/* Выделенные строки: плагин заворачивает строку в <mark> или <del> со своим
+   фоном от браузера - гасим его и рисуем свой, во всю ширину блока */
+.highlight-line {
+  display: inline-block;
+  width: calc(100% + 32px);
+  margin: 0 -16px;
+  padding: 0 16px;
+  background: none;
+  color: inherit;
+  text-decoration: none;
+}
+
+.highlight-line:empty::after { content: " "; }
+
+.highlight-line-active,
+.highlight-line-add {
+  background: var(--acc-soft);
+  box-shadow: inset 2px 0 0 var(--acc);
+}
+
+.highlight-line-remove {
+  background: color-mix(in srgb, var(--coal) 14%, transparent);
+  box-shadow: inset 2px 0 0 var(--coal);
+}
+
+/* ---------- output ---------- */
+
+/* Вывод, стоящий сразу за кодом, приклеен к нему снизу */
+.code:has(+ .code__out) { border-radius: 8px 8px 0 0; }
+
+.code__out {
+  margin: 22px 0 0;
+  padding: 12px 16px 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(14, 11, 16, .35);
+  font: 400 13px/1.6 var(--mono);
+  color: var(--ink-2);
+}
+
+.code + .code__out {
+  margin-top: 0;
+  border-top: 1px dashed var(--line);
+  border-radius: 0 0 8px 8px;
+}
+
+.code__out > b {
+  display: block;
+  margin-bottom: 8px;
+  font: 500 10px/1 var(--mono);
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.note .code__out p { margin: 0; }
+
+.code__out pre {
+  margin: 0;
+  overflow-x: auto;
+  font: inherit;
+  line-height: 1.5;
+}
+
+.code__out code {
+  padding: 0;
+  background: none;
+  font-size: 1em;
+}
+
+/* Два блока кода рядом: было и стало */
+.split {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 22px;
+}
+
+.split .code { margin: 0; }
+
+.prose .flow {
+  margin-top: 22px;
+  color: var(--ink-2);
+}
+
+/* ---------- figure ---------- */
+
+.fig { margin: 28px 0 0; }
+
+.fig__frame {
+  padding: 22px 22px 18px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(14, 11, 16, .5);
+}
+
+.fig__frame svg,
+.fig__frame img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.fig figcaption {
+  margin-top: 12px;
+  font-size: 15px;
+  line-height: 1.45;
+  color: var(--ink-3);
+}
+
+.fig figcaption b {
+  margin-right: 12px;
+  font: 500 10px/1 var(--mono);
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--acc);
+}
+
+/* Краски схем из src/_includes/figures */
+.d-fill   { fill: rgba(243, 236, 228, .05); }
+.d-fill-2 { fill: rgba(7, 6, 10, .55); }
+.d-line   { stroke: rgba(243, 236, 228, .24); }
+.d-txt    { fill: var(--ink); font-family: var(--mono); }
+.d-dim    { fill: var(--ink-3); font-family: var(--mono); }
+.d-acc    { fill: var(--acc); }
+.d-acc-s  { stroke: var(--acc); }
+.d-acc-bg { fill: var(--acc-soft); }
+.d-warn   { fill: var(--coal); }
+.d-warn-s { stroke: var(--coal); }
+
+/* ---------- callouts ---------- */
+
+/* note - свиток, tip - неон, warn - фонарь, stop - угли */
+.prose .callout {
+  --c: var(--paper);
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr);
+  column-gap: 14px;
+  padding: 14px 18px 16px 16px;
+}
+
+.prose .callout--tip  { --c: var(--neon); }
+.prose .callout--warn { --c: var(--amber); }
+.prose .callout--stop { --c: var(--coal); }
+
+.callout__ico svg {
+  display: block;
+  width: 18px;
+  height: 18px;
+  margin-top: 3px;
+  stroke-width: 1.8;
+  color: var(--c);
+}
+
+.callout__body > b {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.note .callout__body p { margin: 6px 0 0; color: var(--ink-2); }
+
+/* ---------- table ---------- */
+
+.tablewrap {
+  margin-top: 22px;
+  overflow-x: auto;
+}
+
+.tablewrap .tbl { margin: 0; }
+
+.prose .tbl td:first-child {
+  font: inherit;
+  color: var(--ink);
+  white-space: normal;
+}
+
+.prose .tbl td.ok { color: var(--neon); }
+.prose .tbl td.no { color: var(--coal); }
+
+/* ---------- verdict ---------- */
+
+.verdict {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 22px;
+}
+
+.verdict__col {
+  padding: 16px 18px 18px;
+  border: 1px solid var(--line);
+  border-top: 2px solid var(--c);
+  border-radius: 0 0 8px 8px;
+  background: color-mix(in srgb, var(--c) 5%, transparent);
+}
+
+.verdict--yes { --c: var(--neon); }
+.verdict--no  { --c: var(--coal); }
+
+.prose .verdict h4 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font: 500 11px/1 var(--mono);
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--c);
+}
+
+.verdict h4 svg { width: 16px; height: 16px; stroke-width: 2; }
+
+.note .verdict ul {
+  margin-top: 12px;
+  padding-left: 18px;
+  font-size: 16px;
+  line-height: 1.45;
+}
+
+/* ---------- more ---------- */
+
+.more {
+  margin-top: 22px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.more > summary {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 16px;
+  list-style: none;
+  font: 500 11px/1.3 var(--mono);
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+  cursor: pointer;
+  transition: color .25s var(--ease);
+}
+
+.more > summary::-webkit-details-marker { display: none; }
+
+.more > summary::before {
+  content: "+";
+  font-size: 15px;
+  line-height: 1;
+  color: var(--acc);
+  transition: rotate .3s var(--ease);
+}
+
+.more[open] > summary::before { rotate: 45deg; }
+
+.more > summary:hover,
+.more > summary:focus-visible { color: var(--ink); outline: none; }
+
+.more__body {
+  padding: 0 16px 16px;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.note .more__body > :first-child { margin-top: 0; }
+.note .more__body p { color: var(--ink-2); }
+
+/* ---------- term ---------- */
+
+/* Термин с расшифровкой: пунктир и подпись по наведению или фокусу */
+.term {
+  position: relative;
+  text-decoration: underline dotted var(--ink-3);
+  text-underline-offset: 4px;
+  cursor: help;
+  outline: none;
+}
+
+.term::after {
+  content: attr(data-tip);
+  position: absolute;
+  z-index: 2;
+  left: 0;
+  bottom: calc(100% + 8px);
+  width: max-content;
+  max-width: min(320px, 70vw);
+  padding: 9px 12px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #15101a;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .5);
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--ink-2);
+  opacity: 0;
+  translate: 0 4px;
+  pointer-events: none;
+  transition: opacity .2s var(--ease), translate .2s var(--ease);
+}
+
+.term:hover,
+.term:focus-visible { text-decoration-color: var(--acc); }
+
+.term:hover::after,
+.term:focus-visible::after { opacity: 1; translate: 0; }
+
+/* ---------- footnotes ---------- */
+
+.fnref {
+  margin-left: 2px;
+  padding: 0 2px;
+  font: 500 10px/1 var(--mono);
+  vertical-align: super;
+  color: var(--acc);
+  text-decoration: none;
+}
+
+.fnref:hover,
+.fnref:focus-visible { text-decoration: underline; outline: none; }
+
+.prose h2.u-kicker {
+  margin: 0;
+  font: 500 11px/1 var(--mono);
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: var(--acc);
+}
+
+.notes-block {
+  margin-top: 64px;
+  padding-top: 22px;
+  border-top: 1px solid var(--line);
+}
+
+.note .notes-block ol {
+  margin: 14px 0 0;
+  padding-left: 22px;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.notes-block li::marker {
+  font: 500 11px/1 var(--mono);
+  color: var(--acc);
+}
+
+.note .notes-block p { margin: 0; color: var(--ink-3); }
+
+/* Сноска, к которой пришли по ссылке из текста */
+.note .notes-block li:target p { color: var(--ink); }
+
+/* У notes-g.css есть свой .back - ссылка к стене; здесь это возврат к месту сноски */
+.notes-block .back {
+  display: inline;
+  margin-left: 4px;
+  font: inherit;
+  letter-spacing: 0;
+  color: var(--acc);
+}
+
+/* ---------- finale ---------- */
+
+/* Итог заметки: единственный блок, который светится сам */
+.finale {
+  margin-top: 26px;
+  padding: 24px 28px 28px;
+  border: 1px solid color-mix(in srgb, var(--acc) 34%, transparent);
+  border-radius: 10px;
+  background:
+    radial-gradient(120% 140% at 0% 0%, color-mix(in srgb, var(--acc) 13%, transparent), transparent 62%),
+    rgba(14, 11, 16, .5);
+}
+
+.note .finale p {
+  margin-top: 12px;
+  font-size: 20px;
+  line-height: 1.45;
+  color: var(--ink);
+}
+
+/* ---------- arrival ---------- */
+
+/* Как разделы в note-g.css: текст поднимается следом за шапкой */
+.arriving .prose > :not(.lede, .tldr) {
+  animation: rise .6s var(--ease) calc(.35s + 4 * 70ms) backwards;
+}
+
+/* ---------- narrow screens ---------- */
+
+@media (max-width: 1100px) {
+  .prose h2:not(.u-kicker)::before { display: none; }
+
+  .split,
+  .verdict { grid-template-columns: minmax(0, 1fr); }
+
+  .fig__frame { padding: 14px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .anchor, .copy, .term::after, .more > summary::before { transition: none; }
+
+  .arriving .prose > :not(.lede, .tldr) { animation: none; }
+}
