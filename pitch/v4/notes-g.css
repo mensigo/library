@@ -77,6 +77,12 @@ body { --acc: var(--g); --acc-soft: color-mix(in srgb, var(--g) 14%, transparent
 
 body[data-g="docker"] .mark__dot { fill: currentColor; }
 
+/* Docker: метки - квадратики, как ящики в его знаке. Свежая заметка в списке и
+   пункты тезисов на странице заметки (.tldr в note-g.css). Угольки «В пути» остаются
+   круглыми: это огонь, а не ящики. */
+body[data-g="docker"] .row--fresh .row__m span:last-child::before,
+body[data-g="docker"] .tldr li::before { border-radius: 1px; }
+
 /* ---------- arrival ---------- */
 
 /* Строки поднимаются по одной, пока знак доезжает со стены */

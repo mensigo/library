@@ -149,3 +149,21 @@
 .is-instant .sigil,
 .is-instant .sigil path,
 .is-instant .sigil__dot { transition: none !important; }
+
+/* Нажатая клавиша в подсказке: в wall.css вспышка слишком яркая, здесь она приглушена -
+   цвет и рамка на полтона тише, ореол вдвое слабее */
+.keys kbd.hit {
+  color: rgba(240, 169, 74, .78);
+  border-color: rgba(240, 169, 74, .5);
+  box-shadow: 0 0 8px rgba(240, 169, 74, .2);
+}
+
+/* Раздел в работе (data-soon на карточке, main.js): строка под названием в дыму */
+.fog__soon {
+  margin: 20px 0 0;
+  font-size: clamp(17px, 1.5vw, 22px);
+  color: #3a2c22;
+}
+
+/* Дым накрывает все, включая подсказку по клавишам (.keys, z-index 4 в wall.css) */
+.fog { z-index: 6; }

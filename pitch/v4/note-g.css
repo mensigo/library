@@ -87,6 +87,7 @@ html {
 
 .hud .mark__brush { stroke-width: 26; }
 .hud .mark__thin  { stroke-width: 13; }
+.hud .mark__line  { stroke-width: 18; }
 .hud .mark__dot   { r: 6px; }
 
 .arriving .hud .mark { animation: none; }

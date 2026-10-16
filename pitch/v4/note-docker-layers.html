@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Библиотека · заметки · Docker · Слои и кеш сборки (pitch v4, вариант G)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap">
+<link rel="preload" as="image" href="img/wall-g.jpg">
+<link rel="stylesheet" href="main.css">
+<link rel="stylesheet" href="notes.css">
+<link rel="stylesheet" href="notes-g.css">
+<link rel="stylesheet" href="note-g.css">
+<link rel="stylesheet" href="prose.css">
+<link rel="stylesheet" href="vt.css">
+</head>
+<!-- data-g задает цвет группы; класс arriving держит появление текста и снимается в note-g.js -->
+<body class="arriving" data-g="docker">
+
+<!-- Та же стена, что на странице группы, но только за шапкой заметки: она почти
+     погасла и уходит вверх вместе с шапкой, текст ниже лежит на ровном фоне. -->
+<div class="sky" aria-hidden="true">
+  <div class="backdrop"></div>
+  <div class="shade"></div>
+</div>
+
+<!-- Линия прочитанного -->
+<div class="progress" id="progress" aria-hidden="true"></div>
+
+<nav class="hud" id="bar" aria-label="Хлебные крошки">
+  <span class="dot"></span>
+  <a href="index-g.html"><b>БИБЛИОТЕКА</b></a>
+  <span class="sep">/</span>
+  <a class="hud__opt" href="index-g.html#notes">заметки</a>
+  <span class="sep hud__opt">/</span>
+  <!-- Знак и название группы со страницы группы: уменьшились и встали в крошки -->
+  <a class="hud__g" href="notes-docker.html" data-back>
+    <svg class="mark" viewBox="0 0 400 400" fill="none" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path class="mark__line" d="M60 222 C60 152 150 132 230 152 C280 164 310 172 330 152 C322 132 335 112 355 106 C350 131 372 141 381 129 C378 166 350 186 330 192 C300 262 200 292 130 277 C90 268 60 252 60 222 Z"/>
+      <path class="mark__thin" d="M76 238 C120 264 200 264 258 238"/>
+      <path class="mark__thin" d="M150 132 C150 108 140 94 124 87 M150 132 C152 106 165 94 181 89"/>
+      <path class="mark__thin" d="M196 138 h22 v-20 h-22 Z M222 142 h22 v-20 h-22 Z M209 116 h22 v-20 h-22 Z"/>
+      <circle class="mark__dot" cx="104" cy="208" r="4"/>
+    </svg>
+    <span class="hud__gt">docker</span>
+  </a>
+  <span class="sep">/</span>
+  <span>слои</span>
+</nav>
+
+<main class="wrap">
+  <header class="nhead">
+    <span class="kicker">03 / docker</span>
+    <h1>Слои и кеш сборки</h1>
+    <p class="meta"><span><b>4</b> мин</span><span>16 окт</span><i>Образы</i><i>Dockerfile</i><i>Кеш</i></p>
+  </header>
+
+  <div class="layout">
+    <!-- Пробная заметка: проверить страницу и переходы на группе Docker -->
+    <article class="note prose">
+      <p class="lede">Каждая инструкция Dockerfile, меняющая файлы, дает слой. Сборщик кеширует слои по порядку, поэтому от порядка инструкций зависит, сколько пересобирается после правки одной строки.</p>
+
+<h2 id="слой">Слой - это дифф <a class="anchor" href="#слой" aria-label="Ссылка на раздел">#</a></h2>
+<p>Слой - зафиксированный набор изменений файловой системы относительно предыдущего состояния: какие файлы добавлены, изменены, удалены. Как коммит в git, только для ФС.</p>
+<p>Слой дают инструкции, которые меняют файлы: <code>RUN</code>, <code>COPY</code>, <code>ADD</code>. Слои складываются стопкой, и процесс в контейнере видит одно обычное дерево, ничего не зная о слоях.</p>
+<h2 id="порядок">Порядок инструкций <a class="anchor" href="#порядок" aria-label="Ссылка на раздел">#</a></h2>
+<p>Сборщик идет по Dockerfile сверху вниз и берет слой из кеша, пока инструкция и ее входные файлы не изменились. Первый же промах пересобирает все, что ниже.</p>
+<div class="split">
+<div class="code"><div class="code__bar"><span class="code__dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="code__name">было</span><span class="code__lang">dockerfile</span><button class="copy" type="button"><svg class="ico-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg><svg class="ico-done" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" aria-hidden="true"><path d="m5 13 4 4L19 7"/></svg><span class="copy__label">Копировать</span></button></div><pre class="language-dockerfile"><code class="language-dockerfile"><span class="highlight-line"><span class="token instruction"><span class="token keyword">FROM</span> python:3.12-slim</span></span>
+<span class="highlight-line"><span class="token instruction"><span class="token keyword">WORKDIR</span> /app</span></span>
+<del class="highlight-line highlight-line-remove"><span class="token instruction"><span class="token keyword">COPY</span> . .</span></del>
+<span class="highlight-line"><span class="token instruction"><span class="token keyword">RUN</span> pip install -r requirements.txt</span></span>
+<span class="highlight-line"><span class="token instruction"><span class="token keyword">CMD</span> [<span class="token string">"python"</span>, <span class="token string">"app.py"</span>]</span></span></code></pre>
+</div>
+<div class="code"><div class="code__bar"><span class="code__dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="code__name">стало</span><span class="code__lang">dockerfile</span><button class="copy" type="button"><svg class="ico-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg><svg class="ico-done" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" aria-hidden="true"><path d="m5 13 4 4L19 7"/></svg><span class="copy__label">Копировать</span></button></div><pre class="language-dockerfile"><code class="language-dockerfile"><span class="highlight-line"><span class="token instruction"><span class="token keyword">FROM</span> python:3.12-slim</span></span>
+<span class="highlight-line"><span class="token instruction"><span class="token keyword">WORKDIR</span> /app</span></span>
+<mark class="highlight-line highlight-line-active"><span class="token instruction"><span class="token keyword">COPY</span> requirements.txt .</span></mark>
+<span class="highlight-line"><span class="token instruction"><span class="token keyword">RUN</span> pip install -r requirements.txt</span></span>
+<mark class="highlight-line highlight-line-active"><span class="token instruction"><span class="token keyword">COPY</span> . .</span></mark>
+<span class="highlight-line"><span class="token instruction"><span class="token keyword">CMD</span> [<span class="token string">"python"</span>, <span class="token string">"app.py"</span>]</span></span></code></pre>
+</div>
+</div>
+<p>Слева правка в <code>app.py</code> ломает кеш уже на <code>COPY . .</code>, и зависимости ставятся заново. Справа они лежат слоем выше кода и переживают любую его правку:</p>
+<div class="code"><div class="code__bar"><span class="code__dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="code__name">терминал</span><span class="code__lang">bash</span><button class="copy" type="button"><svg class="ico-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg><svg class="ico-done" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" aria-hidden="true"><path d="m5 13 4 4L19 7"/></svg><span class="copy__label">Копировать</span></button></div><pre class="language-bash"><code class="language-bash"><span class="token function">docker</span> build <span class="token parameter variable">-t</span> app <span class="token builtin">.</span></code></pre>
+</div>
+<div class="code__out"><b aria-hidden="true">stdout</b><span class="u-sr">вывод</span>
+<pre><code> =&gt; CACHED [2/5] WORKDIR /app
+ =&gt; CACHED [3/5] COPY requirements.txt .
+ =&gt; CACHED [4/5] RUN pip install -r requirements.txt
+ =&gt; [5/5] COPY . .
+</code></pre>
+</div>
+<div class="callout callout--tip"><div class="callout__ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.5 10.9c.3.3.5.7.5 1.1h6c0-.4.2-.8.5-1.1A6 6 0 0 0 12 3Z"/></svg></div><div class="callout__body"><b>.dockerignore</b>
+<p><code>COPY . .</code> берет и <code>.git</code>, и виртуальное окружение. Любая их перемена тоже ломает кеш - их стоит перечислить в <code>.dockerignore</code>.</p>
+</div></div>
+<h2 id="удаление">Удаление не уменьшает образ <a class="anchor" href="#удаление" aria-label="Ссылка на раздел">#</a></h2>
+<p>Удалить файл из нижнего слоя нельзя: слои read-only. Новый слой только кладет поверх маркер «скрыт» (whiteout), а сами байты остаются в образе. Поэтому <code>RUN rm</code> отдельной строкой ничего не экономит: чистить нужно в той же инструкции, где мусор появился, или собирать образ в несколько стадий.</p>
+<div class="finale"><h2 class="u-kicker">Итог</h2>
+<p>Что меняется редко - выше, что часто - ниже. Тогда правка кода пересобирает один тонкий слой, а не все окружение.</p>
+</div>
+    </article>
+
+    <aside class="side">
+      <nav class="toc" aria-label="Содержание">
+        <span class="kicker">Содержание</span>
+        <ol>
+          <li><a href="#слой"><span>01</span>Слой - это дифф</a></li>
+          <li><a href="#порядок"><span>02</span>Порядок инструкций</a></li>
+          <li><a href="#удаление"><span>03</span>Удаление не уменьшает образ</a></li>
+        </ol>
+        <p class="tockeys"><kbd>W</kbd><kbd>S</kbd> по разделам</p>
+      </nav>
+
+      <a class="back" href="notes-docker.html" data-back><i>←</i> к списку <kbd>A</kbd></a>
+    </aside>
+  </div>
+
+  <div class="frameline frameline--foot">
+    <span>кальян дымит</span>
+    <span>утро подождет</span>
+  </div>
+</main>
+
+<script src="note-g.js"></script>
+</body>
+</html>

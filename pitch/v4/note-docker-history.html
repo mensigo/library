@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Библиотека · заметки · Docker · История (pitch v4, вариант G)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap">
+<link rel="preload" as="image" href="img/wall-g.jpg">
+<link rel="stylesheet" href="main.css">
+<link rel="stylesheet" href="notes.css">
+<link rel="stylesheet" href="notes-g.css">
+<link rel="stylesheet" href="note-g.css">
+<link rel="stylesheet" href="prose.css">
+<link rel="stylesheet" href="vt.css">
+</head>
+<!-- data-g задает цвет группы; класс arriving держит появление текста и снимается в note-g.js -->
+<body class="arriving" data-g="docker">
+
+<!-- Та же стена, что на странице группы, но только за шапкой заметки: она почти
+     погасла и уходит вверх вместе с шапкой, текст ниже лежит на ровном фоне. -->
+<div class="sky" aria-hidden="true">
+  <div class="backdrop"></div>
+  <div class="shade"></div>
+</div>
+
+<!-- Линия прочитанного -->
+<div class="progress" id="progress" aria-hidden="true"></div>
+
+<nav class="hud" id="bar" aria-label="Хлебные крошки">
+  <span class="dot"></span>
+  <a href="index-g.html"><b>БИБЛИОТЕКА</b></a>
+  <span class="sep">/</span>
+  <a class="hud__opt" href="index-g.html#notes">заметки</a>
+  <span class="sep hud__opt">/</span>
+  <!-- Знак и название группы со страницы группы: уменьшились и встали в крошки -->
+  <a class="hud__g" href="notes-docker.html" data-back>
+    <svg class="mark" viewBox="0 0 400 400" fill="none" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path class="mark__line" d="M60 222 C60 152 150 132 230 152 C280 164 310 172 330 152 C322 132 335 112 355 106 C350 131 372 141 381 129 C378 166 350 186 330 192 C300 262 200 292 130 277 C90 268 60 252 60 222 Z"/>
+      <path class="mark__thin" d="M76 238 C120 264 200 264 258 238"/>
+      <path class="mark__thin" d="M150 132 C150 108 140 94 124 87 M150 132 C152 106 165 94 181 89"/>
+      <path class="mark__thin" d="M196 138 h22 v-20 h-22 Z M222 142 h22 v-20 h-22 Z M209 116 h22 v-20 h-22 Z"/>
+      <circle class="mark__dot" cx="104" cy="208" r="4"/>
+    </svg>
+    <span class="hud__gt">docker</span>
+  </a>
+  <span class="sep">/</span>
+  <span>история</span>
+</nav>
+
+<main class="wrap">
+  <header class="nhead">
+    <span class="kicker">01 / docker</span>
+    <h1>История Docker</h1>
+    <p class="meta"><span><b>7</b> мин</span><span>2 окт</span><i>Linux</i><i>История</i></p>
+  </header>
+
+  <div class="layout">
+    <!-- Тело заметки - разметка из _site/drafts/docker-1/ как есть (src/drafts/docker-1.md); лид и тезисы - из ее frontmatter -->
+    <article class="note prose">
+      <p class="lede">Docker не изобрел контейнеры - он их упаковал. Изоляция уже была в ядре Linux к 2013 году, не хватало удобного способа собирать, доставлять и запускать.</p>
+
+      <ul class="tldr">
+        <li><b>Не изобретение.</b> Namespaces, cgroups и LXC существовали до Docker. Контейнеры в проде уже гоняли Google и хостеры на OpenVZ.</li>
+        <li><b>Происхождение.</b> Внутренний движок PaaS-компании dotCloud. Показан на PyCon и открыт в марте 2013.</li>
+        <li><b>Что добавил.</b> Слоеные образы, Dockerfile, registry, модель «один процесс - один контейнер» и простой CLI.</li>
+        <li><b>Почему 2013.</b> Ядро Linux дозрело (3.8), микросервисы и DevOps на подъеме, VM для этого тяжелы.</li>
+        <li><b>Итог.</b> Формат и workflow стали стандартом (OCI), оркестрацию выиграл Kubernetes, а сама компания заработала на этом немного.</li>
+      </ul>
+
+<div class="callout callout--warn"><div class="callout__ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.3 3.9 1.9 18a2 2 0 0 0 1.7 3h16.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4M12 17h.01"/></svg></div><div class="callout__body"><b>Черновик</b>
+<p>Даты, версии ядра и имена сверить по первоисточникам перед публикацией: kernel changelog, блог Docker, записи докладов.</p>
+</div></div>
+<h2 id="интро">Интро <a class="anchor" href="#интро" aria-label="Ссылка на раздел">#</a></h2>
+<p>Docker не придумал изоляцию процессов. К моменту его появления в 2013 году все нужное уже лежало в ядре Linux. Не было другого: удобного способа собрать окружение, передать его и запустить одной командой.</p>
+<h2 id="истоки">Истоки <a class="anchor" href="#истоки" aria-label="Ссылка на раздел">#</a></h2>
+<div class="tablewrap"><table class="tbl">
+<thead>
+<tr>
+<th>Год</th>
+<th>Что</th>
+<th>Что дало</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1979</td>
+<td><code>chroot</code></td>
+<td>У процесса свой корень файловой системы. Первый шаг, но не настоящая изоляция</td>
+</tr>
+<tr>
+<td>2000</td>
+<td>FreeBSD jails</td>
+<td>Полноценная «система в системе», но не на Linux</td>
+</tr>
+<tr>
+<td>2004</td>
+<td>Solaris Zones</td>
+<td>То же самое в Solaris</td>
+</tr>
+<tr>
+<td>2002-2013</td>
+<td>Linux namespaces</td>
+<td>Добавлялись по одному: mount, PID, network, user и другие. Управляют тем, что процесс <strong>видит</strong></td>
+</tr>
+<tr>
+<td>2006-2008</td>
+<td>cgroups</td>
+<td>Начинались в Google как «process containers», в ядре с 2008. Управляют тем, сколько процесс <strong>потребляет</strong>: CPU, память, I/O</td>
+</tr>
+<tr>
+<td>2008</td>
+<td>LXC</td>
+<td>Первый инструмент, который собрал namespaces и cgroups в контейнеры</td>
+</tr>
+</tbody>
+</table></div>
+<p>LXC работал, но был низкоуровневым: получалось что-то вроде легкой виртуальной машины, которую настраивают руками.</p>
+<p>Контейнеры уже работали в проде. Google запускал в них все: по его собственным данным 2014 года - больше двух миллиардов контейнеров в неделю. Хостинг-провайдеры продавали на OpenVZ виртуальные серверы. Но это была инфраструктура для экспертов.</p>
+<h2 id="dotcloud">dotCloud <a class="anchor" href="#dotcloud" aria-label="Ссылка на раздел">#</a></h2>
+<p>Соломон Хайкс был сооснователем dotCloud - PaaS-компании по образцу Heroku. Стартап появился в Париже и в 2010 году попал в Y Combinator.</p>
+<p>Чтобы запускать приложения клиентов на разных языках на общих машинах, внутри компании написали контейнерный движок поверх LXC.</p>
+<p>PaaS-бизнес шел тяжело, зато внутренний инструмент выглядел многообещающе. В марте 2013 года Хайкс показал его в пятиминутном lightning talk на PyCon - «<a href="https://www.youtube.com/watch?v=9xciauwbsuo">The future of Linux Containers</a>» - и в том же месяце проект выложили в открытый доступ.</p>
+<p>Интерес вырос почти сразу. В течение года компания переименовалась в Docker Inc., а сам PaaS в августе 2014 года продали берлинской cloudControl.</p>
+<h2 id="что-именно-добавил-docker">Что именно добавил Docker <a class="anchor" href="#что-именно-добавил-docker" aria-label="Ссылка на раздел">#</a></h2>
+<ul>
+<li><strong>Слоеные образы.</strong> Файловая система собирается из сложенных друг на друга слоев (изначально на <abbr class="term" tabindex="0" data-tip="union-файловая система Linux: накладывает несколько каталогов друг на друга и показывает их как один">AUFS</abbr>). Слои кешируются и переиспользуются, поэтому пересборка и скачивание затрагивают только изменившееся.</li>
+<li><strong>Dockerfile.</strong> Окружение как короткий воспроизводимый текстовый рецепт.</li>
+<li><strong>Registry.</strong> <code>docker push</code> / <code>docker pull</code> и Docker Hub: образы стали распространяться как пакеты.</li>
+<li><strong>Один процесс - один контейнер.</strong> Контейнер как упакованное приложение, а не мини-сервер, на который заходят по SSH.</li>
+<li><strong>Простой CLI.</strong> <code>docker run</code> спрятал всю кухню namespaces и cgroups.</li>
+</ul>
+<p>Метафора морского контейнера здесь по делу: стандартный ящик, который не нужно перепаковывать по дороге с ноутбука в CI и в прод.</p>
+<p>Это решало проблему «у меня на машине работает» - куда более частую, чем нехватка изоляции.</p>
+<h2 id="почему-выстрелило-в-2013">Почему выстрелило в 2013 <a class="anchor" href="#почему-выстрелило-в-2013" aria-label="Ссылка на раздел">#</a></h2>
+<ul>
+<li><strong>Ядро дозрело.</strong> В феврале 2013 вышло ядро 3.8: в нем доделали user namespaces, и его же Docker назвал минимальной версией - на более старых всплывали ошибки. Сам Docker начал использовать user namespaces только в 1.10, в 2016 году.</li>
+<li><strong>Спрос.</strong> Микросервисы и DevOps были на подъеме, а VM для такого стиля деплоя тяжелы и медленны.</li>
+<li><strong>Простая идея.</strong> Chef и Puppet (системы управления конфигурацией) приводили сервер к нужному состоянию. Неизменяемый образ оказался проще.</li>
+</ul>
+<h2 id="что-было-дальше">Что было дальше <a class="anchor" href="#что-было-дальше" aria-label="Ссылка на раздел">#</a></h2>
+<ul>
+<li><strong>2014.</strong> Docker заменил LXC собственной <code>libcontainer</code> на Go, в июне вышел 1.0. В том же году анонсировали Kubernetes.</li>
+<li><strong>2015.</strong> После трений с CoreOS и ее конкурирующим <code>rkt</code> появилась <abbr class="term" tabindex="0" data-tip="OCI - проект под эгидой Linux Foundation, который задает открытые стандарты формата образа и запуска контейнеров">Open Container Initiative</abbr>. Docker передал туда свой рантайм под именем <code>runc</code>, форматы образа и рантайма стали открытыми стандартами.</li>
+<li><strong>2017, containerd.</strong> Docker передал <code>containerd</code> в <abbr class="term" tabindex="0" data-tip="Cloud Native Computing Foundation - фонд при Linux Foundation, который владеет Kubernetes, containerd и другими открытыми инфраструктурными проектами">CNCF</abbr>: ядро его движка перестало быть собственностью Docker Inc. и стало общей инфраструктурой - тот же ход, что и с передачей <code>runc</code> в OCI.</li>
+<li><strong>2017, оркестрация.</strong> Оркестрация - это управление контейнерами сразу на многих машинах: где что запустить, как перезапустить упавшее, как масштабировать. У Docker был свой оркестратор, Docker Swarm, но он проиграл Kubernetes: в октябре 2017 года Docker сам добавил поддержку Kubernetes в свои продукты. А управление кластерами, судя по всему, было одним из направлений, на которых компания надеялась зарабатывать.</li>
+<li><strong>2019.</strong> Docker Inc. продала enterprise-бизнес компании Mirantis и сосредоточилась на инструментах для разработчиков.</li>
+</ul>
+<h2 id="итог">Итог <a class="anchor" href="#итог" aria-label="Ссылка на раздел">#</a></h2>
+<p>Docker как формат и workflow стал универсальным стандартом. Docker как компания получил от этого сравнительно немного.</p>
+    </article>
+
+    <aside class="side">
+      <nav class="toc" aria-label="Содержание">
+        <span class="kicker">Содержание</span>
+        <ol>
+          <li><a href="#интро"><span>01</span>Интро</a></li>
+          <li><a href="#истоки"><span>02</span>Истоки</a></li>
+          <li><a href="#dotcloud"><span>03</span>dotCloud</a></li>
+          <li><a href="#что-именно-добавил-docker"><span>04</span>Что именно добавил Docker</a></li>
+          <li><a href="#почему-выстрелило-в-2013"><span>05</span>Почему выстрелило в 2013</a></li>
+          <li><a href="#что-было-дальше"><span>06</span>Что было дальше</a></li>
+          <li><a href="#итог"><span>07</span>Итог</a></li>
+        </ol>
+        <p class="tockeys"><kbd>W</kbd><kbd>S</kbd> по разделам</p>
+      </nav>
+
+      <a class="back" href="notes-docker.html" data-back><i>←</i> к списку <kbd>A</kbd></a>
+    </aside>
+  </div>
+
+  <div class="frameline frameline--foot">
+    <span>кальян дымит</span>
+    <span>утро подождет</span>
+  </div>
+</main>
+
+<script src="note-g.js"></script>
+</body>
+</html>

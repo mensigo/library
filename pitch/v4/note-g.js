@@ -9,8 +9,10 @@
   var heads = Array.prototype.slice.call(document.querySelectorAll('.note h2:not(.u-kicker)'));
   var links = Array.prototype.slice.call(document.querySelectorAll('.toc a'));
   var still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  // Пришли со списка: возвращаемся по истории, а не кладем в нее список второй раз
-  var fromList = /notes-python\.html/.test(document.referrer);
+  // Пришли со списка своей группы (он же ссылка «к списку»): возвращаемся по истории,
+  // а не кладем в нее список второй раз
+  var list = backs[backs.length - 1].getAttribute('href');
+  var fromList = document.referrer.split(/[?#]/)[0].slice(-list.length) === list;
   // Раздел считается начатым, когда его заголовок поднялся под крошки
   var EDGE = 96;
 

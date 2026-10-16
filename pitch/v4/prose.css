@@ -11,6 +11,18 @@
   counter-reset: h2;
 }
 
+/* Docker: свет меняется местами. У Python ведет фонарь, а неон из окна - второй
+   цвет; у Docker ведет неон (--acc, цвет его знака на стене), а фонарь уходит во
+   второй ряд. Предупреждения остаются фонарем, советы и «да» - неоном, ключевые
+   слова в коде - неоном, строки - теплым светом фонаря. */
+body[data-g="docker"] .prose {
+  --amber: #d9a35a;
+  --neon: var(--acc);
+}
+
+body[data-g="docker"] .prose .token.keyword { color: var(--neon); }
+body[data-g="docker"] .prose .token.string { color: #e2c393; }
+
 .prose > p,
 .prose li { color: var(--ink-2); }
 

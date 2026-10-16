@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Библиотека · заметки · Docker · Образ и контейнер (pitch v4, вариант G)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap">
+<link rel="preload" as="image" href="img/wall-g.jpg">
+<link rel="stylesheet" href="main.css">
+<link rel="stylesheet" href="notes.css">
+<link rel="stylesheet" href="notes-g.css">
+<link rel="stylesheet" href="note-g.css">
+<link rel="stylesheet" href="prose.css">
+<link rel="stylesheet" href="vt.css">
+</head>
+<!-- data-g задает цвет группы; класс arriving держит появление текста и снимается в note-g.js -->
+<body class="arriving" data-g="docker">
+
+<!-- Та же стена, что на странице группы, но только за шапкой заметки: она почти
+     погасла и уходит вверх вместе с шапкой, текст ниже лежит на ровном фоне. -->
+<div class="sky" aria-hidden="true">
+  <div class="backdrop"></div>
+  <div class="shade"></div>
+</div>
+
+<!-- Линия прочитанного -->
+<div class="progress" id="progress" aria-hidden="true"></div>
+
+<nav class="hud" id="bar" aria-label="Хлебные крошки">
+  <span class="dot"></span>
+  <a href="index-g.html"><b>БИБЛИОТЕКА</b></a>
+  <span class="sep">/</span>
+  <a class="hud__opt" href="index-g.html#notes">заметки</a>
+  <span class="sep hud__opt">/</span>
+  <!-- Знак и название группы со страницы группы: уменьшились и встали в крошки -->
+  <a class="hud__g" href="notes-docker.html" data-back>
+    <svg class="mark" viewBox="0 0 400 400" fill="none" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path class="mark__line" d="M60 222 C60 152 150 132 230 152 C280 164 310 172 330 152 C322 132 335 112 355 106 C350 131 372 141 381 129 C378 166 350 186 330 192 C300 262 200 292 130 277 C90 268 60 252 60 222 Z"/>
+      <path class="mark__thin" d="M76 238 C120 264 200 264 258 238"/>
+      <path class="mark__thin" d="M150 132 C150 108 140 94 124 87 M150 132 C152 106 165 94 181 89"/>
+      <path class="mark__thin" d="M196 138 h22 v-20 h-22 Z M222 142 h22 v-20 h-22 Z M209 116 h22 v-20 h-22 Z"/>
+      <circle class="mark__dot" cx="104" cy="208" r="4"/>
+    </svg>
+    <span class="hud__gt">docker</span>
+  </a>
+  <span class="sep">/</span>
+  <span>образ</span>
+</nav>
+
+<main class="wrap">
+  <header class="nhead">
+    <span class="kicker">02 / docker</span>
+    <h1>Образ и контейнер</h1>
+    <p class="meta"><span><b>3</b> мин</span><span>14 окт</span><i>Образы</i><i>Основы</i></p>
+  </header>
+
+  <div class="layout">
+    <!-- Пробная заметка: проверить страницу и переходы на группе Docker -->
+    <article class="note prose">
+      <p class="lede">Образ - неизменяемый шаблон, контейнер - запущенный из него процесс с тонким слоем для записи сверху. Из одного образа поднимаются десятки контейнеров, и диск почти не растет.</p>
+
+      <ul class="tldr">
+        <li><b>Образ.</b> Набор read-only слоев и JSON с метаданными: команда запуска, env, пользователь.</li>
+        <li><b>Контейнер.</b> Тот же образ плюс writable-слой и процесс в своих namespaces.</li>
+        <li><b>Следствие.</b> Все, что записано в контейнер, умирает вместе с ним. Для данных есть volumes.</li>
+      </ul>
+
+<h2 id="образ">Образ <a class="anchor" href="#образ" aria-label="Ссылка на раздел">#</a></h2>
+<p>Образ - неизменяемый шаблон: файловая система плюс метаданные. Физически это не один файл, а набор объектов, связанных хешами:</p>
+<ul>
+<li><strong>Слои</strong> - tar-архивы, в каждом только измененные файлы.</li>
+<li><strong>Config</strong> - JSON с метаданными: команда запуска, env, рабочая директория, пользователь, порядок слоев.</li>
+<li><strong>Manifest</strong> - оглавление: ссылка на config и список слоев с их размерами и хешами.</li>
+</ul>
+<p>Имя каждого объекта - sha256 его содержимого. Поэтому два образа с одной базой физически делят одни и те же слои.</p>
+<div class="code"><div class="code__bar"><span class="code__dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="code__name">терминал</span><span class="code__lang">bash</span><button class="copy" type="button"><svg class="ico-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg><svg class="ico-done" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" aria-hidden="true"><path d="m5 13 4 4L19 7"/></svg><span class="copy__label">Копировать</span></button></div><pre class="language-bash"><code class="language-bash"><span class="token function">docker</span> image inspect python:3.12-slim <span class="token parameter variable">--format</span> <span class="token string">'{{.Config.Cmd}}'</span></code></pre>
+</div>
+<div class="code__out"><b aria-hidden="true">stdout</b><span class="u-sr">вывод</span>
+<p>[python3]</p>
+</div>
+<h2 id="контейнер">Контейнер <a class="anchor" href="#контейнер" aria-label="Ссылка на раздел">#</a></h2>
+<p>Контейнер - запущенный экземпляр образа: те же read-only слои, тонкий writable-слой сверху и процесс в своих namespaces.</p>
+<div class="flow">
+<code>Dockerfile</code> <i>→</i> <code>docker build</code> <i>→</i> образ <i>→</i> <code>docker run</code> <i>→</i> контейнер
+</div>
+<div class="tablewrap"><table class="tbl">
+<thead>
+<tr>
+<th></th>
+<th>Образ</th>
+<th>Контейнер</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Можно писать</td>
+<td class="no">нет</td>
+<td class="ok">да, в свой слой</td>
+</tr>
+<tr>
+<td>Сколько штук</td>
+<td>один</td>
+<td>сколько угодно из одного образа</td>
+</tr>
+<tr>
+<td>Когда исчезает</td>
+<td><code>docker rmi</code></td>
+<td><code>docker rm</code>, вместе со всем записанным</td>
+</tr>
+</tbody>
+</table></div>
+<div class="callout"><div class="callout__ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg></div><div class="callout__body"><b>Данные</b>
+<p>Writable-слой удаляется вместе с контейнером. То, что должно его пережить - базу, загрузки, логи - кладут в volume.</p>
+</div></div>
+    </article>
+
+    <aside class="side">
+      <nav class="toc" aria-label="Содержание">
+        <span class="kicker">Содержание</span>
+        <ol>
+          <li><a href="#образ"><span>01</span>Образ</a></li>
+          <li><a href="#контейнер"><span>02</span>Контейнер</a></li>
+        </ol>
+        <p class="tockeys"><kbd>W</kbd><kbd>S</kbd> по разделам</p>
+      </nav>
+
+      <a class="back" href="notes-docker.html" data-back><i>←</i> к списку <kbd>A</kbd></a>
+    </aside>
+  </div>
+
+  <div class="frameline frameline--foot">
+    <span>кальян дымит</span>
+    <span>утро подождет</span>
+  </div>
+</main>
+
+<script src="note-g.js"></script>
+</body>
+</html>

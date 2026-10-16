@@ -78,13 +78,13 @@
         <span class="card__d">Python изнутри: от tuple до async.</span>
         <span class="card__m"><b>7</b> заметок <i>→</i></span>
       </a>
-      <a class="card" href="#reviews" data-title="Обзоры">
+      <a class="card" href="#reviews" data-title="Обзоры" data-soon="Раздел еще пишется.">
         <span class="card__k">02 / обзоры</span>
         <span class="card__t">Обзоры</span>
         <span class="card__d">Аниме и философия. С оценкой и вердиктом.</span>
         <span class="card__m"><b>3</b> обзора <i>→</i></span>
       </a>
-      <a class="card" href="#cinema" data-title="Cinema">
+      <a class="card" href="#cinema" data-title="Cinema" data-soon="Разбор еще монтируется.">
         <span class="card__k">03 / cinema</span>
         <span class="card__t">Cinema</span>
         <span class="card__d">Большие разборы с кадрами. Cowboy Bebop.</span>
@@ -103,10 +103,10 @@
         <span class="group__d">Изнутри: от tuple до async.</span>
         <span class="group__m"><b>7</b> заметок <i>→</i></span>
       </a>
-      <a class="group group--draft" href="#notes" data-g="docker" aria-disabled="true">
+      <a class="group" href="notes-docker.html" data-g="docker">
         <span class="group__t">Docker</span>
         <span class="group__d">Контейнеры без магии.</span>
-        <span class="group__m">тлеет · <b>1</b> черновик</span>
+        <span class="group__m"><b>3</b> заметки <i>→</i></span>
       </a>
     </nav>
     <button class="back" id="back" type="button"><i>←</i> в комнату</button>
@@ -132,11 +132,13 @@
 </header>
 
 <!-- Дымовой переход: в питче просто показывает название раздела и рассеивается,
-     на сайте за ним будет настоящая навигация. -->
-<div class="fog" id="fog" aria-hidden="true">
+     на сайте за ним будет настоящая навигация. У раздела, который еще не готов
+     (data-soon на карточке), под названием появляется строка «в работе». -->
+<div class="fog" id="fog" aria-live="polite">
   <div class="fog__inner">
-    <span class="kicker">переход</span>
+    <span class="kicker" id="fogKicker">переход</span>
     <strong id="fogTitle"></strong>
+    <p class="fog__soon" id="fogSoon" hidden></p>
   </div>
 </div>
 

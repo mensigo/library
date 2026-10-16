@@ -12,7 +12,7 @@ and what ties them together.
 | `main.css` | Base: stage geometry (`--sw`, `--ratio: 1.7768`), panel, cards, glows, scrim, fog. Shared with all variants. |
 | `wall.css` | Camera pan, wall layer, group list, sigils, key hints. Shared with D, E, F. |
 | `g.css` | Variant G only, loaded after `wall.css`: wall image, wall mask, `.world` isolation, sigil position. |
-| `main.js` | Fog transition on the cards. |
+| `main.js` | Fog transition on the cards. A card with `data-soon` (Reviews, Cinema in G) says "в работе" in the fog, shows that text under the title and holds the fog 3.2 s instead of 2.3 s; the line (`#fogSoon`, styled in `g.css`) exists only in `index-g.html`. |
 | `wall.js` | Pan to the wall on `#notes`, W/A/S/D keys, group and sigil selection. |
 | `g.js` | Variant G only: the pause before leaving the wall for a group page, and the return to the wall. |
 | `vt.css` | Cross-document view transition between the wall and a group page. Loaded by both pages. |
@@ -43,6 +43,24 @@ term). It also loads `prose.css`, which styles that real markup: code bar, highl
 lines, output, figures and diagram colours, callouts, table, verdict, footnotes, finale.
 The page was assembled once by a throwaway script; after a change in the source note it
 has to be pasted again.
+
+`notes-docker.html` is the Docker group page, same markup as the Python one with
+`data-g="docker"`. Its three rows open `note-docker-history.html` (the built body of
+`_site/drafts/docker-1/` as is, lede and key points from the frontmatter of
+`src/drafts/docker-1.md`), `note-docker-image.html` and `note-docker-layers.html` (two short
+test notes written for the pitch, material from `src/drafts/docker_todo.md`). The three
+note pages were generated once by a throwaway script, like `note-slots.html`.
+
+What differs on Docker pages:
+
+- **The light swaps.** On Python the lantern leads and the window neon is second; on
+  Docker the neon leads (`--acc` is the sigil's `#4fd6c9`) and the lantern is second.
+  `prose.css` swaps `--amber` and `--neon` under `body[data-g="docker"]`: warnings stay
+  lantern, tips and "yes" cells are neon, code keywords neon, strings warm.
+- **Square markers.** The fresh-note marker and the key-point bullets are small squares,
+  like the crates in the sigil (`notes-g.css`). The "В пути" (drafts) embers stay round.
+- The small mark in the note's breadcrumbs needs `.hud .mark__line` (`note-g.css`): the
+  whale is drawn with `mark__line`, not `mark__brush`.
 
 ## Wall to group page
 
@@ -94,6 +112,8 @@ has to be pasted again.
   On a direct visit it is a link to `notes-python.html`; `sessionStorage.note` tells
   `notes-g.js` which row to open and select. `.is-open` is dropped 1 s after the return.
 - **A new note** needs its own page and the row's `href`; rows with `href="#"` do nothing.
+  `note-g.js` treats the page as opened from its list when the referrer ends with the
+  href of the page's "к списку" link, so a note in a new group needs no script change.
 
 ## JPEG conversion
 
@@ -132,6 +152,9 @@ Sizes stay the same: 1672x941 for the room, 2688x1152 for the wall.
   canvas (836x470).
 
 ## Not done, not checked
+
+- Docker pages were checked as stills at 1600 px only. The wall to Docker and Docker to
+  note transitions were not watched, and the pages were not opened under 1100 px.
 
 - The camera pan was only checked on still screenshots (headless Chrome, 1600x900, with
   the camera stopped mid-pan). It was not watched in motion.
