@@ -31,6 +31,12 @@ This is an [Eleventy](https://www.11ty.dev/) static site — a personal library/
 - **`src/css/styles.css`** — single stylesheet with CSS custom properties for theming (`data-theme="dark"` / `data-theme="light"`).
 - **`DESIGN.md`** — the design foundation: tokens, layout, reusable patterns, and the markdown authoring syntax. Read it before touching CSS or adding markup patterns.
 
+### Images
+
+Image files live in the images repo `library_static` under `src/images/`; deploy rsyncs them into `src/images/` here (`deploy.yml`, gitignored, only `logo.png` is committed), and `addPassthroughCopy("src/images")` publishes them at `/images/…`. For `npm run dev`, copy them in by hand.
+
+The top-level `images/` folder is the meta image of `library_static/src/images/`: same subfolders, one `meta.md` each (`images/cinema/meta.md`, `images/world/meta.md`) listing which file is used where and its size. Only `meta.md` files are tracked there (`.gitignore`); anything else in `images/` is local scratch. When adding, replacing or removing an image, update its folder's `meta.md`.
+
 ### Layout shell
 
 Fixed `.topbar` (breadcrumbs + reading progress), off-canvas `.drawer` for navigation at every width, `.shell` grid holding the reading column `.doc` and the table-of-contents `.rail`. One breakpoint at `1100px`: above it the rail is a docked grid column, below it a right-hand overlay. Navigation is flat `.navgroup`s — no tree, no tabs.

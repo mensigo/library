@@ -38,11 +38,15 @@
     </svg>
   </div>
   <div class="stage">
-    <!-- Стоп-кадр без видео: img/room-g.jpg, сжатая копия img/shisha-start-10d-good.png -->
-    <img class="stage__img" src="img/room-g.jpg"
-         alt="Парень в худи полулежит на диване в кальянной с трубкой в руке и смотрит вверх; за окном дождь и неоновая вывеска">
+    <!-- Стоп-кадр без видео, 2274x1280: AVIF, где браузер его понимает, иначе JPG.
+         Обе - сжатые копии img/room-g-source-1280.png (апскейл, FINAL_STATE.md) -->
+    <picture>
+      <source type="image/avif" srcset="../../src/images/world/room.avif">
+      <img class="stage__img" src="../../src/images/world/room.jpg"
+           alt="Парень в худи полулежит на диване в кальянной с трубкой в руке и смотрит вверх; за окном дождь и неоновая вывеска">
+    </picture>
     <!-- «Дыхание» сцены: пульсация огней. --x/--y/--d заданы в долях кадра,
-         по одному на каждый источник света в room-g.jpg. -->
+         по одному на каждый источник света в кадре. -->
     <div class="glows" aria-hidden="true">
       <i class="glow" style="--x:2.3%;--y:24.5%;--d:22%;--t:4.3s;--s:-1.2s"></i>
       <i class="glow" style="--x:5.1%;--y:81.5%;--d:30%;--t:5.1s;--s:-3.4s"></i>

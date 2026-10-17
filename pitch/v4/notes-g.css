@@ -1,6 +1,7 @@
 /* Страница группы заметок в варианте G. Подключается после main.css и notes.css.
-   Фон - та же стена img/wall-g.jpg, что в index-g.html, в том же месте, где встает
-   камера, поэтому при переходе со стены (vt.css) фон остается на месте. */
+   Фон - та же стена src/images/world/wall.avif (запасная .jpg), что в index-g.html,
+   в том же месте, где встает камера, поэтому при переходе со стены (vt.css) фон
+   остается на месте. */
 
 :root {
   --wall-w: calc(var(--sw) / var(--ratio) * 2.3333);  /* как в wall.css */
@@ -21,7 +22,8 @@ body { --acc: var(--g); --acc-soft: color-mix(in srgb, var(--g) 14%, transparent
   right: calc(var(--wall-w) * (var(--cam-at) - 1));
   width: var(--wall-w);
   height: calc(var(--sw) / var(--ratio));
-  background: url("img/wall-g.jpg") left center / cover no-repeat;
+  background: url("../../src/images/world/wall.jpg") left center / cover no-repeat;
+  background-image: image-set(url("../../src/images/world/wall.avif") type("image/avif"), url("../../src/images/world/wall.jpg") type("image/jpeg"));  /* как в g.css */
 }
 
 /* Стена темнеет под список: слева, где текст, сильнее */

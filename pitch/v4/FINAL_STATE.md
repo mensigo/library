@@ -27,8 +27,8 @@ need http (on `file://` pages just open), and the font lives in `src/fonts/`.
 | `prose.css` | Styles the real built note markup: code bar, highlighted lines, output, figures, callouts, table, verdict, footnotes, finale. |
 | `cinema-g.html` | Copy of `src/cinema/index.html` with pitch paths, HUD → `index-g.html`, Bebop row `href="#"`. Loads `cinema-land.css/js`, `cinema-g.css` (VT names), `vt.css`, `cinema-g.js`. |
 | `cinema-land.css/js` | Copies of built `/cinema/landing.*` (sources in `src/cinema/_src/`, font path → `../../src/fonts/`). **Regenerate, never hand-edit.** |
-| `img/room-g.jpg` ← `img/shisha-start-10d-good.png` | Room frame, 1672x941. |
-| `img/wall-g.jpg` ← `img/wall-g-source.png` | Wall, 2688x1152. |
+| `../../src/images/world/room.avif`, `.jpg` ← `img/room-g-source-1280.png` | Room frame, 2274x1280 (upscaled). Same files as the site. |
+| `../../src/images/world/wall.avif`, `.jpg` ← `img/wall-g-source-1280.png` | Wall, 2987x1280 (upscaled). Same files as the site. |
 
 Fonts: Ysabeau Infant from `../../src/fonts/` (via `main.css`), JetBrains Mono from Google Fonts.
 `notes.html` and the other `index-*.html` are not part of G.
@@ -113,7 +113,8 @@ place on frame one and slide out (.5 s). Cinema holds first paint with
 
 ## Wall ↔ group page
 
-- `notes-g.css` places `img/wall-g.jpg` exactly where the camera stops (`--cam-at`).
+- `notes-g.css` places the wall (`wall.avif`, JPEG fallback) exactly where the
+  camera stops (`--cam-at`).
 - Active sigil: halo breathes (`sigil-breathe`) once drawn.
 - **Leaving**: `g.js` holds 350 ms (`.is-going`): other groups dim, halo pulses
   (`sigil-pulse`: gone by 30%, flares to 17px at 95% by 65%, shrinks into the line), the
@@ -172,32 +173,84 @@ place on frame one and slide out (.5 s). Cinema holds first paint with
 
 ## Images and geometry
 
-Pages load the JPEGs. After changing a source:
+Pages load AVIF (4:4:4, q70) and fall back to JPEG (4:4:4, q85) in browsers without AVIF
+(Safari on macOS 12 and older). The files live in the images repo `library_static` under
+`src/images/world/`; deploy syncs them into `src/images/world/` here, and the pitch loads them
+from there (`../../src/images/world/…`), the way it loads the Cinema hero. For a local run,
+copy them in by hand. Sizes and the list of files: `images/world/meta.md`.
+
+| File | Size | From (`pitch/v4/img/`) |
+|---|---|---|
+| `room.avif` / `.jpg` | 2274x1280, 189 / 498 KB | `room-g-source-1280.png` |
+| `wall.avif` / `.jpg` | 2987x1280, 244 / 614 KB | `wall-g-source-1280.png` |
+
+- Room: `<picture>` with an AVIF `<source>`. Wall (`g.css`, `notes-g.css`): plain
+  `url(wall.jpg)`, then `image-set(… type("image/avif"), … type("image/jpeg"))`; a browser
+  without `type()` drops the second line. Group and note pages preload `wall.avif` with
+  `type="image/avif"`.
+- A browser takes AVIF for both images or JPEG for both, so the seam always joins one
+  format. Export both with the same settings.
+- Target height 1280: the frame is 1:1 on a 1920x1280 window (stage height is
+  `max(100vw / 1.7768, 100svh)`). Smaller windows scale it down; no `srcset`.
+- 4:4:4 because the frame is mostly near-black with saturated reds and neon. WebP (always
+  4:2:0) makes the dark plaster blotchy and drops its grain; AVIF 4:2:0 smears it.
+
+Both sources are upscales of the generated images (room `img/shisha-start-10d-good.png`
+1672x941, wall `img/wall-g-source.png` 2688x1152): Real-ESRGAN `x4plus` 4×, scaled down to
+height 1280, then 30% of it over 70% of a plain Lanczos stretch. Real-ESRGAN alone sharpens
+edges but wipes the plaster grain and the rain on the window and makes the face waxy
+(`img/room-g-esrgan-only.png`); the blend keeps them. Real-ESRGAN lives in
+`~/.local/opt/realesrgan-ncnn-vulkan/` (v0.2.5.0 macOS build).
 
 ```bash
-magick img/shisha-start-10d-good.png -quality 92 img/room-g.jpg
-magick img/wall-g-source.png -quality 90 img/wall-g.jpg
+E=~/.local/opt/realesrgan-ncnn-vulkan
+up() {  # up <in> <WxH> <out>
+  $E/realesrgan-ncnn-vulkan -i $1 -o x4.png -n realesrgan-x4plus -m $E/models -s 4
+  magick x4.png -filter Lanczos -resize $2! esr.png
+  magick $1 -filter Lanczos -resize $2! lz.png
+  # blend: the first number is the share of the second image (esr.png)
+  magick lz.png esr.png -compose blend -define compose:args=30,70 -composite $3
+}
+up img/shisha-start-10d-good.png 2274x1280 img/room-g-source-1280.png
+up img/wall-g-source.png 2987x1280 wall-up.png
+
+# wall's left end = the room's right 500 px, 1:1 (wall col c = room col 1773.68 + c,
+# 1773.68 = 2274 - .1675 * 2987), fading into the wall over cols 334-500
+magick img/room-g-source-1280.png -virtual-pixel edge -define distort:viewport=501x1280+0+0 \
+  -filter Lanczos -distort SRT '0,0 1 0 -1773.68,0' -background black -extent 2987x1280 frame.png
+magick \( -size 334x1280 xc:white \) \( -size 1280x167 gradient:white-black -rotate -90 \) \
+  \( -size 2486x1280 xc:black \) +append -colorspace gray mask.png
+magick wall-up.png frame.png mask.png -composite img/wall-g-source-1280.png
+
+# export, then copy the four files to library_static/src/images/world/ and ../../src/images/world/
+for n in room wall; do
+  magick img/$n-g-source-1280.png -strip -define heic:chroma=444 -quality 70 $n.avif
+  magick img/$n-g-source-1280.png -strip -sampling-factor 4:4:4 -quality 85 $n.jpg
+done
 ```
 
-Sizes stay 1672x941 (room) and 2688x1152 (wall).
+CSS places both images by fractions (`aspect-ratio: 1672 / 941` holds for 2274x1280), so
+pixel sizes can change without CSS changes. The px numbers below are for the current files.
 
-- **Wall is tied to the frame.** The left 450 px of the wall are the right 368 px of the
-  frame scaled up; the wall carpet continues them, and on the floor the frame's pixels
-  fade into the wall carpet over the last 150 px before the post, only below the sofa
-  base. Changing the frame's lower right corner (right sofa, carpet) means rebuilding the
-  wall's left end. Window, man, hookah changes don't affect it.
+- **Wall is tied to the frame.** The left 500 px of the wall are the right 500 px of the
+  frame, pixel for pixel (pasted in after the upscale, above); over the last 167 px before
+  the post they fade into the wall's own carpet. Changing the frame's lower right corner
+  (right sofa, carpet) means rebuilding the wall's left end. Window, man, hookah changes
+  don't affect it.
 - Wall height = frame height, starts `--lap` (16.75% of its width) before the frame's
-  right edge, so the post's left edge (16.7%) sits on it. Scale 1152 / 941 = 1.2242.
+  right edge, so the post's left edge (16.7%) sits on it. Same scale as the frame.
 - Wall mask (`g.css`): top 85% cut hard at the post (16.7%); bottom 15.2% (floor) fades
   in 4%→10%, where the wall holds the frame's own pixels.
-- Floor line: post and bookshelf end at 993/1152 (86.2%) = sofa base at ~811/941 at the
-  frame's right edge.
+- Floor line: post and bookshelf end at ~1103/1280 (86.2%) = sofa base at the frame's
+  right edge.
 - `.glow` coordinates in `index-g.html` are frame fractions; move with candles/lanterns.
-- `data-coal="465,187"` on `#smoke` = hookah bowl on the half-res canvas (836x470).
+- `data-coal="465,187"` on `#smoke` = hookah bowl on the smoke canvas (836x470, half the
+  original frame, stretched over the stage; does not depend on the image size).
 
 ## Open issues
 
-- `img/` is not in git (JPEGs untracked, PNGs gitignored): a fresh checkout has no room or wall.
+- `img/` (sources) is not in git, and `src/images/` comes from the images repo: a fresh
+  checkout has no room or wall until they are copied in.
 - Checked by hand in Chrome on the MacBook's built-in screen (1470x956 CSS px, the
   viewport a bit shorter after the browser's toolbars), transitions included: good enough.
   Not opened in Safari/Firefox.
@@ -207,7 +260,6 @@ Sizes stay 1672x941 (room) and 2688x1152 (wall).
 - TODO: the copy button on code blocks (`.copy`, handler in `note-g.js`). Term tooltip and
   the collapsible block were checked by hand and work.
 - Shelf top on the wall is at ~62% height; sigil and group list still placed for 61%.
-- Wall is sharper than the frame (frame not upscaled). Carpet diagonals straighten near
-  the post (angled vs straight-on view).
+- Carpet diagonals straighten near the post (angled vs straight-on view).
 - Not done: smoke and projector beam in the Cinema transition.
 - Prompts for the current window view and wall are not written down.

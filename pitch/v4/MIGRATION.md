@@ -89,36 +89,38 @@ All links in templates go through `{{ pathPrefix }}` (`/library` in production).
 
 ## 3. Images
 
-Deploy syncs `mensigo/library_static:src/images/` → `src/images/` (`deploy.yml`), and
+Deploy syncs `library_static:src/images/` → `src/images/` (`deploy.yml`), and
 `src/images/` is gitignored here. Everything the pages load goes into that repo; for
-`npm run dev`, copy it into `src/images/` by hand, as for Cinema.
+`npm run dev`, copy it into `src/images/` by hand, as for Cinema. The files list with
+sizes is `images/world/meta.md`.
 
-| Pitch | Images repo | Used by |
+Done: the files are exported (upscaled to frame height 1280, AVIF + JPEG fallback,
+`FINAL_STATE.md` "Images and geometry") and copied into `library_static/src/images/world/`
+(not committed) and into local `src/images/world/`. The pitch already loads them from there.
+
+| Images repo | Size | Used by |
 |---|---|---|
-| `img/room-g.jpg` (1672x941, 452 KB) | `src/images/world/room.jpg` | home `<img class="stage__img">`, `.cine__frame` sits over it |
-| `img/wall-g.jpg` (2688x1152, 662 KB) | `src/images/world/wall.jpg` | `g.css` `.wall`, `notes-g.css` `.backdrop`, `<link rel=preload>` on group and note pages |
+| `src/images/world/room.avif`, `room.jpg` | 2274x1280, 189 / 498 KB | home `<picture>` → `<img class="stage__img">`, `.cine__frame` sits over it |
+| `src/images/world/wall.avif`, `wall.jpg` | 2987x1280, 244 / 614 KB | `room.css` `.wall`, `notes.css` `.backdrop`, `<link rel=preload>` on group and note pages |
 | `src/images/cinema/index/hero.jpg` | already there | Cinema hero and the room's `.cine__frame` |
 
+On the site:
+
+- Room in `index.njk`: `<source type="image/avif" srcset="{{ pathPrefix }}/images/world/room.avif">`,
+  `<img src="{{ pathPrefix }}/images/world/room.jpg">`.
+- Wall in the bundles (published to `/world/`): `url("../images/world/wall.jpg")`, then
+  `image-set(url("../images/world/wall.avif") type("image/avif"), url("../images/world/wall.jpg") type("image/jpeg"))`.
+- Preload: `<link rel="preload" as="image" href="{{ pathPrefix }}/images/world/wall.avif" type="image/avif">`.
+
 Sources go to the same repo **outside** `src/images/`, so the rsync never publishes them:
-`sources/world/shisha-start-10d-good.png`, `sources/world/wall-g-source.png`. The
-`magick` commands from `FINAL_STATE.md` move to `sources/world/README.md`.
-
-Before export:
-
-- **Size.** The room is over the 400 KB hero budget, and the wall is both larger and wider than
-  1920 px. Try WebP (q 80-85) for both. Then try the wall at frame height (2195x941
-  instead of 2688x1152): CSS places it by fractions, so geometry holds. It also fixes the
-  open issue "wall is sharper than the frame". After the resize, recount the px
-  numbers in `FINAL_STATE.md` "Images and geometry".
-- **The seam.** The wall's left 450 px repeat the frame's right edge. Export both files
-  with the same format and quality, then check the pan by eye at the post: if the two
-  are compressed differently, a visible step appears there.
-- Write `images/meta.md` in the images repo (the Cinema plan mentions it, but it doesn't
-  exist): file → page → size limit.
+`sources/world/` with `room-original.png`, `room-1280.png`, `wall-original.png`,
+`wall-1280.png`, and the recipe from `FINAL_STATE.md` in `sources/world/README.md`.
+`room.png` and `wall.png` (the originals) are staged in `library_static/src/images/world/`
+now: move them out before committing, or deploy publishes them.
 
 Not migrated: every other file in `pitch/v4/img/` (other room takes, toon/regen,
-`wall-f*`, `wall-right*`, `shisha-loop-draft.mp4`). They stay local, and `pitch/v4/.gitignore`
-already excludes them.
+`wall-f*`, `wall-right*`, `shisha-loop-draft.mp4`, comparison sheets, `wall-g-1152.*`).
+They stay local, and `pitch/v4/.gitignore` already excludes them.
 
 ## 4. `src/` after the migration
 
@@ -210,8 +212,8 @@ src/
 │   └── scripts.js                ← js/scripts.js
 ├── fonts/                          Ysabeau Infant, shared by both shells
 ├── images/                         gitignored, synced from library_static
-│   ├── world/room.jpg            + ← pitch img/room-g.jpg
-│   ├── world/wall.jpg            + ← pitch img/wall-g.jpg
+│   ├── world/room.{avif,jpg}     + 2274x1280, section 3
+│   ├── world/wall.{avif,jpg}     + 2987x1280, section 3
 │   ├── cinema/…
 │   └── notes/…
 └── search-index.njk                old shell's drawer search
@@ -271,11 +273,11 @@ switches to the same filter, with parts written as `cinema/_src/cinema.css`.
 | Pitch file | Becomes | Changes |
 |---|---|---|
 | `main.css` | `world/_src/shell.css` + start of `room.css` | split: whatever the group and note pages use (tokens, `@font-face`, `.hud`, `.kicker`, `.frameline`…; find it with the same unused-class scan, run against those pages) goes to `shell.css`, the rest (stage, panel, cards, glows, scrim, fog) to `room.css`. Drop the leftovers of other variants: `.hero--dim`, `.patch`, `.settings*`, `.switch`, `.stage__loop`. `@font-face` → `../fonts/` |
-| `wall.css` + `g.css` | `world/_src/room.css` | fold `g.css` into `wall.css` (G overrides D-F there); drop `.unblue`, `.settings`, the `wall-right.jpg` background; keep `.group--draft` (unused at launch, decision 5); `url()` → `../images/world/wall.jpg` |
+| `wall.css` + `g.css` | `world/_src/room.css` | fold `g.css` into `wall.css` (G overrides D-F there); drop `.unblue`, `.settings`, the `wall-right.jpg` background; keep `.group--draft` (unused at launch, decision 5); `url()` → `../images/world/wall.jpg` + `image-set` with `wall.avif` (section 3) |
 | group colours | `world/_src/note-groups.css` | every `[data-g="…"]` rule from `wall.css`, `notes-g.css`, and the Docker `--amber`/`--neon` swap from `prose.css`, in one file |
 | `cine.css` | `world/_src/cine.css` | none |
 | `vt.css` | `world/_src/vt.css` | none; also goes into the Cinema landing bundle |
-| `notes.css` + `notes-g.css` | `world/_src/notes.css` | drop `.band`, `.band__img`; backdrop `url()` → `../images/world/wall.jpg`; `.dim` → `.u-dim` (the class `titleHtml` already emits) |
+| `notes.css` + `notes-g.css` | `world/_src/notes.css` | drop `.band`, `.band__img`; backdrop `url()` → `../images/world/wall.jpg` + `image-set` with `wall.avif`; `.dim` → `.u-dim` (the class `titleHtml` already emits) |
 | `note-g.css` | `world/_src/note.css` | none |
 | `prose.css` | `world/_src/prose.css` | none |
 | `cinema-g.css` | `cinema/_src/return.css` | appended to the landing bundle |
@@ -423,7 +425,8 @@ the normal way. That's fine for now.
 
 Run `npm run build:check` after each step. Every step leaves the site working.
 
-1. **Images.** Export (section 3), push to `library_static`, copy into local `src/images/`.
+1. **Images.** Exported and copied (section 3). Left: move the source PNGs to
+   `sources/world/` in `library_static`, commit and push there.
 2. **Legacy move.** `_includes/{base,page,plain}.njk` → `_includes/legacy/`, `css/styles.css`
    and `js/scripts.js` → `legacy/`; update `layout:` in reviews, passthrough, the `<link>`/`<script>`
    in `base.njk`, `test/scripts.test.js` and the Jest coverage glob. The site looks the same.

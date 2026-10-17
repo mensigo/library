@@ -22,4 +22,6 @@ node_modules/
 
 123_files/
 src/images/
-images/
+images/**
+!images/**/
+!images/**/meta.md
