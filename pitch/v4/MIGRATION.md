@@ -1,0 +1,530 @@
+# Migration: variant G → the site
+
+Plan for moving pitch v4 variant G (`FINAL_STATE.md`) into `src/`. G replaces the home
+page, the notes section and the way into Cinema. Reviews stay on the current shell for now.
+Sketch, not final: section 1 lists the decisions to make before step 1 of the work order.
+
+## 0. What we're merging
+
+| | Pitch G (`pitch/v4/`) | Site now (`src/`) |
+|---|---|---|
+| Home | room → wall pan, cards, fog, smoke | `index.md`, recent updates list |
+| Notes index | wall with group sigils | `notes/index.md`, nearly empty |
+| Group page | `notes-python.html`, `notes-docker.html`: rows, topics, search, embers | none (the drawer lists notes) |
+| Note page | `note-*.html`: sky, progress, breadcrumb mark, TOC in the side column, W/S/A | `note.njk` in the `base.njk` shell: topbar, drawer, rail, pager |
+| Cinema | `cinema-g.html` = landing + return to the room | `src/cinema/` (bundled from `_src/`) |
+| Reviews | "в работе" fog only | `page.njk`, anime + philosophy |
+| Theme | dark only, colour per group (`data-g`) | light/dark + 8 accent palettes |
+| Search | per-group filter (`notes.js`) | global Fuse.js in the drawer |
+
+Built markup works in G as is: `prose.css` already styles what `.eleventy.js` outputs
+(Prism `.token`, `.code`, `.code__out`, `.callout`, `.fig`, `.d-*` in SVG figures, `.verdict`,
+`.finale`, `.notes-block`, `.term`, `.more`). The markdown pipeline needs no changes.
+
+## 1. Decisions first
+
+Decided, except 3 (phones), which is still open.
+
+1. **Scope.** G covers `/`, `/notes/**` and the entrance to `/cinema/`. `/reviews/**` stays
+   on the old shell (`base.njk` + `styles.css` + `scripts.js`, moved into `legacy/` folders,
+   section 4) and its pages are not touched. The Reviews card keeps `data-soon`. The old
+   shell gets ported to G later, as its own migration.
+2. **URLs of published notes don't change.** `/notes/python/slots/` and the rest have been
+   posted to Telegram (`tg_pub_time`). Only drafts may move.
+3. **Phones: open.** People open notes from Telegram, often on a phone. What the pitch does
+   at 390x844 now (Chrome phone emulation with touch; not checked on a real phone or in Safari):
+   - *Room*: title on top, then a strip of cards you swipe sideways (Cinema is off-screen
+     to the right), the frame below cropped to the man and the window. No key hints.
+   - *Wall* (`#notes`): the two groups stacked, the Python sigil drawn under them, then the shelf.
+   - *Group page*: works. Topics become a chip strip you swipe sideways, rows go to one
+     column without numbers, embers and "к стене" sit under the list.
+   - *Note page*: reads well in one column with lede, key points, code, tables and callouts,
+     and the bar with breadcrumbs and progress stays pinned. Gaps:
+     **no table of contents at all** (`.toc` is hidden under 1100 px), and the **SVG figures
+     shrink until their labels are ~7 px** and can't be read.
+   - *Cinema*: the shipped landing, fine, but the `A в комнату` key hint shows on touch.
+
+   Before launch, at least: figures readable on a phone (scroll inside `.fig__frame` at a
+   minimum width, or tap to open full screen), a TOC on phones (collapsed under the
+   header, or a button in the bar), the key hint hidden on touch, and the transitions tried
+   on a real iPhone. The full mobile view stays a later feature, as in `FINAL_STATE.md`.
+4. **Drafts: grouped by tag.**
+   - A draft whose tags include a group's tag (`Python`, `Docker`) sits in that group's
+     folder with `draft: true`, for example `src/drafts/python-gil.md` → `src/notes/python/python-gil.md` (file names are kept).
+     The group page lists it in the embers block under the group's own heading
+     (`Тлеет` for Python, `В пути` for Docker). Embers are not links, as in the pitch.
+     The draft still builds at its URL (a better way to read drafts is a TODO, section 13).
+   - A draft with no group tag stays in `src/drafts/` and shows up nowhere: it isn't built
+     (`permalink: false` from `drafts.11tydata.js`) and isn't in any collection. These are
+     todos.
+   - The old drawer's `Черновики` group goes, so drafts don't appear there either.
+5. **Docker launches with `docker-1` as a published note**: `src/notes/docker/docker-1.md` → `/notes/docker/docker-1/` (file name kept; `/notes/docker/` itself is the group page),
+   title `История Docker`, `draft: false` (section 7). The group is enabled on the wall.
+   `.group--draft` / `aria-disabled` stay in the code for a future group that has no notes yet.
+6. **Global search is dropped on G pages.** The group filter covers notes;
+   `search-index.json` still builds for the old shell's drawer.
+7. **Row order and numbers.** Rows are sorted by `upd_date` (newest first), as in the
+   pitch. `01..NN` is the position in that order, so the number of a note changes when
+   another note is updated. The note's kicker `01 / python` uses the same number.
+   "Fresh" (square/round marker) = `upd_date` within 45 days of the build date.
+
+## 2. URL map
+
+| Pitch | Site URL | Source |
+|---|---|---|
+| `index-g.html` | `/` | `src/index.njk` (replaces `index.md`) |
+| `index-g.html#notes` | `/#notes` | same page, `wall.js` reads the hash |
+| — | `/notes/` | `src/notes/index.njk`: meta refresh + link to `/#notes` |
+| `notes-python.html` | `/notes/python/` | `src/notes/group.njk`, paginated over `noteGroups` |
+| `notes-docker.html` | `/notes/docker/` | same |
+| `note-slots.html`, `note-async.html` | `/notes/python/slots/` etc. (unchanged) | `src/notes/python/*.md`, layout `world/note.njk` |
+| `note-docker-history.html` | `/notes/docker/docker-1/` | `src/drafts/docker-1.md` → `src/notes/docker/docker-1.md` |
+| `note-docker-image/layers.html` | — | not migrated (test notes) |
+| — | `/notes/python/python-gil/`, `/notes/python/unlimited-ints/` | drafts moved from `src/drafts/` (decision 4) |
+| — | `/drafts/*` | gone: tagged drafts moved, untagged ones aren't built |
+| `cinema-g.html` | `/cinema/` | `src/cinema/index.html`, patched (section 8) |
+| — | `/reviews/**` | unchanged |
+
+All links in templates go through `{{ pathPrefix }}` (`/library` in production).
+
+## 3. Images
+
+Deploy syncs `mensigo/library_static:src/images/` → `src/images/` (`deploy.yml`), and
+`src/images/` is gitignored here. Everything the pages load goes into that repo; for
+`npm run dev`, copy it into `src/images/` by hand, as for Cinema.
+
+| Pitch | Images repo | Used by |
+|---|---|---|
+| `img/room-g.jpg` (1672x941, 452 KB) | `src/images/world/room.jpg` | home `<img class="stage__img">`, `.cine__frame` sits over it |
+| `img/wall-g.jpg` (2688x1152, 662 KB) | `src/images/world/wall.jpg` | `g.css` `.wall`, `notes-g.css` `.backdrop`, `<link rel=preload>` on group and note pages |
+| `src/images/cinema/index/hero.jpg` | already there | Cinema hero and the room's `.cine__frame` |
+
+Sources go to the same repo **outside** `src/images/`, so the rsync never publishes them:
+`sources/world/shisha-start-10d-good.png`, `sources/world/wall-g-source.png`. The
+`magick` commands from `FINAL_STATE.md` move to `sources/world/README.md`.
+
+Before export:
+
+- **Size.** The room is over the 400 KB hero budget, and the wall is both larger and wider than
+  1920 px. Try WebP (q 80-85) for both. Then try the wall at frame height (2195x941
+  instead of 2688x1152): CSS places it by fractions, so geometry holds. It also fixes the
+  open issue "wall is sharper than the frame". After the resize, recount the px
+  numbers in `FINAL_STATE.md` "Images and geometry".
+- **The seam.** The wall's left 450 px repeat the frame's right edge. Export both files
+  with the same format and quality, then check the pan by eye at the post: if the two
+  are compressed differently, a visible step appears there.
+- Write `images/meta.md` in the images repo (the Cinema plan mentions it, but it doesn't
+  exist): file → page → size limit.
+
+Not migrated: every other file in `pitch/v4/img/` (other room takes, toon/regen,
+`wall-f*`, `wall-right*`, `shisha-loop-draft.mp4`). They stay local, and `pitch/v4/.gitignore`
+already excludes them.
+
+## 4. `src/` after the migration
+
+`+` new, `←` moved or made from, `~` edited, `−` removed, no mark = unchanged.
+
+Files about note groups say `note` in their name unless their folder already does:
+`notes/group.njk` and `notes/groups.js` sit in `notes/`, `note-sigils.njk` and
+`note-groups.css` don't. The global variable is `noteGroups`, since every page sees it.
+
+```
+src/
+├── _includes/
+│   ├── meta.njk                  + OG/Telegram <meta>, taken out of base.njk; both shells include it
+│   ├── world/                    + layouts shared by many pages
+│   │   ├── shell.njk             + <head> + body slot for every new page: fonts, meta.njk, bundle CSS, rel=expect
+│   │   ├── note.njk              ← pitch note-slots.html: the note layout
+│   │   └── note-sigils.njk       ← sigil SVGs from index-g.html: macro sigil(id, mode "wall" | "mark")
+│   ├── figures/                    SVG diagrams for notes
+│   │   ├── dis-columns.njk
+│   │   ├── slots-inherit.njk
+│   │   ├── slots-layout.njk
+│   │   └── slots-memory.njk
+│   ├── legacy/                   ← old shell, reviews only
+│   │   ├── base.njk              ~ includes meta.njk, drawer without Черновики
+│   │   ├── page.njk
+│   │   └── plain.njk
+│   └── note.njk                  − replaced by world/note.njk
+├── world/                        + new design's assets, laid out like cinema/
+│   ├── _src/                     + sources, never published
+│   │   ├── shell.css             ← main.css: what every page needs
+│   │   ├── room.css              ← rest of main.css + wall.css + g.css
+│   │   ├── cine.css              ← cine.css
+│   │   ├── note-groups.css       ← per-group colours from wall.css, notes-g.css, prose.css
+│   │   ├── notes.css             ← notes.css + notes-g.css: group page and note page
+│   │   ├── note.css              ← note-g.css
+│   │   ├── prose.css             ← prose.css
+│   │   ├── vt.css                ← vt.css
+│   │   ├── fog.js                ← main.js
+│   │   ├── wall.js               ← wall.js + g.js
+│   │   ├── cine.js               ← cine.js
+│   │   ├── smoke.js              ← smoke.js
+│   │   ├── note-group.js         ← notes.js + notes-g.js
+│   │   └── note.js               ← note-g.js
+│   └── bundles.njk               + joins _src/ → /world/{home,note-group,note}.{css,js}
+├── index.njk                     + → /: the room, markup inline (pitch index-g.html)
+├── index.md                      − replaced by index.njk
+├── notes/
+│   ├── groups.js                 + note groups: id, title, desc, tag, embers, done, enabled;
+│   │                               global data `noteGroups` (loaded in .eleventy.js), never published
+│   ├── notes.11tydata.js         + layout world/note.njk + group id from the folder name, for every note
+│   ├── index.njk                 + → /notes/: redirect to /#notes
+│   ├── index.md                  − replaced by index.njk
+│   ├── group.njk                 + → /notes/<id>/: group page, markup inline (pitch notes-python.html),
+│   │                               pagination over noteGroups
+│   ├── python/
+│   │   ├── assert.md
+│   │   ├── async.md
+│   │   ├── classmethod-staticmethod.md
+│   │   ├── disassemble.md
+│   │   ├── property.md
+│   │   ├── slots.md
+│   │   ├── tuple.md
+│   │   ├── python-gil.md         ← drafts/, still draft: true → embers "Тлеет"
+│   │   └── unlimited-ints.md     ← drafts/, still draft: true → embers "Тлеет"
+│   └── docker/
+│       └── docker-1.md           ← drafts/, published → /notes/docker/docker-1/
+├── drafts/                         drafts with no group tag: not built, not listed
+│   ├── drafts.11tydata.js        + permalink: false, eleventyExcludeFromCollections: true
+│   ├── docker_todo.md              (untracked)
+│   ├── python_todo.md              (untracked)
+│   └── python_async_todo.md        (untracked)
+├── cinema/
+│   ├── _src/
+│   │   ├── cinema.css
+│   │   ├── cinema.js
+│   │   ├── landing.css
+│   │   ├── landing.js
+│   │   ├── bebop.css
+│   │   ├── return.css            ← pitch cinema-g.css
+│   │   └── return.js             ← pitch cinema-g.js
+│   ├── bundles.njk               ~ parts as paths from src/; landing gains return.* and world/_src/vt.css
+│   ├── index.html                ~ rel=expect, data-back, key hint, .cine return block
+│   └── bebop/index.html
+├── reviews/                        on the old shell, as now
+│   ├── anime/{index,made-in-abyss,platinum-end}.md
+│   └── philosophy/seneca/letters-to-lucilius.md
+├── legacy/                       ← old shell's assets → /legacy/
+│   ├── styles.css                ← css/styles.css; recent-updates rules removed
+│   └── scripts.js                ← js/scripts.js
+├── fonts/                          Ysabeau Infant, shared by both shells
+├── images/                         gitignored, synced from library_static
+│   ├── world/room.jpg            + ← pitch img/room-g.jpg
+│   ├── world/wall.jpg            + ← pitch img/wall-g.jpg
+│   ├── cinema/…
+│   └── notes/…
+└── search-index.njk                old shell's drawer search
+```
+
+Outside `src/`:
+
+- `lib/filters.js` (+): the new filters, so Jest can import them.
+- `.eleventy.js` (~): `bundle` filter, `world/_src/` watch target, filters from `lib/`,
+  `addGlobalData('noteGroups', …)` for `src/notes/groups.js`; passthrough `src/css` +
+  `src/js` → `src/legacy`.
+- `test/links.test.js` (~): `src`/`url()` checks. `test/scripts.test.js` (~): requires
+  `../src/legacy/scripts.js`; Jest coverage glob `src/js/**` → `src/legacy/**`.
+- `test/filters.test.js`, `test/note-drafts.test.js` (+).
+
+Three places, three jobs: `_includes/world/` holds the shared HTML layouts, `world/_src/`
+the CSS/JS sources, and `world/bundles.njk` joins those sources into the files browsers
+load from `/world/`. `world/` follows Cinema's layout and rule: nothing under any `_src/`
+is published. Eleventy only builds `md`/`njk`, and no passthrough copy covers `world/_src/`.
+
+One-off pages keep their markup in the page itself (`index.njk`, `notes/group.njk`), the
+same way Cinema pages do; `_includes/world/` holds only what several pages share.
+
+The old shell lives in `legacy/` and `_includes/legacy/`. When reviews move to the new
+design, deleting those two folders is the whole cleanup.
+
+Everyday jobs:
+
+| Job | Where |
+|---|---|
+| Write a note | one `.md` file in `notes/<group>/` |
+| Add a draft for a group | same folder, `draft: true` |
+| Add a note group | `notes/groups.js`, `note-sigils.njk`, `note-groups.css`, the `notes/<id>/` folder |
+| Change how a note page looks | `_includes/world/note.njk`, `world/_src/note.css`, `prose.css` |
+| Change the room | `index.njk`, `world/_src/room.css` |
+| Retire the old shell | delete `legacy/` and `_includes/legacy/` |
+
+`prose.css` keeps a generic name: it styles markdown output, not notes as such, and
+reviews will use it once they move to the new design.
+
+## 5. CSS
+
+One CSS file per page type, joined at build time, the same way as Cinema. Rename
+`cinemaBundle` to `bundle`, resolve parts from `src/`, and add `addWatchTarget("src/world/_src/")`:
+
+```yaml
+# src/world/bundles.njk
+- out: home.css        parts: [shell, room, cine, note-groups, vt]
+- out: note-group.css  parts: [shell, notes, note-groups, vt]
+- out: note.css        parts: [shell, notes, note, prose, note-groups, vt]
+# each part is world/_src/<name>.css
+```
+
+`note-groups.css` comes after the files whose rules it recolours. `src/cinema/bundles.njk`
+switches to the same filter, with parts written as `cinema/_src/cinema.css`.
+
+| Pitch file | Becomes | Changes |
+|---|---|---|
+| `main.css` | `world/_src/shell.css` + start of `room.css` | split: whatever the group and note pages use (tokens, `@font-face`, `.hud`, `.kicker`, `.frameline`…; find it with the same unused-class scan, run against those pages) goes to `shell.css`, the rest (stage, panel, cards, glows, scrim, fog) to `room.css`. Drop the leftovers of other variants: `.hero--dim`, `.patch`, `.settings*`, `.switch`, `.stage__loop`. `@font-face` → `../fonts/` |
+| `wall.css` + `g.css` | `world/_src/room.css` | fold `g.css` into `wall.css` (G overrides D-F there); drop `.unblue`, `.settings`, the `wall-right.jpg` background; keep `.group--draft` (unused at launch, decision 5); `url()` → `../images/world/wall.jpg` |
+| group colours | `world/_src/note-groups.css` | every `[data-g="…"]` rule from `wall.css`, `notes-g.css`, and the Docker `--amber`/`--neon` swap from `prose.css`, in one file |
+| `cine.css` | `world/_src/cine.css` | none |
+| `vt.css` | `world/_src/vt.css` | none; also goes into the Cinema landing bundle |
+| `notes.css` + `notes-g.css` | `world/_src/notes.css` | drop `.band`, `.band__img`; backdrop `url()` → `../images/world/wall.jpg`; `.dim` → `.u-dim` (the class `titleHtml` already emits) |
+| `note-g.css` | `world/_src/note.css` | none |
+| `prose.css` | `world/_src/prose.css` | none |
+| `cinema-g.css` | `cinema/_src/return.css` | appended to the landing bundle |
+| `cinema-land.css/js` | — | were copies of the built bundle, gone |
+
+All bundles go to `/world/`, so every `url()` is relative to `/world/` (`../fonts/`,
+`../images/`) and works with or without the path prefix.
+
+The "Values that must stay in sync" in `FINAL_STATE.md` stay as they are. Folding files
+together makes most of these pairs end up in one file, so leave a comment at each one.
+
+## 6. JS
+
+| Pitch | Becomes | Changes |
+|---|---|---|
+| `main.js` | `world/_src/fog.js` | comment "только в варианте G" removed |
+| `wall.js` + `g.js` | `world/_src/wall.js` | merge (G is the only consumer) |
+| `cine.js` | `world/_src/cine.js` | none |
+| `smoke.js` | `world/_src/smoke.js` | none |
+| `notes.js` + `notes-g.js` | `world/_src/note-group.js` | merge; drop the fog-on-arrival code from `notes.js` (group pages have no `#fog` in G); fixes below |
+| `note-g.js` | `world/_src/note.js` | fixes below |
+| `cinema-g.js` | `cinema/_src/return.js` | appended to `landing.js` bundle; fixes below |
+
+Bundles: `home.js = [fog, wall, cine, smoke]`, `note-group.js = [note-group]`, `note.js = [note]`.
+
+Fixes needed because of pretty URLs and the prefix:
+
+- `notes-g.js` `fromWall = /index-g\.html/` and `cinema-g.js` `fromRoom = /index-g\.html/`
+  → compare the referrer's pathname with the pathname of the page's own `[data-back]` link.
+  `note-g.js` already works this way; copy its approach.
+- `note-g.js` stores `location.pathname.split('/').pop()` in `sessionStorage.note`,
+  and `notes-g.js` looks for `.row[href="<that>"]`. With `/notes/python/slots/` that's `''`.
+  Store `location.pathname` and match rows by `row.pathname`.
+- `sessionStorage.wall` = group id: no change. Keys used by G: `fog`, `wall`, `note`,
+  `cine`, `cineIn`. The old shell uses `localStorage` `theme`/`rail`/`accent`; the two
+  sets don't overlap.
+
+`legacy/scripts.js` stays as it is, for the old shell. New pages don't load it: the copy
+button lives in `note.js`, the term tooltip and `.more` need no JS, and table sorting is
+only used in reviews.
+
+## 7. Templates and data
+
+**`notes/groups.js`** (one entry per note group; colours live in `note-groups.css`).
+Not in `_data/`: it sits next to the group folders it lists. It still has to be global data,
+because the room (`src/index.njk`, outside `notes/`) draws the groups on the wall, so
+`.eleventy.js` loads it:
+
+```js
+eleventyConfig.addGlobalData('noteGroups', () => require('./src/notes/groups.js'));
+```
+
+It is never published: Eleventy builds only `md`/`njk` here, and no passthrough copies
+`notes/*.js`. Check in step 5 that `npm run dev` rebuilds on an edit to it; if not, add
+`addWatchTarget('src/notes/groups.js')`, or move it to `_data/noteGroups.js`.
+
+```js
+module.exports = [
+  { id: 'python', title: 'Python', desc: 'Изнутри: от tuple до async.', tag: 'Python', embers: 'Тлеет',  done: '…', enabled: true },
+  { id: 'docker', title: 'Docker', desc: 'Контейнеры без магии.',       tag: 'Docker', embers: 'В пути', done: '…', enabled: true },
+];
+```
+
+`tag` is the group's own tag. It's left out of the topic buttons and the row tags, and it
+decides where a draft lives (decision 4). Every Python note has `Python` as its first tag.
+`embers` is the heading of the drafts block; when a group has no drafts, the block isn't shown.
+
+**`notes/notes.11tydata.js`** replaces a data file per group:
+
+```js
+module.exports = {
+  layout: 'world/note.njk',
+  eleventyComputed: {
+    // notes/<group>/<file>.md → group id; index.njk and group.njk one level up get none
+    group: (data) => {
+      const parts = data.page.filePathStem.split('/');   // ['', 'notes', 'python', 'slots']
+      return parts.length === 4 ? parts[2] : undefined;
+    }
+  }
+};
+```
+
+`index.njk` and `group.njk` set their own `layout` in front matter, which wins over the
+directory data. A new group needs no data file: its folder name is its id.
+
+**New filters** in `lib/filters.js`:
+
+- `groupNotes(collection, id)` → published notes of the group, sorted by `upd_date` desc;
+  `groupDrafts` → the group's drafts (`draft: true` in its folder), same order.
+- `topics(notes, ownTag)` → `[{tag, count}]` for the side buttons, `все` first.
+- `toc(content)` → `[{id, text}]` from `<h2 id>` without `.u-kicker`. The TOC is built at build time
+  (the pitch has a static `<ol>`) instead of by `initTableOfContents`, so G does not need a
+  copy of `generateSlug` in the browser.
+- `shortDate` → `26 сен`; `isFresh(date)` → decision 7.
+
+**`index.njk`** (the room, layout `world/shell.njk`). Card numbers come from collections
+(`notes | length` + `plural`, reviews count); Cinema `1 разбор` stays hardcoded, like the
+Cinema counters. The wall lists `noteGroups`, and the sigils come from `note-sigils.njk`
+in `wall` mode (`pathLength`, `--w/--d`, `--done`). The `.glow` coordinates, `data-coal`,
+and the alt text are copied as is.
+
+**`notes/group.njk`** (layout `world/shell.njk`, pagination over `noteGroups`, permalink
+`/notes/{{ group.id }}/`). Rows: `row__t` = `titleHtml or title`, `row__d` = `lede`, tags =
+`tags` minus `tag`, meta = `reading_time or readingTime` + `shortDate`. Short notes with no
+lede and no tags get the low row. Embers = `groupDrafts`. The mark comes from
+`note-sigils.njk` in `mark` mode.
+
+**`_includes/world/note.njk`.** Pitch structure: `.sky`, `.progress`, `.hud` with the mark and
+`hud__gt`, `.nhead` (kicker, `h1` from `titleHtml or title`, meta), `article.note.prose`
+(`.lede` and `ul.tldr` from frontmatter, then `content`), `.side` (`.toc` from `toc`,
+back link). Not ported from the current `note.njk`: `.pager` and `.doc__foot`, because
+W/S/A cover navigation. Notes get this layout from `notes.11tydata.js`, so the note files
+themselves don't change.
+
+**`docker/docker-1.md`** (moved from `src/drafts/`): `title: История Docker`,
+`draft: true` removed, `tags` stay (`Docker`, `Linux`, `История`), plus `tg_desc` /
+`tg_pub_time`. The text starts with a `::: warn Черновик` callout: "check dates, kernel
+versions and names against primary sources before publishing". Do that check first, then
+remove the callout.
+
+**`meta.njk`.** OG/Telegram tags out of `legacy/base.njk`. Both shells include it, or note
+links in Telegram lose their previews.
+
+## 8. Cinema
+
+Port the `cinema-g.html` diff into `src/cinema/index.html`:
+
+- `<link rel="expect" blocking="render" href="#ready">` in `<head>`, `<i id="ready" hidden>`
+  at the end of `<body>`;
+- HUD `БИБЛИОТЕКА` gets `data-back` (href stays `../`) and the `hud__keys` hint `A в комнату`;
+- the `.cine` return block (bars + black) before the scripts;
+- landing bundles: CSS gains `cinema/_src/return.css` + `world/_src/vt.css`, JS gains
+  `cinema/_src/return.js`.
+
+The pitch-only changes are not ported: image paths and the Bebop row `href="#"`.
+
+The room's `.cine__frame` img is `{{ pathPrefix }}/images/cinema/index/hero.jpg`, the
+same file as the Cinema hero. It has to be: the transition relies on the two being
+identical, pixel for pixel.
+
+Bebop (`/cinema/bebop/`) gets no transition. Its `БИБЛИОТЕКА` → `../../` opens the room
+the normal way. That's fine for now.
+
+## 9. Work order
+
+Run `npm run build:check` after each step. Every step leaves the site working.
+
+1. **Images.** Export (section 3), push to `library_static`, copy into local `src/images/`.
+2. **Legacy move.** `_includes/{base,page,plain}.njk` → `_includes/legacy/`, `css/styles.css`
+   and `js/scripts.js` → `legacy/`; update `layout:` in reviews, passthrough, the `<link>`/`<script>`
+   in `base.njk`, `test/scripts.test.js` and the Jest coverage glob. The site looks the same.
+3. **Bundle filter.** Rename `cinemaBundle` to `bundle`, resolve parts from `src/`, add the
+   `world/_src/` watch target. Cinema builds byte-for-byte the same.
+4. **Sources.** Copy the G CSS/JS into `world/_src/`, apply the splits, merges and cuts
+   (sections 5-6), and add `world/bundles.njk`. Nothing uses the bundles yet.
+5. **Partials and data.** Add `meta.njk` (wire it into `legacy/base.njk` as well),
+   `notes/groups.js` (and its `addGlobalData`), `note-sigils.njk`, `world/shell.njk`, and the
+   new filters with unit tests.
+6. **Group pages.** `notes/group.njk`. Check `/notes/python/` against `notes-python.html`
+   by eye, side by side.
+7. **Note layout.** Add `notes/notes.11tydata.js` and `_includes/world/note.njk`.
+   Check `slots` against `note-slots.html` (the page that has every prose element) and
+   `async` against `note-async.html`. The old `_includes/note.njk` is now unused.
+8. **Phones** (decision 3): figures, TOC, key hint.
+9. **Home.** `src/index.njk` (the room), `/notes/` redirect. Remove `index.md` and the
+   recent-updates CSS from `legacy/styles.css`.
+10. **Cinema** (section 8). Check the whole room → Cinema → room loop by hand.
+11. **Drafts and Docker.** Move `python-gil` and `unlimited-ints` into `src/notes/python/`,
+    add `drafts.11tydata.js` (decision 4). Move `docker-1.md` to `src/notes/docker/` and publish it
+    (decision 5).
+12. **Old shell.** In `legacy/base.njk`, the drawer's notes group links to `/notes/python/` etc.
+    and the brand links to `/`; the `Черновики` group is removed. Remove `src/_includes/note.njk`.
+13. **Docs.** Turn `FINAL_STATE.md` into `docs/world.md`, updating paths and file names
+    (keep "Values that must stay in sync" and "Don't repeat" word for word). Add a pointer
+    to it in `DESIGN.md`, and rewrite the Architecture/Layout sections of `CLAUDE.md`.
+    Mark `pitch/v4/` as reference only, frozen.
+
+## 10. Tests
+
+- `links.test.js` only checks `href`. A missing `room.jpg`, bundle or font would still pass.
+  Extend it to `src="…"` and to `url(…)` in `_site/world/*.css` and `_site/cinema/*.css`.
+  Skip images when `_site/images/` is empty, so CI without the images repo still runs it.
+- It skips `href="#…"`, so a row left over from the pitch with `href="#"` won't fail it.
+  Add a check: no `a.row[href="#"]` in `_site/notes/`.
+- Draft placement (`test/note-drafts.test.js`): fail if a file in `src/drafts/` has a note
+  group's tag, or a file in a group folder lacks its group's tag. Otherwise a draft can
+  silently go missing from its embers.
+- Unit tests for the new filters (`groupNotes`, `topics`, `toc`, `shortDate`, `isFresh`).
+  They live in `.eleventy.js`, so move them into a `lib/filters.js` that Jest can import.
+- The G browser JS gets no unit tests (it's all DOM and timing); the hand checks below cover it.
+
+## 11. Checks before merging to `main`
+
+- Chrome, MacBook screen (1470x956): every transition from `FINAL_STATE.md`, both directions,
+  direct visits and back/forward.
+- **Safari and Firefox**: not opened so far. Safari has cross-document view transitions;
+  Firefox doesn't have `pagereveal` and takes the `pageshow` path. Both must at least
+  navigate correctly, even without the animation.
+- Production prefix: `NODE_ENV=production npm run build`, serve `_site/` under `/library/`,
+  and go through all the loops (referrer checks, `sessionStorage.note`, VT names).
+- Real iPhone (Safari): a note opened by direct link, a figure, the TOC, and room → wall → note
+  by taps (decision 3).
+- `prefers-reduced-motion`: every page reachable, nothing waits on an animation.
+- Short screen (< 560 px tall): known bar mismatch on return from Cinema. Accept it or fix it.
+
+## 12. Not migrated
+
+`index.html`, `index-b..f.html`, `e.css`, `f.css`, `loop.js`, `notes.html`, both prompt
+files, `note-docker-image.html`, `note-docker-layers.html`, and every image except the
+two in section 3. They stay in `pitch/v4/` (untracked or gitignored) as reference.
+
+## 13. TODO (not part of this migration)
+
+### Self-host JetBrains Mono
+
+Today every page loads it from Google Fonts: `shell.njk` (from the pitch, weights 400/500/700)
+and `legacy/base.njk` (400/500/600). Cinema has no link at all, so its mono text falls back to
+the system font. That makes three behaviours, plus a third-party request on every page.
+
+- Put the variable `JetBrainsMono[wght].woff2` (covers 100-800, one file) in `src/fonts/`,
+  next to Ysabeau. Add the italic file too: code comments are `font-style: italic`
+  (`prose.css`, `.t-c` in `styles.css`), and right now the browser fakes the slant.
+- `@font-face` in `world/_src/shell.css`, `legacy/styles.css`, `cinema/_src/cinema.css`;
+  `url()` is `../fonts/…` in all three, since all three get published one level below the root.
+- Remove the Google Fonts `<link>` and `preconnect` from `shell.njk` and `legacy/base.njk`.
+  Preload the upright file like Ysabeau.
+- Check: `.hud`/kicker letter-spacing and the code bar look the same (the metrics are
+  identical, but the weight steps change: 600 vs 700).
+- Add the licence (OFL) next to the file, like any self-hosted font.
+
+### A convenient view of drafts before publishing
+
+Now (decision 4) a group draft builds at its URL, but nothing links to it: the ember isn't a
+link, so you have to type the address. Drafts with no group tag aren't built at all. Neither
+can be read the way it will look on the site.
+
+Proposal: everything visible in `npm run dev`, nothing extra in production. Eleventy 2
+sets `process.env.ELEVENTY_RUN_MODE` (`serve` / `watch` / `build`), exposed as a global `dev`
+flag:
+
+- **Embers become links** in dev (to the draft's note page) and stay plain text in
+  production.
+- **The draft note page** gets a visible `черновик` mark in the header in dev, so a draft
+  can't be mistaken for a published note in a screenshot.
+- **Drafts with no group tag** are built in dev only (`drafts.11tydata.js`: `permalink` depends on
+  `dev`), with a dev-only `/drafts/` index listing every draft, tagged or not, by `upd_date`.
+- **Production**: decide whether group drafts still build at their URL (shareable for
+  review by link) or not at all (`permalink: false` when not `dev`). Default: not at all,
+  and dev is the place to read them.
+
+Publishing then stays a one-line change: remove `draft: true`. The note was already
+readable in dev with the final layout.
