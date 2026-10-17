@@ -1,0 +1,22 @@
+# Питч v4: в репозитории только вариант G (FINAL_STATE.md). Ниже то, что G не использует.
+
+# Картинки: исходники тяжелые, сжатые копии генерируются из них (FINAL_STATE.md)
+img/
+
+# Прежние варианты главной и их стили
+index.html
+index-b.html
+index-c.html
+index-d.html
+index-e.html
+index-f.html
+e.css
+f.css
+loop.js
+
+# Старая страница всех заметок, из G на нее ссылок нет
+notes.html
+
+# Промпты для генерации прежних вариантов
+index-f-rework-prompt.md
+wall-f-prompt.md

@@ -1,0 +1,174 @@
+/* Вариант G: уход из комнаты в Cinema (cine.js). Комната становится кадром фильма:
+   сверху и снизу въезжают черные полосы 2.39:1, в зале гаснет свет (фонари по одному
+   слева направо, кадр темнеет), и между полосами с мерцанием проектора загорается
+   первый кадр раздела - hero.jpg страницы Cinema, стоящий ровно так, как на ней.
+   Дальше браузер раскрывает его во весь экран (vt.css, имя cinema-frame).
+   Возврат - зеркало ухода: на странице Cinema въезжают полосы и кадр плавно гаснет
+   (cinema-g.css), комната открывается в тех же полосах на черном, черное сходит,
+   полосы уезжают, свет возвращается. Подключается после g.css. */
+
+.cine {
+  /* Высота героя (main.css) и полос. Полоса - то, что остается от экрана над и под
+     кадром 2.39:1, но не тоньше 8% и не толще 22% высоты: на узком экране кадр
+     во всю ширину был бы щелью. */
+  --H: max(100svh, 560px);
+  --bar: clamp(calc(var(--H) * .08), calc((var(--H) - 100vw / 2.39) / 2), calc(var(--H) * .22));
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+}
+
+.cine__bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: var(--bar);
+  background: #000;
+  z-index: 1;               /* над кадром, и в переходе тоже */
+  /* Возврат: полосы уезжают сразу, как только сходит черное */
+  transition: translate .5s cubic-bezier(.65, 0, .2, 1);
+}
+
+.cine__bar--top { top: 0; translate: 0 -100%; }
+.cine__bar--bot { bottom: 0; translate: 0 100%; }
+
+/* Кадр - во весь герой, полосы лежат поверх него (z-index выше). Картинка стоит точно
+   как .hero-img на странице Cinema (cover, scale 1.04 - начало ее drift), поэтому
+   снимок кадра совпадает с первым экраном той страницы, и на переходе полосам есть
+   что открыть: они уезжают, а под ними та же картинка.
+   Пробовали кадр только между полосами: тогда то, что открывали полосы, бралось
+   из новой страницы на середине растворения, и полоса не уезжала, а светлела.
+   Под картинкой черный экран: он гаснет первым, и лампа разгорается уже на черном,
+   комната сквозь полупрозрачный кадр не видна. */
+.cine__frame {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: #000;
+  opacity: 0;
+}
+
+.cine__frame img {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: var(--H);
+  object-fit: cover;
+  scale: 1.04;
+}
+
+/* Черное между полосами на возврате: комната открывается под ним, и оно сходит */
+.cine__black {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: var(--bar);
+  bottom: var(--bar);
+  background: #000;
+  opacity: 0;
+}
+
+/* ---------- уход ---------- */
+
+.is-cine .cine__bar { translate: 0 0; transition-delay: 0s; transition-duration: .5s; }
+
+/* Полосы уходят из кадра вместе с переходом, пока кадр раскрывается (vt.css).
+   Без имен они были частью снимка всей комнаты и просто растворялись вместе с ним. */
+.is-cine .cine__bar--top { view-transition-name: cine-bar-top; }
+.is-cine .cine__bar--bot { view-transition-name: cine-bar-bot; }
+
+/* Гаснет все, что поверх комнаты, включая HUD и строку внизу: в полосах остается
+   только кадр. Плавно, как текст на странице Cinema при возврате (cinema-g.css):
+   к .4s, раньше, чем въедут полосы (.5s), его уже нет.
+   Пробовали .3s на --ease: кривая резкая в начале, текст пропадал рывком. */
+.is-cine .panel,
+.is-cine .hud,
+.is-cine .frameline,
+.is-cine .keys { opacity: 0; pointer-events: none; transition: opacity .4s cubic-bezier(.45, 0, .55, 1); }
+
+/* Свет в зале гаснет: фонари по одному слева направо (в index-g.html они так и идут).
+   Мерцание (flicker) занимает opacity, поэтому гасим через filter.
+   Здесь - возврат: свет зажигается быстро и почти разом, на полутемной комнате
+   в полосах не задерживаемся. */
+.glow { transition: filter .35s var(--ease) calc(var(--i) * .03s); }
+.glow:nth-child(1) { --i: 0; }
+.glow:nth-child(2) { --i: 1; }
+.glow:nth-child(3) { --i: 2; }
+.glow:nth-child(4) { --i: 3; }
+.glow:nth-child(5) { --i: 4; }
+.glow:nth-child(6) { --i: 5; }
+.glow:nth-child(7) { --i: 6; }
+.glow:nth-child(8) { --i: 7; }
+
+.is-cine .glow {
+  filter: opacity(0);
+  transition-duration: .3s;
+  transition-delay: calc(.2s + var(--i) * .05s);
+}
+
+.stage__img { transition: filter .45s var(--ease); }
+.is-cine .stage__img {
+  filter: brightness(.36) saturate(.7);
+  transition-duration: .8s;
+  transition-delay: .2s;
+}
+
+/* Проектор: лампа разгорается мягко, с одной легкой просадкой, без передержки.
+   Пробовали резкое мерцание (скачки 0 -> .75 -> .12 -> .9, brightness до 1.8):
+   из темной комнаты оно било по глазам вспышкой.
+   Сначала (.6-.9s) между полосами становится черно, потом разгорается картинка.
+   Имя для перехода у кадра только здесь: в комнате его нет, и другие переходы
+   (к стене, к группам) его не видят. */
+.is-cine .cine__frame {
+  view-transition-name: cinema-frame;
+  opacity: 1;
+  transition: opacity .3s ease-in .6s;
+}
+
+.is-cine .cine__frame img { animation: cine-on .7s ease-in-out .9s both; }
+
+@keyframes cine-on {
+  0%   { opacity: 0;   filter: brightness(1.1); }
+  35%  { opacity: .5; }
+  50%  { opacity: .38; }
+  100% { opacity: 1;   filter: brightness(1); }
+}
+
+/* ---------- возврат ---------- */
+
+/* Комната открывается такой, какой ее оставила страница Cinema: полосы на месте,
+   между ними черно, свет погашен, кадра нет. Переходить не из чего, и имени для
+   перехода у кадра тоже нет: обе страницы в этот момент выглядят одинаково. */
+.is-cine-dark .cine__black { opacity: 1; }
+.is-cine-dark .cine__frame,
+.is-cine-dark .cine__bar { view-transition-name: none; }
+.is-cine-dark .cine__frame { opacity: 0; }
+.is-cine-dark .cine__frame,
+.is-cine-dark .cine__black,
+.is-cine-dark .cine__bar,
+.is-cine-dark .glow,
+.is-cine-dark .stage__img,
+.is-cine-dark .panel,
+.is-cine-dark .hud,
+.is-cine-dark .frameline,
+.is-cine-dark .keys { transition: none; }
+
+/* Черное сходит (.45s), и уже через .15s комната начинает разматываться: полосы
+   уезжают, свет и кадр разгораются, панель, HUD и строка внизу - последними.
+   Пробовали дождаться, пока черное сойдет совсем: комната полсекунды стояла
+   полутемной в полосах, это читалось как остановка. */
+.is-cine-lift .cine__black { opacity: 0; transition: opacity .45s ease-out; }
+
+.is-cine-back .panel,
+.is-cine-back .hud,
+.is-cine-back .frameline,
+.is-cine-back .keys { transition: opacity .5s var(--ease) .3s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .cine__bar, .glow, .stage__img { transition: none; }
+  .is-cine .cine__frame { transition: none; }
+  .is-cine .cine__frame img { animation: none; }
+  .is-cine-lift .cine__black { transition: none; }
+}

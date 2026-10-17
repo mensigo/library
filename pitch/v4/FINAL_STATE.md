@@ -12,10 +12,11 @@ and what ties them together.
 | `main.css` | Base: stage geometry (`--sw`, `--ratio: 1.7768`), panel, cards, glows, scrim, fog. Shared with all variants. |
 | `wall.css` | Camera pan, wall layer, group list, sigils, key hints. Shared with D, E, F. |
 | `g.css` | Variant G only, loaded after `wall.css`: wall image, wall mask, `.world` isolation, sigil position. |
-| `main.js` | Fog transition on the cards. A card with `data-soon` (Reviews, Cinema in G) says "в работе" in the fog, shows that text under the title and holds the fog 3.2 s instead of 2.3 s; the line (`#fogSoon`, styled in `g.css`) exists only in `index-g.html`. |
+| `main.js` | Fog transition on the cards. A card with `data-soon` (Reviews in G) says "в работе" in the fog, shows that text under the title and holds the fog 3.2 s instead of 2.3 s; the line (`#fogSoon`, styled in `g.css`) exists only in `index-g.html`. |
 | `wall.js` | Pan to the wall on `#notes`, W/A/S/D keys, group and sigil selection. |
 | `g.js` | Variant G only: the pause before leaving the wall for a group page, and the return to the wall. |
-| `vt.css` | Cross-document view transition between the wall and a group page. Loaded by both pages. |
+| `vt.css` | Cross-document view transitions: wall and group page, group page and note, room and Cinema. Loaded by every page of G. |
+| `cine.css`, `cine.js` | Variant G only: the room turns into a film frame before Cinema opens, and back. |
 | `smoke.js` | Smoke on the `#smoke` canvas. Only the wisp from the coals runs (`data-exhale="off"`). |
 | `img/room-g.jpg` | The room frame, 1672x941. |
 | `img/wall-g.jpg` | The wall, 2688x1152. |
@@ -61,6 +62,72 @@ What differs on Docker pages:
   like the crates in the sigil (`notes-g.css`). The "В пути" (drafts) embers stay round.
 - The small mark in the note's breadcrumbs needs `.hud .mark__line` (`note-g.css`): the
   whale is drawn with `mark__line`, not `mark__brush`.
+
+`cinema-g.html` is the target of the Cinema card: a copy of `src/cinema/index.html` with
+pitch paths, `href="index-g.html"` in the HUD and the Bebop row on `href="#"`. It loads
+`cinema-land.css` and `cinema-land.js`, copies of the built `/cinema/landing.*` bundles
+(sources from `src/cinema/_src/`, font path changed to `../../src/fonts/`; regenerate
+after a change there, do not edit by hand), plus `cinema-g.css` (the view-transition name),
+`vt.css` and `cinema-g.js` (back to the room).
+
+## Room to Cinema
+
+- **Leaving** (`cine.js`, `cine.css`). The click holds the page for 1600 ms
+  (`.is-cine`): panel, key hints, HUD and the bottom line fade (.4 s ease-in-out), black 2.39:1 bars slide
+  in (`--bar`: what is left above and below a 2.39:1 frame, clamped to 8-22% of the
+  height), the eight lanterns go out one by one left to right (through `filter`, since
+  `flicker` owns `opacity`), the room dims to `brightness(.36)`. At 0.6-0.9 s the space
+  between the bars goes black (`.cine__frame` has a black background), so the room
+  never shows through the frame; at 0.9 s the picture on it comes up like a projector
+  lamp warming up (`cine-on`, .7 s: one soft dip, no overexposure). `LEAVE` in
+  `cine.js` = delay + duration of `cine-on`. Tried and rejected: a hard flicker with
+  `brightness(1.8)`, it flashed out of the dark room.
+- **The frame.** `.cine__frame` covers the whole hero under the bars (`z-index: 1` on the
+  bars) and holds `hero.jpg` cover, `scale: 1.04` (the start of the landing's `drift`),
+  so it is pixel for pixel the Cinema hero. Only the band between the bars is seen.
+- **Shared name** `cinema-frame`, forward only: `.is-cine .cine__frame` in the room,
+  `.hero` on the Cinema page, the same size on both. In `vt.css` both snapshots keep their
+  own size, centred, and the image pair clips them. The page's scrim and text fade in
+  over the frame. Tried and rejected: `object-fit: cover` on both snapshots (the old one
+  scales up, the new one does not, the frame doubles); a frame only between the bars
+  (what the bars uncovered came from the new page halfway through its fade, so the top
+  bar seemed to fade out rather than slide away).
+- **Bars and HUD in the transition.** `.is-cine` also names the bars `cine-bar-top` /
+  `cine-bar-bot`. They have no pair on the Cinema page, so `vt.css` slides their old
+  snapshots off the edge with the frame's timing (.9 s, same curve), uncovering the same
+  picture underneath. The Cinema `.hud` is named `cinema-hud` and fades in
+  last (.35 s from .55 s). Before this the bars sat in the root snapshot and just faded
+  with it, and the HUD showed in the new root, got covered by the opening frame and then
+  appeared a second time when the transition ended.
+- **Skipped transition fallback.** Chrome sometimes skips the transition (seen on the
+  first navigation in a freshly started browser). The new page then appears at once, and
+  the room's bars vanished with no motion. The room's click now sets
+  `sessionStorage.cineIn`; on `pagereveal` with no transition (or a skipped one),
+  `cinema-g.js` adds `.is-arriving` for two frames, so the Cinema page's own bars are in
+  place on the first frame and slide out (.5 s). The page holds first paint for its
+  scripts with `<link rel="expect" blocking="render">`, like the room.
+- **Returning** mirrors leaving. The HUD link, or A / Left / Escape (`cinema-g.js`, hint
+  `A в комнату` at the right of the HUD, hidden on touch), adds `.is-leaving` on the
+  Cinema page for 1200 ms: the same bars slide in over the page (`.cine` in
+  `cinema-g.html`, fixed, above the HUD; `--bar` repeats the room's formula) and the
+  hero text and scroll cue fade (.6 s ease-in-out; the page's `--ease` at .3 s cut
+  them off abruptly), leaving only the picture, then the
+  picture between them darkens to black (.7 s, like the lamp warming up in reverse).
+  `.hero` loses its name, nothing travels. Then `history.back()` if the page was opened
+  from the room, otherwise `sessionStorage.cine` + the link.
+  The room opens in the same picture (`.is-cine-dark`: bars, `.cine__black` between
+  them, lights off, no frame, no transitions). On a cache restore that happens in
+  `pagereveal`, before the first paint; on a direct visit in `cine.js` at load. The
+  view transition between two identical black screens is skipped (it held the black
+  for an extra .55 s). Two frames later `.is-cine-lift` starts fading the black (.45 s),
+  and 150 ms in (`LIFT`) `.is-cine-back` already unwinds the room: the bars slide out
+  (.5 s), the room brightens (.45 s), the lanterns come back almost together (.35 s,
+  .03 s apart), panel, HUD and bottom line last (.3 s delay). `.is-cine-lift` stays on
+  until the end, or the black would snap off mid-fade. Tried and rejected: waiting for
+  the black to clear first, the half-dark room in bars stood still for half a second. Without `pagereveal` (Firefox) all of this runs on
+  `pageshow`, after the first paint.
+  Tried and rejected: shrinking the Cinema hero back into the band with the view
+  transition, then fading the frame over the dark room.
 
 ## Wall to group page
 
@@ -152,6 +219,13 @@ Sizes stay the same: 1672x941 for the room, 2688x1152 for the wall.
   canvas (836x470).
 
 ## Not done, not checked
+
+- Room to Cinema was checked in headless Chrome only (1600x900, screencast frames, three
+  paths: forward, back by history, back by the HUD link on a direct visit). Not watched
+  in motion, not opened under 1100 px or in Safari/Firefox. Screens under 560 px tall:
+  the room's bars are computed from the 560 px hero, the Cinema page's from the
+  viewport, so they would not match on return. The smoke and projector beam from the
+  first sketch are not done.
 
 - Docker pages were checked as stills at 1600 px only. The wall to Docker and Docker to
   note transitions were not watched, and the pages were not opened under 1100 px.

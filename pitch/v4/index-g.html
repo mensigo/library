@@ -10,6 +10,7 @@
 <link rel="stylesheet" href="main.css">
 <link rel="stylesheet" href="wall.css">
 <link rel="stylesheet" href="g.css">
+<link rel="stylesheet" href="cine.css">
 <link rel="stylesheet" href="vt.css">
 <!-- Первый кадр ждет скриптов внизу страницы: при возврате со страницы группы
      камера уже должна стоять у стены, а знак - быть на ней -->
@@ -84,7 +85,7 @@
         <span class="card__d">Аниме и философия. С оценкой и вердиктом.</span>
         <span class="card__m"><b>3</b> обзора <i>→</i></span>
       </a>
-      <a class="card" href="#cinema" data-title="Cinema" data-soon="Разбор еще монтируется.">
+      <a class="card" href="cinema-g.html" data-title="Cinema" data-cine>
         <span class="card__k">03 / cinema</span>
         <span class="card__t">Cinema</span>
         <span class="card__d">Большие разборы с кадрами. Cowboy Bebop.</span>
@@ -125,6 +126,16 @@
     </span>
   </div>
 
+  <!-- Уход в Cinema (cine.js, cine.css): полосы 2.39:1 и окно между ними. В окне
+       hero.jpg страницы Cinema, стоит ровно как на ней; браузер раскрывает его во весь
+       экран (vt.css). Черное между полосами - для возврата из Cinema. -->
+  <div class="cine" aria-hidden="true">
+    <i class="cine__bar cine__bar--top"></i>
+    <div class="cine__frame"><img src="../../src/images/cinema/index/hero.jpg" alt=""></div>
+    <i class="cine__black"></i>
+    <i class="cine__bar cine__bar--bot"></i>
+  </div>
+
   <div class="frameline">
     <span>кальян дымит</span>
     <span>утро подождет</span>
@@ -145,6 +156,7 @@
 <script src="main.js"></script>
 <script src="wall.js"></script>
 <script src="g.js"></script>
+<script src="cine.js"></script>
 <script src="smoke.js"></script>
 <i id="ready" hidden></i>
 </body>

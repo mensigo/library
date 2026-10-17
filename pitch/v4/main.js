@@ -14,8 +14,9 @@
 
   document.querySelectorAll('.card').forEach(function (card) {
     card.addEventListener('click', function (e) {
-      // Карточка с data-pan не уходит в дым: камера уезжает к стене (wall.js)
-      if (card.hasAttribute('data-pan')) return;
+      // Карточка с data-pan не уходит в дым: камера уезжает к стене (wall.js),
+      // с data-cine - комната становится кадром фильма (cine.js, вариант G)
+      if (card.hasAttribute('data-pan') || card.hasAttribute('data-cine')) return;
       e.preventDefault();
       fogTitle.textContent = card.dataset.title;
       // Раздел еще не готов: дым говорит об этом и держится дольше, чтобы успеть прочитать
