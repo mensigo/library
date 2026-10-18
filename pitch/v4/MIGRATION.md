@@ -95,8 +95,8 @@ Deploy syncs `library_static:src/images/` → `src/images/` (`deploy.yml`), and
 sizes is `images/world/meta.md`.
 
 Done: the files are exported (upscaled to frame height 1280, AVIF + JPEG fallback,
-`FINAL_STATE.md` "Images and geometry") and copied into `library_static/src/images/world/`
-(not committed) and into local `src/images/world/`. The pitch already loads them from there.
+`FINAL_STATE.md` "Images and geometry"), committed and pushed to `library_static/src/images/world/`,
+and copied into local `src/images/world/`. The pitch already loads them from there.
 
 | Images repo | Size | Used by |
 |---|---|---|
@@ -112,11 +112,11 @@ On the site:
   `image-set(url("../images/world/wall.avif") type("image/avif"), url("../images/world/wall.jpg") type("image/jpeg"))`.
 - Preload: `<link rel="preload" as="image" href="{{ pathPrefix }}/images/world/wall.avif" type="image/avif">`.
 
-Sources go to the same repo **outside** `src/images/`, so the rsync never publishes them:
-`sources/world/` with `room-original.png`, `room-1280.png`, `wall-original.png`,
-`wall-1280.png`, and the recipe from `FINAL_STATE.md` in `sources/world/README.md`.
-`room.png` and `wall.png` (the originals) are staged in `library_static/src/images/world/`
-now: move them out before committing, or deploy publishes them.
+Sources sit next to them: `src/images/world/room.png` (1672x941) and `wall.png` (2688x1152),
+the generated originals the upscale starts from (recipe in `FINAL_STATE.md`). Committed together with them.
+No page loads them, and deploy's rsync skips them (`--exclude '/world/*.png'` in
+`deploy.yml`), so they never reach `src/images/` here or the site. Don't copy them in for
+`npm run dev` either.
 
 Not migrated: every other file in `pitch/v4/img/` (other room takes, toon/regen,
 `wall-f*`, `wall-right*`, `shisha-loop-draft.mp4`, comparison sheets, `wall-g-1152.*`).
@@ -425,8 +425,8 @@ the normal way. That's fine for now.
 
 Run `npm run build:check` after each step. Every step leaves the site working.
 
-1. **Images.** Exported and copied (section 3). Left: move the source PNGs to
-   `sources/world/` in `library_static`, commit and push there.
+1. **Images.** Done: exported, committed and pushed to `library_static` with the source
+   PNGs (section 3).
 2. **Legacy move.** `_includes/{base,page,plain}.njk` → `_includes/legacy/`, `css/styles.css`
    and `js/scripts.js` → `legacy/`; update `layout:` in reviews, passthrough, the `<link>`/`<script>`
    in `base.njk`, `test/scripts.test.js` and the Jest coverage glob. The site looks the same.

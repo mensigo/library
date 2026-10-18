@@ -12,6 +12,14 @@ this table records which image is used where and at what size.
 | home — wall (`.wall`); group and note pages — `.backdrop`, `<link rel=preload>` | `src/images/world/wall.avif` | 2987×1280, 244 KB |
 | same, fallback | `src/images/world/wall.jpg` | 2987×1280, 614 KB |
 
+Sources, not loaded by any page. Deploy skips them (`--exclude '/world/*.png'` in
+`deploy.yml`), so they are never published:
+
+| What | File | Size |
+|---|---|---|
+| room, generated original | `src/images/world/room.png` | 1672×941, 1.8 MB |
+| wall, generated original | `src/images/world/wall.png` | 2688×1152, 3.2 MB |
+
 Processing (full recipe in `pitch/v4/FINAL_STATE.md`, "Images and geometry"):
 
 - Upscaled from the generated originals (room 1672×941, wall 2688×1152) to height 1280:
