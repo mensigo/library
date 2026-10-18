@@ -1,0 +1,711 @@
+/* Комната (src/index.njk): стоп-кадр комнаты (room.avif, запасной room.jpg), панель
+   с карточками, огни, дым, переход в дым - и стена справа от кадра (wall.avif,
+   запасной wall.jpg), к которой уезжает камера по #notes: группы заметок и их знаки.
+   Картинки лежат в src/images/world/ (репозиторий картинок library_static), исходники
+   и экспорт описаны в docs, «Images and geometry». Левые 500 px стены - правые 500 px
+   кадра, пиксель в пиксель: если кадр меняется, эту вклейку надо обновить.
+   Раскладка стены: диван кончается у столба, дальше низкая книжная полка, пустая
+   стена, бумажные фонари, свиток и бамбук.
+   Цвета групп - в note-groups.css, переходы между страницами - в vt.css. */
+
+/* ---------- hero ---------- */
+
+.hero {
+  position: relative;
+  height: 100svh;
+  min-height: 560px;
+  overflow: hidden;
+}
+
+.stage {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: var(--sw);
+  aspect-ratio: 1672 / 941;
+  /* Слои сцены (дым, огни) лежат выше панели и иначе перехватывают клики по карточкам */
+  pointer-events: none;
+}
+
+.stage__img,
+.stage__smoke,
+.glows {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.glow {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  width: var(--d);
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 184, 96, .5), rgba(255, 138, 48, .2) 38%, transparent 68%);
+  mix-blend-mode: screen;
+  animation: flicker var(--t) linear var(--s) infinite;
+}
+
+/* Едва заметный отсвет (стекло колбы кальяна) */
+.glow--faint {
+  background: radial-gradient(circle, rgba(255, 184, 96, .14), rgba(255, 138, 48, .05) 40%, transparent 68%);
+}
+
+/* Огни и дым поверх кадра, но под стеной (z-index 4): она заходит на кадр */
+.glows, .stage__smoke { z-index: 3; }
+
+/* Неровный ритм: пламя то разгорается, то проседает, без заметного цикла */
+@keyframes flicker {
+  0%   { opacity: .72; scale: 1; }
+  8%   { opacity: .95; scale: 1.03; }
+  17%  { opacity: .55; scale: .97; }
+  23%  { opacity: .88; scale: 1.02; }
+  31%  { opacity: .66; scale: .98; }
+  44%  { opacity: 1;   scale: 1.05; }
+  52%  { opacity: .6;  scale: .97; }
+  61%  { opacity: .86; scale: 1.01; }
+  70%  { opacity: .7;  scale: .99; }
+  83%  { opacity: .97; scale: 1.04; }
+  91%  { opacity: .62; scale: .98; }
+  100% { opacity: .72; scale: 1; }
+}
+
+.scrim {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(to bottom, rgba(7, 6, 10, .6), transparent 26%),
+    linear-gradient(to top, rgba(7, 6, 10, .55), transparent 22%);
+}
+
+/* ---------- panel ---------- */
+
+.panel {
+  position: absolute;
+  top: clamp(76px, 13vh, 150px);
+  right: clamp(20px, 5vw, 84px);
+  /* Заголовок висит в дыму над кальяном, карточки — колонкой правее него,
+     чтобы не ложиться на сам кальян */
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 270px;
+  column-gap: 36px;
+  align-items: start;
+  width: min(720px, 52vw);
+  /* У стены панель отстает от камеры и гаснет */
+  transition: opacity .5s var(--ease), translate var(--pan-t) var(--pan-ease);
+}
+
+h1 .co { color: var(--acc); }
+
+/* ---------- cards ---------- */
+
+.cards {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: rgba(14, 11, 16, .44);
+  -webkit-backdrop-filter: blur(10px) saturate(1.2);
+  backdrop-filter: blur(10px) saturate(1.2);
+  color: inherit;
+  text-decoration: none;
+  transition: transform .35s var(--ease), border-color .35s var(--ease), background .35s var(--ease), box-shadow .35s var(--ease);
+  animation: drift 7s ease-in-out infinite;
+}
+
+.card:nth-child(2) { animation-delay: -2.3s; }
+.card:nth-child(3) { animation-delay: -4.6s; }
+
+@keyframes drift {
+  50% { translate: 0 -7px; }
+}
+
+.card:hover,
+.card:focus-visible {
+  transform: translateY(-6px);
+  border-color: var(--acc);
+  background: rgba(30, 20, 14, .6);
+  outline: none;
+}
+
+/* Выбранная карточка (W/S, курсор) светится теплым, как лампы в комнате */
+.card.is-active {
+  border-color: rgba(240, 169, 74, .6);
+  background: rgba(34, 22, 13, .58);
+  box-shadow:
+    0 0 38px rgba(255, 170, 80, .2),
+    inset 0 0 30px rgba(255, 170, 80, .08);
+}
+
+.card__k {
+  font: 500 10px/1 var(--mono);
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.card.is-active .card__k { color: var(--acc); }
+
+.card__t {
+  margin-top: 10px;
+  font-size: 23px;
+  font-weight: 600;
+  line-height: 1.1;
+}
+
+.card__d {
+  margin-top: 6px;
+  font-size: 15px;
+  line-height: 1.35;
+  color: var(--ink-2);
+}
+
+.card__m {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin-top: auto;
+  padding-top: 12px;
+  font: 500 11px/1 var(--mono);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.card__m b { color: var(--acc); font-size: 14px; }
+
+.card__m i {
+  margin-left: auto;
+  font-style: normal;
+  color: var(--ink);
+  transition: translate .35s var(--ease);
+}
+
+.card:hover .card__m i,
+.card.is-active .card__m i { translate: 4px 0; }
+
+/* ---------- fog transition ---------- */
+
+/* Дым накрывает все, включая подсказку по клавишам (.keys, z-index 4) */
+.fog {
+  position: fixed;
+  z-index: 6;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  opacity: 0;
+  background:
+    radial-gradient(90% 70% at 28% 62%, rgba(226, 205, 214, .96), transparent 70%),
+    radial-gradient(80% 80% at 74% 30%, rgba(150, 168, 178, .9), transparent 72%),
+    #2a2430;
+  transition: opacity .9s var(--ease);
+}
+
+.fog.on { opacity: 1; }
+
+.fog__inner {
+  text-align: center;
+  opacity: 0;
+  translate: 0 10px;
+  transition: opacity .5s var(--ease) .45s, translate .5s var(--ease) .45s;
+}
+
+.fog.on .fog__inner { opacity: 1; translate: 0 0; }
+
+.fog .kicker { color: #3a2c22; }
+
+.fog strong {
+  display: block;
+  margin-top: 12px;
+  font-size: clamp(44px, 8vw, 110px);
+  font-weight: 600;
+  line-height: 1;
+  color: #17121a;
+}
+
+/* Раздел в работе (data-soon на карточке, fog.js): строка под названием в дыму */
+.fog__soon {
+  margin: 20px 0 0;
+  font-size: clamp(17px, 1.5vw, 22px);
+  color: #3a2c22;
+}
+
+/* ---------- world: camera and wall ---------- */
+
+:root {
+  --edge: var(--sw);                                  /* правый край кадра в координатах мира */
+  --wall-w: calc(var(--sw) / var(--ratio) * 2.3333);  /* стена той же высоты, что кадр; 2987x1280. = --wall-w в notes.css */
+  /* Стена начинается ровно со столба (16.75% ее длины): кадр доходит до него своим
+     диваном, а дорисованный кусок дивана левее столба не показывается вовсе. */
+  --lap: calc(var(--wall-w) * .1675);
+  --wall-x: calc(var(--edge) - var(--lap));
+  /* Где встает камера: правый край экрана на 95% длины стены. Ваза и фонарик на полке
+     уходят левее списка групп, справа в кадр входит бамбук.
+     Синхронно с --cam-at в notes.css (.95, на узком .8), иначе фон страницы группы
+     прыгнет при переходе. */
+  --cam: calc(var(--wall-x) + var(--wall-w) * .95 - 100vw);
+  --pan-t: 1.7s;
+  --pan-ease: cubic-bezier(.65, 0, .2, 1);
+}
+
+/* Мир всегда свой слой. Без этого в комнате стена (z-index 4) вылезала поверх .scrim,
+   и ее ковер у правого края кадра был светлее затемненного пола, а с началом
+   проезда мир получал translate, стена уходила под .scrim и пол гас. */
+.world {
+  position: absolute;
+  inset: 0;
+  isolation: isolate;
+  transition: translate var(--pan-t) var(--pan-ease);
+}
+
+.at-wall .world { translate: calc(var(--cam) * -1) 0; }
+
+.wall {
+  position: absolute;
+  bottom: 0;
+  left: var(--wall-x);
+  width: var(--wall-w);
+  height: calc(var(--sw) / var(--ratio));
+  z-index: 4;                  /* выше слоев сцены, иначе кадр перекроет нахлест */
+  background: url("../images/world/wall.jpg") left center / cover no-repeat;
+  /* AVIF там, где браузер его понимает; без поддержки type() остается строка выше.
+     Так же в .backdrop (notes.css). */
+  background-image: image-set(url("../images/world/wall.avif") type("image/avif"), url("../images/world/wall.jpg") type("image/jpeg"));
+  /* Верх режется по левой грани столба жестко. Пол (нижние 15%) заходит на кадр:
+     левые 11% картинки стены на полу - это сам правый край кадра, пиксель в пиксель,
+     поэтому наложение в комнате не видно. Дальше, до столба, ковер кадра уже в самой
+     картинке перетекает в ковер стены, дорисованный как его продолжение. */
+  -webkit-mask-image:
+    linear-gradient(to right, transparent 16.7%, #000 16.7%),
+    linear-gradient(to right, transparent 4%, #000 10%);
+  mask-image:
+    linear-gradient(to right, transparent 16.7%, #000 16.7%),
+    linear-gradient(to right, transparent 4%, #000 10%);
+  -webkit-mask-size: 100% 85%, 100% 15.2%;
+  mask-size: 100% 85%, 100% 15.2%;
+  -webkit-mask-position: top, bottom;
+  mask-position: top, bottom;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+}
+
+/* ---------- sigils ---------- */
+
+/* Цвет ореола в анимациях задан переменной --c, а не через currentColor: с ним
+   браузер не умеет плавно переходить от кадра к кадру и ореол мигает скачком.
+   --done - когда дорисован последний штрих (задержки и длительности штрихов --w/--d
+   заданы в разметке знака, note-sigils.njk), до этого знак не дышит. Новому знаку
+   нужно свое значение (note-groups.css). */
+.sigil {
+  --c: var(--g-python);
+  --done: 1.6s;
+  position: absolute;
+  /* Пустая стена длиннее (до 72% длины) и ниже: полка поднимается до 61% высоты.
+     Знак стоит посередине между списком групп и фонарями и не задевает полку.
+     От низа: стена стоит на нижнем крае экрана, а сверху на широких окнах обрезана. */
+  left: calc(83.5% - 46.5vw + 160px);
+  bottom: 60svh;
+  width: min(42svh, 28vw);
+  translate: -50% 50%;
+  color: var(--g-python);
+  opacity: 0;
+  /* Ореол в покое: нижняя точка дыхания, ниже нее свечение не опускается */
+  filter: drop-shadow(0 0 16px color-mix(in srgb, var(--c) 70%, transparent));
+  transition: opacity .35s var(--ease);
+}
+
+.sigil path {
+  stroke: currentColor;
+  stroke-dasharray: 1 1.01;
+  stroke-dashoffset: 1;
+  /* Гаснет знак целиком, а штрихи сбрасываются уже невидимыми */
+  transition: stroke-dashoffset 0s .35s;
+}
+
+.sigil__brush { stroke-width: 15; }
+.sigil__line  { stroke-width: 5; }
+.sigil__thin  { stroke-width: 3.5; }
+
+.sigil__dot {
+  fill: var(--bg);
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: opacity 0s .35s;
+}
+
+.sigil.on { opacity: .92; }
+
+.sigil.on path {
+  stroke-dashoffset: 0;
+  transition: stroke-dashoffset var(--d, 1.25s) cubic-bezier(.5, 0, .3, 1) var(--w, 0s);
+}
+
+.sigil.on .sigil__dot {
+  opacity: 1;
+  transition: opacity .3s ease 1.3s;
+}
+
+/* ---------- wall ui ---------- */
+
+.at-wall .panel {
+  opacity: 0;
+  translate: -24vw 0;
+  pointer-events: none;
+}
+
+.wallui {
+  position: absolute;
+  z-index: 4;
+  top: clamp(76px, 13vh, 150px);
+  left: clamp(20px, 7vw, 110px);
+  width: min(320px, 26vw);
+  opacity: 0;
+  translate: 28px 0;
+  pointer-events: none;
+  transition: opacity .4s var(--ease), translate .6s var(--ease);
+}
+
+.at-wall .wallui {
+  opacity: 1;
+  translate: 0 0;
+  pointer-events: auto;
+  transition-delay: 1.1s;
+}
+
+/* Под списком групп оказываются ваза и фонарик на полке: приглушаем их тенью */
+.wallui::before {
+  content: "";
+  position: absolute;
+  inset: -50px -60px -70px -80px;
+  z-index: -1;
+  background: radial-gradient(closest-side, rgba(7, 6, 10, .7), transparent);
+  pointer-events: none;
+}
+
+.wallui h2 {
+  margin: 14px 0 0;
+  font-size: clamp(32px, 3.5vw, 54px);
+  font-weight: 600;
+  line-height: 1.02;
+  letter-spacing: -.01em;
+  white-space: nowrap;
+}
+
+.groups {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 26px;
+}
+
+/* Те же стеклянные карточки, что в комнате: темная подложка с размытием держит
+   текст на любом фоне - и на темной стене, и там, куда падает свет фонаря */
+.group {
+  --g: var(--g-python);
+  display: flex;
+  flex-direction: column;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: rgba(14, 11, 16, .56);
+  -webkit-backdrop-filter: blur(12px) saturate(1.2);
+  backdrop-filter: blur(12px) saturate(1.2);
+  color: inherit;
+  text-decoration: none;
+  outline: none;
+  transition: border-color .35s var(--ease), background .35s var(--ease), box-shadow .35s var(--ease);
+}
+
+/* Выбранная группа светится своим цветом, как выбранная карточка в комнате */
+.group.is-on {
+  border-color: color-mix(in srgb, var(--g) 62%, transparent);
+  background: rgba(24, 17, 14, .66);
+  box-shadow:
+    0 0 38px color-mix(in srgb, var(--g) 20%, transparent),
+    inset 0 0 30px color-mix(in srgb, var(--g) 8%, transparent);
+}
+
+/* Название ужато до своего текста, иначе при переезде на страницу группы оно растянется */
+.group__t {
+  align-self: flex-start;
+  font-size: clamp(26px, 2.4vw, 34px);
+  font-weight: 600;
+  line-height: 1.05;
+  transition: color .3s var(--ease);
+}
+
+.group.is-on .group__t { color: var(--g); }
+
+.group__d {
+  margin-top: 6px;
+  font-size: 16px;
+  color: var(--ink-2);
+}
+
+.group__m {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin-top: 12px;
+  font: 500 11px/1 var(--mono);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+
+.group__m b { color: var(--g); font-size: 14px; }
+
+.group__m i {
+  margin-left: auto;
+  font-style: normal;
+  color: var(--ink);
+  transition: translate .35s var(--ease);
+}
+
+.group.is-on .group__m i { translate: 4px 0; }
+
+/* Группа из одних черновиков: знак рисуется, но перейти пока некуда.
+   Название не глушим - на светлом фоне серое терялось; о черновике говорит пунктир. */
+.group--draft { cursor: default; border-style: dashed; }
+
+.back {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-top: 26px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: 500 11px/1 var(--mono);
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  cursor: pointer;
+  transition: color .25s var(--ease);
+}
+
+.back i { font-style: normal; transition: translate .35s var(--ease); }
+
+.back:hover,
+.back:focus-visible { color: var(--ink); outline: none; }
+
+.back:hover i { translate: -4px 0; }
+
+/* ---------- keys ---------- */
+
+.keys {
+  position: absolute;
+  z-index: 4;
+  left: 26px;
+  bottom: 18px;
+  font: 500 10px/1 var(--mono);
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.keys__set {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: opacity .4s var(--ease);
+}
+
+.keys__set span { margin: 0 14px 0 5px; }
+
+/* Оба набора лежат в одной точке, виден тот, что подходит месту */
+.keys__set--wall {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  white-space: nowrap;
+  opacity: 0;
+}
+
+.at-wall .keys__set--room { opacity: 0; }
+.at-wall .keys__set--wall { opacity: 1; transition-delay: 1.1s; }
+
+.keys kbd {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: rgba(14, 11, 16, .44);
+  font: inherit;
+  letter-spacing: 0;
+  color: var(--ink-2);
+  transition: color .16s, border-color .16s, box-shadow .16s;
+}
+
+/* Нажатая клавиша: приглушенная вспышка, на полтона тише акцента */
+.keys kbd.hit {
+  color: rgba(240, 169, 74, .78);
+  border-color: rgba(240, 169, 74, .5);
+  box-shadow: 0 0 8px rgba(240, 169, 74, .2);
+}
+
+@media (hover: none), (max-width: 1100px) {
+  .keys { display: none; }
+}
+
+/* ---------- leaving for a group page (wall.js, vt.css) ---------- */
+
+/* Что переезжает на страницу группы: знак выбранной группы (sigil ↔ .mark в notes.css)
+   и ее название (group-title ↔ .head h1 в notes.css). */
+.sigil.on { view-transition-name: sigil; }
+.group.is-on .group__t { view-transition-name: group-title; }
+
+/* Пауза перед уходом: остальное гаснет */
+.wallui h2,
+.wallui .kicker,
+.group,
+.back { transition-property: opacity, border-color, background, box-shadow, color; }
+
+.is-going .wallui h2,
+.is-going .group:not(.is-going),
+.is-going .back { opacity: .22; transition-duration: .35s; }
+
+/* Дорисованный знак дышит: ореол за ним мерно разгорается и спадает, пока группа
+   выбрана. */
+.sigil.on { animation: sigil-breathe 3.2s ease-in-out var(--done) infinite; }
+
+@keyframes sigil-breathe {
+  0%, 100% { filter: drop-shadow(0 0 16px color-mix(in srgb, var(--c) 70%, transparent)); }
+  50%      { filter: drop-shadow(0 0 19px color-mix(in srgb, var(--c) 95%, transparent)); }
+}
+
+/* Импульс перед уходом: ореол сначала гаснет совсем, затем один раз вспыхивает
+   (разгорается и втягивается обратно в линию). Сам знак цвета не меняет. На страницу
+   группы он переезжает уже без ореола.
+   Длительность (.35s, и у sigil-blink тоже) = пауза перед уходом в wall.js (350 мс). */
+.is-going .sigil.on { animation: sigil-pulse .35s ease-in-out forwards; }
+
+@keyframes sigil-pulse {
+  0%   { filter: drop-shadow(0 0 16px color-mix(in srgb, var(--c) 70%, transparent)); }
+  30%  { filter: drop-shadow(0 0 0 color-mix(in srgb, var(--c) 0%, transparent)); }
+  65%  { filter: drop-shadow(0 0 17px color-mix(in srgb, var(--c) 95%, transparent)); }
+  100% { filter: drop-shadow(0 0 0 color-mix(in srgb, var(--c) 0%, transparent)); }
+}
+
+/* На вспышке знак моргает: глаз сжимается в щелку и раскрывается обратно. Закрыт он
+   в тот же момент, когда ореол ярче всего (65%). */
+.is-going .sigil.on .sigil__dot { animation: sigil-blink .35s ease-in-out; }
+
+@keyframes sigil-blink {
+  0%, 40%, 90%, 100% { scale: 1 1; }
+  65%                { scale: 1 .1; }
+}
+
+/* Возврат со страницы группы: знак стоит на стене сразу, без рисования */
+.is-instant .sigil,
+.is-instant .sigil path,
+.is-instant .sigil__dot { transition: none !important; }
+
+/* ---------- narrow screens ---------- */
+
+@media (max-width: 1100px) {
+  .stage {
+    left: calc(var(--sw) * -.05);
+    -webkit-mask-image: linear-gradient(to bottom, transparent, #000 28%);
+    mask-image: linear-gradient(to bottom, transparent, #000 28%);
+  }
+
+  .panel {
+    display: block;
+    top: 58px;
+    left: 0;
+    right: 0;
+    width: auto;
+  }
+
+  .panel__head { margin: 0 16px; }
+
+  h1 { font-size: clamp(32px, 6vw, 48px); }
+
+  /* На телефоне три карточки не помещаются в ряд — здесь карусель уместна */
+  .cards {
+    flex-direction: row;
+    gap: 10px;
+    margin-top: 20px;
+    padding: 0 16px 8px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+  }
+
+  .cards::-webkit-scrollbar { display: none; }
+
+  .card {
+    flex: 0 0 min(68%, 280px);
+    min-height: 150px;
+    scroll-snap-align: start;
+    animation: none;
+  }
+
+  /* Кадр на узком экране сдвинут влево на 5% своей ширины (.stage выше).
+     Камера встает так, что фонари висят у правого края, а слева от них пустая стена.
+     Синхронно с --cam-at в notes.css. */
+  :root {
+    --edge: calc(var(--sw) * .95);
+    --cam: calc(var(--wall-x) + var(--wall-w) * .8 - 100vw);
+  }
+
+  /* Как и кадр, стена сверху растворяется в фоне под текстом; срез по столбу идет
+     на всю высоту */
+  .wall {
+    -webkit-mask-image: linear-gradient(to right, transparent 16.7%, #000 16.7%), linear-gradient(to bottom, transparent, #000 28%);
+    mask-image: linear-gradient(to right, transparent 16.7%, #000 16.7%), linear-gradient(to bottom, transparent, #000 28%);
+    -webkit-mask-size: auto;
+    mask-size: auto;
+    -webkit-mask-position: 0 0;
+    mask-position: 0 0;
+    -webkit-mask-composite: source-in;
+    mask-composite: intersect;
+  }
+
+  .at-wall .panel { translate: -60vw 0; }
+
+  .wallui {
+    top: 58px;
+    left: 16px;
+    right: 16px;
+    width: auto;
+  }
+
+  .wallui::before { display: none; }
+
+  .sigil {
+    left: calc(80% - 66vw);
+    bottom: 38svh;
+    width: min(24svh, 52vw);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --pan-t: .01s; }
+  .card, .glow { animation: none; }
+  .fog, .fog__inner { transition-duration: .01s; transition-delay: 0s; }
+  .at-wall .wallui { transition-delay: 0s; }
+  .sigil.on path { transition-duration: .01s; transition-delay: 0s; }
+  .sigil.on .sigil__dot { transition-delay: 0s; }
+
+  .sigil.on,
+  .is-going .sigil.on,
+  .is-going .sigil.on .sigil__dot { animation: none; }
+}

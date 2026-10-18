@@ -1,0 +1,74 @@
+/* Переход между стеной (комната, src/index.njk) и страницей группы (/notes/<группа>/).
+   Подключается на обеих страницах: браузер сам сводит элементы с одинаковым
+   view-transition-name. Имена раздаются в room.css и notes.css:
+   sigil - знак группы, group-title - ее название.
+   Между страницей группы и заметкой те же два имени уводят знак и название группы
+   в крошки, и добавляется еще одно из notes.css и note.css: note-title - название
+   заметки.
+   Из комнаты в Cinema (/cinema/) едет кадр cinema-frame (cine.css ↔ .hero в
+   cinema/_src/return.css), а черные полосы cine-bar-top и cine-bar-bot (cine.css)
+   уходят за край. HUD Cinema (cinema-hud, return.css) появляется последним.
+   Последняя часть каждого бандла, в том числе бандла лендинга Cinema.
+   Где переходов между документами нет, страница просто открывается: фон у обеих
+   один и тот же, поэтому место не меняется. */
+
+@view-transition { navigation: auto; }
+
+/* Все, что без имени (список групп, строки заметок, затемнение стены), перетекает */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: .55s;
+  animation-timing-function: cubic-bezier(.2, .7, .2, 1);
+}
+
+/* Знак и название едут тем же ходом, что и камера к стене */
+::view-transition-group(sigil),
+::view-transition-group(group-title) {
+  animation-duration: .8s;
+  animation-timing-function: cubic-bezier(.65, 0, .2, 1);
+}
+
+/* Название заметки едет чуть быстрее: путь у него короче */
+::view-transition-group(note-title) {
+  animation-duration: .7s;
+  animation-timing-function: cubic-bezier(.65, 0, .2, 1);
+}
+
+/* Кадр Cinema: из комнаты, где он стоит под черными полосами (cine.css), в первый
+   экран страницы Cinema (cinema/_src/return.css). Обратно он не едет: Cinema гаснет в полосах
+   сама, и комната открывается в том же виде. Размер у кадра на обеих страницах один,
+   картинка одна и на одном месте: полосы уезжают (ниже), а затемнение и текст
+   страницы проступают по ходу. Оба снимка стоят в своем размере по центру, а рамка
+   их обрезает - на случай, если высоты все же разойдутся.
+   Пробовали object-fit: cover на снимках: старый при этом растягивается,
+   новый нет, и на перекрестном растворении кадр двоится. */
+::view-transition-group(cinema-frame) {
+  animation-duration: .9s;
+  animation-timing-function: cubic-bezier(.65, 0, .2, 1);
+}
+
+::view-transition-image-pair(cinema-frame) { overflow: hidden; }
+
+::view-transition-old(cinema-frame),
+::view-transition-new(cinema-frame) {
+  top: 50%;
+  translate: 0 -50%;
+}
+
+/* Имена у полос есть только в комнате, пары на странице Cinema нет, поэтому снимок
+   не растворяется, а уезжает за край, открывая под собой ту же картинку кадра.
+   Тем же ходом и временем, что и кадр. */
+::view-transition-old(cine-bar-top) { animation: cine-bar-up .9s cubic-bezier(.65, 0, .2, 1) both; }
+::view-transition-old(cine-bar-bot) { animation: cine-bar-down .9s cubic-bezier(.65, 0, .2, 1) both; }
+@keyframes cine-bar-up   { to { translate: 0 -100%; } }
+@keyframes cine-bar-down { to { translate: 0 100%; } }
+
+/* HUD Cinema проявляется, когда полосы почти ушли, - как в комнате он погас, когда
+   они пришли. Без имени он был частью снимка страницы под кадром: проступал,
+   кадр, раскрываясь, его накрывал, а после перехода HUD появлялся еще раз. */
+::view-transition-new(cinema-hud) { animation: cine-hud-in .35s ease-out .55s both; }
+@keyframes cine-hud-in { from { opacity: 0; } }
+
+@media (prefers-reduced-motion: reduce) {
+  @view-transition { navigation: none; }
+}

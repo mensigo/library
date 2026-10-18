@@ -1,0 +1,42 @@
+/* Цвета групп заметок: на стене (знак, карточка группы), на странице группы и на
+   странице заметки (body[data-g]). Идет после частей, чьи правила перекрашивает
+   (room.css, notes.css, note.css, prose.css). Новая группа: свой цвет и блок ниже,
+   плюс запись в src/notes/groups.js и знак в note-sigils.njk. */
+
+:root {
+  --g-python: #f0a94a;   /* свет фонаря */
+  --g-docker: #4fd6c9;   /* неон из окна */
+}
+
+/* ---------- python ---------- */
+
+/* Знак и карточка на стене уже python по умолчанию (room.css) */
+body[data-g="python"] { --g: var(--g-python); }
+
+/* ---------- docker ---------- */
+
+/* --done: когда дорисован последний штрих знака Docker (его --w + --d в note-sigils.njk) */
+.sigil[data-g="docker"] { color: var(--g-docker); --c: var(--g-docker); --done: 2.4s; }
+.sigil[data-g="docker"] .sigil__dot { fill: currentColor; }
+.group[data-g="docker"] { --g: var(--g-docker); }
+
+body[data-g="docker"] { --g: var(--g-docker); }
+body[data-g="docker"] .mark__dot { fill: currentColor; }
+
+/* Метки - квадратики, как ящики в его знаке: свежая заметка в списке и пункты тезисов
+   на странице заметки (.tldr в note.css). Угольки черновиков («В пути») остаются
+   круглыми: это огонь, а не ящики. */
+body[data-g="docker"] .row--fresh .row__m span:last-child::before,
+body[data-g="docker"] .tldr li::before { border-radius: 1px; }
+
+/* Свет меняется местами. У Python ведет фонарь, а неон из окна - второй цвет; у Docker
+   ведет неон (--acc, цвет его знака на стене), а фонарь уходит во второй ряд.
+   Предупреждения остаются фонарем, советы и «да» - неоном, ключевые слова в коде -
+   неоном, строки - теплым светом фонаря (prose.css). */
+body[data-g="docker"] .prose {
+  --amber: #d9a35a;
+  --neon: var(--acc);
+}
+
+body[data-g="docker"] .prose .token.keyword { color: var(--neon); }
+body[data-g="docker"] .prose .token.string { color: #e2c393; }

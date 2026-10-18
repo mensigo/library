@@ -1,0 +1,551 @@
+/* Страница группы заметок (/notes/<группа>/) и общее с ней у страницы заметки:
+   стена за текстом, шапка со знаком, список, темы, черновики, возврат к стене.
+   Подключается после shell.css и берет оттуда токены, .hud, .kicker, .dot.
+   Фон - та же стена wall.avif (запасная .jpg), что в комнате, в том же месте, где
+   встает камера, поэтому при переходе со стены (vt.css) фон остается на месте.
+   Цвет группы (--g на body[data-g]) - в note-groups.css. */
+
+:root {
+  --wall-w: calc(var(--sw) / var(--ratio) * 2.3333);  /* = --wall-w в room.css */
+  --cam-at: .95;                                      /* = --cam в room.css: правый край экрана на 95% стены */
+}
+
+/* Акцент страницы - цвет группы: им светятся название, знак и все акценты */
+body { --acc: var(--g); --acc-soft: color-mix(in srgb, var(--g) 14%, transparent); }
+
+/* ---------- backdrop ---------- */
+
+.backdrop {
+  position: fixed;
+  z-index: -2;
+  bottom: 0;
+  right: calc(var(--wall-w) * (var(--cam-at) - 1));
+  width: var(--wall-w);
+  height: calc(var(--sw) / var(--ratio));
+  background: url("../images/world/wall.jpg") left center / cover no-repeat;
+  background-image: image-set(url("../images/world/wall.avif") type("image/avif"), url("../images/world/wall.jpg") type("image/jpeg"));  /* как .wall в room.css */
+}
+
+/* Стена темнеет под список: слева, где текст, сильнее */
+.shade {
+  position: fixed;
+  z-index: -1;
+  inset: 0;
+  background:
+    linear-gradient(to right, rgba(7, 6, 10, .5), transparent 70%),
+    rgba(7, 6, 10, .7);
+}
+
+/* ---------- head ---------- */
+
+.hud { z-index: 2; }
+.hud a { color: inherit; text-decoration: none; }
+.hud a:hover b, .hud a:focus-visible b { color: var(--acc); }
+
+/* Заголовок стоит там же, где у стены стоял список групп (.wallui в room.css) */
+.wrap {
+  max-width: 1320px;
+  margin: 0;
+  padding: clamp(76px, 13vh, 150px) clamp(20px, 5vw, 84px) 40px clamp(20px, 7vw, 110px);
+}
+
+.head {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  gap: clamp(18px, 2.4vw, 36px);
+}
+
+/* Название группы - пара group-title к .group.is-on .group__t в room.css */
+.head h1 {
+  width: fit-content;
+  font-size: clamp(44px, 5.4vw, 76px);
+  color: var(--g);
+  view-transition-name: group-title;
+}
+
+/* Знак группы - пара sigil к .sigil.on в room.css */
+.mark {
+  flex: none;
+  width: clamp(84px, 9vw, 132px);
+  aspect-ratio: 1;
+  margin-bottom: -6px;
+  color: var(--g);
+  opacity: .92;
+  filter: drop-shadow(0 0 14px color-mix(in srgb, currentColor 55%, transparent));
+  view-transition-name: sigil;
+}
+
+.mark path { stroke: currentColor; }
+.mark__brush { stroke-width: 15; }
+.mark__line  { stroke-width: 5; }
+.mark__thin  { stroke-width: 3.5; }
+.mark__dot   { fill: var(--bg); }
+
+/* ---------- layout ---------- */
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 270px;
+  column-gap: 64px;
+  align-items: start;
+  margin-top: 44px;
+}
+
+.side {
+  position: sticky;
+  top: 28px;
+  display: grid;
+  gap: 40px;
+}
+
+/* ---------- find ---------- */
+
+.find {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding-bottom: 14px;
+  font: 500 11px/1 var(--mono);
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.find input {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  font: 400 14px/1.4 var(--mono);
+  letter-spacing: 0;
+  outline: none;
+}
+
+.find input::placeholder { color: var(--ink-3); }
+.find input::-webkit-search-cancel-button { display: none; }
+
+.find kbd {
+  padding: 4px 7px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  font: inherit;
+  letter-spacing: 0;
+}
+
+.find:focus-within { color: var(--acc); }
+.find:focus-within kbd { border-color: var(--acc); }
+
+/* ---------- rows ---------- */
+
+.row {
+  position: relative;
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr) auto;
+  column-gap: 18px;
+  padding: 22px 0 24px;
+  border-top: 1px solid var(--line);
+  color: inherit;
+  text-decoration: none;
+}
+
+.row[hidden] { display: none; }
+
+#rows { border-bottom: 1px solid var(--line); }
+
+/* Уголек слева от строки: разгорается под курсором */
+.row::before {
+  content: "";
+  position: absolute;
+  top: -1px;
+  left: 0;
+  width: 0;
+  height: 1px;
+  background: var(--acc);
+  box-shadow: 0 0 10px var(--acc);
+  transition: width .45s var(--ease);
+}
+
+.row:hover::before,
+.row:focus-visible::before { width: 100%; }
+
+.row:focus-visible { outline: none; }
+
+.row__n {
+  padding-top: 9px;
+  font: 500 11px/1 var(--mono);
+  letter-spacing: .1em;
+  color: var(--ink-3);
+}
+
+.row__body { display: block; }
+
+.row__t {
+  display: block;
+  font-size: clamp(24px, 2.2vw, 30px);
+  font-weight: 600;
+  line-height: 1.1;
+  transition: color .3s var(--ease), translate .3s var(--ease);
+}
+
+.row:hover .row__t,
+.row:focus-visible .row__t {
+  color: var(--acc);
+  translate: 6px 0;
+}
+
+/* Подчеркивания в __slots__ и подобных названиях (titleHtml) */
+.row__t .u-dim { color: var(--ink-3); }
+
+.row__d {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  max-width: 62ch;
+  margin-top: 8px;
+  font-size: 16px;
+  line-height: 1.42;
+  color: var(--ink-2);
+}
+
+.row__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  margin-top: 12px;
+  font: 500 10px/1 var(--mono);
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.row__tags i { font-style: normal; }
+
+.row__m {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  padding-top: 8px;
+  font: 500 11px/1 var(--mono);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--ink-3);
+}
+
+.row__m b { color: var(--acc); font-size: 14px; }
+
+/* Обновлено недавно: дата подсвечена, рядом тлеет точка */
+.row--fresh .row__m span:last-child { color: var(--ink-2); }
+
+.row--fresh .row__m span:last-child::before {
+  content: "";
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  margin-right: 8px;
+  border-radius: 50%;
+  background: var(--acc);
+  box-shadow: 0 0 8px var(--acc);
+  vertical-align: 1px;
+}
+
+.empty {
+  margin: 28px 0 0;
+  color: var(--ink-3);
+}
+
+/* ---------- topics ---------- */
+
+.topics__list {
+  display: flex;
+  flex-direction: column;
+  margin-top: 12px;
+}
+
+.topic {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 0;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  background: none;
+  color: var(--ink-2);
+  font: inherit;
+  font-size: 16px;
+  text-align: left;
+  cursor: pointer;
+  transition: color .25s var(--ease);
+}
+
+.topic b {
+  font: 500 11px/1 var(--mono);
+  color: var(--ink-3);
+}
+
+.topic:hover,
+.topic:focus-visible { color: var(--ink); outline: none; }
+
+.topic[aria-pressed="true"] { color: var(--acc); }
+.topic[aria-pressed="true"] b { color: var(--acc); }
+
+/* ---------- embers ---------- */
+
+.embers ul {
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.embers li {
+  display: grid;
+  grid-template-columns: 7px minmax(0, 1fr);
+  column-gap: 12px;
+  align-items: baseline;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.embers .dot { translate: 0 -2px; }
+.embers li:nth-child(2) .dot { animation-delay: -1.1s; }
+.embers li:nth-child(3) .dot { animation-delay: -2.2s; }
+
+.embers__t {
+  font-size: 16px;
+  line-height: 1.25;
+  color: var(--ink-2);
+}
+
+.embers small {
+  grid-column: 2;
+  margin-top: 6px;
+  font: 500 10px/1 var(--mono);
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+/* ---------- foot ---------- */
+
+.frameline--foot {
+  position: static;
+  justify-content: flex-end;
+  margin-top: 72px;
+}
+
+/* ---------- arrival ---------- */
+
+/* Строки поднимаются по одной, пока знак доезжает со стены */
+@keyframes rise {
+  from { opacity: 0; translate: 0 16px; }
+}
+
+.arriving .sub,
+.arriving .find,
+.arriving .row,
+.arriving .side > * {
+  animation: rise .6s var(--ease) calc(.3s + var(--i, 0) * 55ms) backwards;
+}
+
+/* Знак приезжает со стены без ореола, свечение разгорается уже на месте */
+@keyframes glow-in {
+  from { filter: drop-shadow(0 0 0 color-mix(in srgb, var(--g) 0%, transparent)); }
+  to   { filter: drop-shadow(0 0 14px color-mix(in srgb, var(--g) 55%, transparent)); }
+}
+
+.arriving .mark { animation: glow-in .6s var(--ease) .8s backwards; }
+
+.arriving .find { --i: 1; }
+.arriving .row:nth-child(1) { --i: 2; }
+.arriving .row:nth-child(2) { --i: 3; }
+.arriving .row:nth-child(3) { --i: 4; }
+.arriving .row:nth-child(4) { --i: 5; }
+.arriving .row:nth-child(5) { --i: 6; }
+.arriving .row:nth-child(n + 6) { --i: 7; }
+.arriving .side > * { --i: 4; }
+
+/* ---------- selected row ---------- */
+
+/* Строка, выбранная с W/S (note-group.js), горит так же, как под курсором */
+.row.is-on { outline: none; }
+.row.is-on::before { width: 100%; }
+
+.row.is-on .row__t {
+  color: var(--acc);
+  translate: 6px 0;
+}
+
+/* Пока выбирают с клавиатуры, строка под курсором не горит: активна одна.
+   Класс снимается при первом движении мыши (note-group.js). */
+.by-keys .row { pointer-events: none; }
+
+/* ---------- leaving for a note ---------- */
+
+/* Название едет в заголовок заметки (note-title ↔ .nhead h1 в note.css): рамка по
+   тексту, иначе его сожмет по ширине */
+.row.is-open .row__t {
+  width: fit-content;
+  color: var(--acc);
+  translate: 6px 0;
+  view-transition-name: note-title;
+}
+
+/* Пауза перед уходом (note-group.js): гаснет все, кроме того, что поедет на страницу
+   заметки - названия открытой строки, названия группы и знака.
+   Длительность (.3s) = пауза перед уходом в note-group.js (300 мс). */
+.head .kicker,
+.sub,
+.find,
+.row,
+.side,
+.row__n,
+.row__d,
+.row__tags,
+.row__m { transition: opacity .3s var(--ease); }
+
+.is-going .head .kicker,
+.is-going .sub,
+.is-going .find,
+.is-going .side,
+.is-going .row:not(.is-open) { opacity: .2; }
+
+/* Линия выбора и черта над открытой строкой гаснут вместе с остальным */
+.row { transition: opacity .3s var(--ease), border-color .3s var(--ease); }
+.row::before { transition: width .45s var(--ease), opacity .3s var(--ease); }
+
+.is-going .row.is-open { border-color: transparent; }
+.is-going .row.is-open::before { opacity: 0; }
+
+.is-going .row.is-open .row__n,
+.is-going .row.is-open .row__d,
+.is-going .row.is-open .row__tags,
+.is-going .row.is-open .row__m { opacity: 0; }
+
+/* ---------- back ---------- */
+
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  justify-self: start;
+  font: 500 11px/1 var(--mono);
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: var(--ink-3);
+  transition: color .25s var(--ease);
+}
+
+.back i { font-style: normal; transition: translate .35s var(--ease); }
+
+.back kbd {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  margin-left: 6px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  font: inherit;
+  letter-spacing: 0;
+}
+
+.back:hover,
+.back:focus-visible { color: var(--ink); outline: none; }
+
+.back:hover i { translate: -4px 0; }
+
+/* ---------- narrow screens ---------- */
+
+@media (max-width: 1100px) {
+  /* Как в room.css: камера на узком экране встает на 80% стены, а стена кверху
+     растворяется в фоне */
+  :root { --cam-at: .8; }
+
+  .backdrop {
+    -webkit-mask-image: linear-gradient(to bottom, transparent, #000 28%);
+    mask-image: linear-gradient(to bottom, transparent, #000 28%);
+  }
+
+  .wrap { padding: 58px 16px 32px; }
+
+  .mark { width: 72px; }
+
+  .layout {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    margin-top: 28px;
+  }
+
+  /* Темы уезжают наверх лентой чипов, черновики остаются под списком */
+  .side { display: contents; }
+
+  .topics { order: -1; margin-bottom: 26px; }
+  .topics .kicker { display: none; }
+
+  .topics__list {
+    flex-direction: row;
+    gap: 8px;
+    margin: 0 -16px;
+    padding: 0 16px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .topics__list::-webkit-scrollbar { display: none; }
+
+  .topic {
+    flex: none;
+    gap: 8px;
+    padding: 8px 12px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    font-size: 15px;
+  }
+
+  .topic[aria-pressed="true"] {
+    border-color: var(--acc);
+    background: var(--acc-soft);
+  }
+
+  .find kbd { display: none; }
+
+  .row {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 18px 0 20px;
+  }
+
+  .row__n { display: none; }
+
+  .row__m {
+    flex-direction: row;
+    align-items: baseline;
+    gap: 16px;
+    padding-top: 12px;
+  }
+
+  .embers { margin-top: 44px; }
+
+  .frameline--foot { justify-content: flex-start; margin-top: 48px; }
+
+  .back { margin-top: 36px; }
+  .back kbd { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .arriving .sub,
+  .arriving .find,
+  .arriving .row,
+  .arriving .side > *,
+  .arriving .mark { animation: none; }
+
+  .head .kicker, .sub, .find, .row, .row::before, .row__t, .side,
+  .row__n, .row__d, .row__tags, .row__m { transition: none; }
+}

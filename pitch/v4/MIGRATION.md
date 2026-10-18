@@ -485,10 +485,14 @@ The tests from section 10 are spread over the steps that make them possible.
 
    In the browser (met):
    1. `/cinema/` and `/cinema/bebop/` look and work as before.
-3. **Sources.** Copy the G CSS/JS into `world/_src/`, apply the splits, merges and cuts
+3. **Sources.** Done. Copy the G CSS/JS into `world/_src/`, apply the splits, merges and cuts
    (sections 5-6), and add `world/bundles.njk`. Nothing uses the bundles yet.
+   Also done in this step: the group colours in `note-groups.css` are `--g-python` /
+   `--g-docker` on `:root`, and `body[data-g]` takes `--g` from them, so a colour is written
+   once. `video.stage__img` went with the other leftovers (the room has no video). The
+   `href="#"` guard in the row click handler is gone (rows always link; step 5 tests it).
 
-   Done when:
+   Done when (met):
    - Every `world/_src/` file in the tables of sections 5 and 6 exists. `cinema/_src/return.*`
      belong to step 9.
    - The cuts are gone: grepping `src/world/_src/` for `hero--dim`, `.patch`, `settings`,
@@ -503,7 +507,7 @@ The tests from section 10 are spread over the steps that make them possible.
    - `links.test.js` checks `src="…"` and `url(…)` (section 10) and passes; `_site/` outside
      `world/` is the same as before the step.
 
-   In the browser (no page uses the bundles yet):
+   In the browser (no page uses the bundles yet; met, checked over HTTP with `curl`):
    1. `/world/home.css` and `/world/note.js` open; `/world/_src/shell.css` is a 404.
    2. With `npm run dev` running, change a value in `src/world/_src/shell.css`, reload
       `/world/home.css`: the change is there. Undo it.
