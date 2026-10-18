@@ -95,7 +95,6 @@ Keep the reading width constrained. If a page needs wider content, add a modifie
 - `.cfg`, `.cfg__group`, `.seg` / `.seg__btn`, `.cfg__pick` / `.cfg__list` / `.cfg__opt`: settings popover.
 - `.totop`, `.skip-link`, `.u-sr`, `.u-mono`, `.u-dim` (muted inline text), `.u-kicker` (small mono caps label; on an `h2` it also opts the heading out of the TOC, the section counter, and the section count).
 - `.sortable`, `.sort-asc`, `.sort-desc`: sortable table headers.
-- `.recent-updates`, `.recent-update-*`, `.badge-review` / `.badge-note` / `.badge-draft`: the home page feed.
 - `.navlink--cinema` (with `.go`; `.is-soon` for a door whose target does not exist): the door into `/cinema/`, in the drawer directly under «Обзоры аниме». See the exception below.
 
 Before adding a new pattern, check whether one of these can be extended with a modifier.

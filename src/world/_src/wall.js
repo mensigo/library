@@ -19,7 +19,8 @@
   // Курсор и клавиши W/S двигают один и тот же выбор.
   var card = 0;
   var group = 0;
-  var drawTimer;
+  // Пока камера едет к стене, здесь таймер: знак ждет, когда она доедет
+  var drawTimer = null;
 
   function atWall() { return hero.classList.contains('at-wall'); }
 
@@ -36,6 +37,21 @@
     groups.forEach(function (g) { g.classList.toggle('is-on', g.dataset.g === name); });
   }
 
+  // Знак выбранной группы сразу, не дожидаясь камеры: выбор клавишами, уход, возврат
+  function draw(i) {
+    clearTimeout(drawTimer);
+    drawTimer = null;
+    pickGroup(i);
+  }
+
+  // Курсор на группе. Пока камера едет, группы проезжают под неподвижным курсором:
+  // тогда наведение только выбирает группу, а знак рисуется, когда камера доедет.
+  // Иначе он успевал дорисоваться на ходу.
+  function hover(i) {
+    if (drawTimer) group = i;
+    else pickGroup(i);
+  }
+
   function sync() {
     var wall = location.hash === '#notes';
     hero.classList.toggle('at-wall', wall);
@@ -43,9 +59,10 @@
     ui.inert = !wall;
     crumb.textContent = wall ? 'заметки' : 'главная';
     clearTimeout(drawTimer);
+    drawTimer = null;
     pickGroup(group, false);
     // Знак проявляется, когда камера уже доехала
-    if (wall) drawTimer = setTimeout(function () { pickGroup(group); }, 1300);
+    if (wall) drawTimer = setTimeout(function () { draw(group); }, 1300);
   }
 
   function leave() {
@@ -58,8 +75,7 @@
   // sigil-pulse и sigil-blink в room.css.
   function go(g, n) {
     if (hero.classList.contains('is-going')) return;
-    clearTimeout(drawTimer);
-    pickGroup(n);
+    draw(n);
     hero.classList.add('is-going');
     g.classList.add('is-going');
     setTimeout(function () { location.href = g.href; }, still ? 0 : 350);
@@ -71,8 +87,8 @@
   });
 
   groups.forEach(function (g, n) {
-    g.addEventListener('mouseenter', function () { clearTimeout(drawTimer); pickGroup(n); });
-    g.addEventListener('focus', function () { clearTimeout(drawTimer); pickGroup(n); });
+    g.addEventListener('mouseenter', function () { hover(n); });
+    g.addEventListener('focus', function () { hover(n); });
     g.addEventListener('click', function (e) {
       // Группа без заметок: знак рисуется, но перейти некуда
       if (g.getAttribute('aria-disabled') === 'true') {
@@ -116,7 +132,7 @@
 
     var step = k === 'w' ? -1 : k === 's' ? 1 : 0;
     if (atWall()) {
-      if (step) { clearTimeout(drawTimer); pickGroup(group + step); }
+      if (step) draw(group + step);
       else if (k === 'd') groups[group].click();
       else leave();
     } else {
@@ -125,10 +141,15 @@
     }
   });
 
-  // Возврат кнопкой «назад»: страница достается из кеша такой, какой с нее ушли
-  window.addEventListener('pageshow', function () {
+  // Возврат кнопкой «назад»: страница достается из кеша такой, какой с нее ушли.
+  // Метку возврата к стене (ниже) читает только свежая загрузка; из кеша она не нужна,
+  // но ее надо снять, иначе следующая загрузка с #notes покажет знак без рисования.
+  window.addEventListener('pageshow', function (e) {
     hero.classList.remove('is-going');
     groups.forEach(function (g) { g.classList.remove('is-going'); });
+    if (e.persisted) {
+      try { sessionStorage.removeItem('wall'); } catch (err) {}
+    }
   });
 
   window.addEventListener('hashchange', sync);
@@ -146,7 +167,7 @@
   if (from && location.hash === '#notes') {
     hero.classList.add('is-instant');
     groups.forEach(function (g, n) {
-      if (g.dataset.g === from) { clearTimeout(drawTimer); pickGroup(n); }
+      if (g.dataset.g === from) draw(n);
     });
     requestAnimationFrame(function () {
       requestAnimationFrame(function () { hero.classList.remove('is-instant'); });

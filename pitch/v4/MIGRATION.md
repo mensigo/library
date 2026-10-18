@@ -633,17 +633,40 @@ The tests from section 10 are spread over the steps that make them possible.
    4. `/notes/python/`: topics are a chip strip you swipe, rows are one column.
    5. Back at 1470x956: `slots`, `async` and `/notes/python/` look as they did after step 6.
    The real iPhone run stays in section 11.
-8. **Home.** `src/index.njk` (the room), `/notes/` redirect. Remove `index.md`, the
+8. **Home.** Done. `src/index.njk` (the room), `/notes/` redirect. Remove `index.md`, the
    `recentUpdates` collection (`index.md` is its only user) and the recent-updates CSS from
    `css/styles.css`.
+   Also done in this step: a `reviews` collection (published reviews, sorted by `title`)
+   counts the Reviews card. The room has `eleventyExcludeFromCollections`, like the group
+   pages, so `search-index.json` lost `Главная страница` and `Notes` (the two removed
+   `index.md`). `<title>` is `Библиотека`. The wall draws `noteGroups`: an `enabled: false`
+   group gets `.group--draft`, `aria-disabled` and `<embers> · N черновиков`, as in pitch D.
+   Docker reads `0 заметок` until step 10 publishes `docker-1`. `/notes/` is a bare page
+   (`layout: false`): `location.replace` so `/notes/` stays out of history, meta refresh
+   without JS, `noindex`. The `.recent-update*` / `.badge-*` line is gone from `DESIGN.md`,
+   and `CLAUDE.md` lists `reviews` instead of `recentUpdates`.
+   Two bugs ported from the pitch (it still has them) are fixed in `wall.js`:
+   - The groups slide in under a still cursor while the camera pans, and `mouseenter`
+     started the sign at once, so it was fully drawn on arrival. Now, while the camera is
+     on its way (`drawTimer` set), hovering only picks the group, and the sign starts when
+     the camera arrives.
+   - After `к стене` (`history.back()`, the room restored from cache) the `wall` mark stayed
+     in `sessionStorage`, and the next fresh load at `/#notes` showed the sign
+     already drawn. `pageshow` with `persisted` now clears it.
 
-   Done when:
+   Done when (met):
    - `src/index.md`, `src/notes/index.md` are gone; grepping `.eleventy.js` for
      `recentUpdates` and `src/css/styles.css` for the recent-updates classes finds nothing.
    - After `NODE_ENV=production npm run build`, `_site/notes/index.html` points to
      `/library/#notes`.
+   - Outside `index.html`, `notes/index.html`, `css/styles.css` and `search-index.json`,
+     `_site/` is the same as before the step.
 
-   In the browser:
+   In the browser (met, by headless Chrome over the DevTools protocol at 1470x956:
+   screenshots of `/` and `/#notes` next to the pitch's, and a scripted run of the clicks.
+   Checked by hand: the room → wall → group transitions for both groups with their sigils
+   (after the two fixes above), smoke and glows, the Reviews fog, keys, back/forward, and
+   the room's half of leaving for Cinema and coming back. The Cinema half is step 9):
    1. `/` side by side with `index-g.html`: room, cards, fog, smoke, glows match.
    2. The Notes card count equals the number of published notes; Reviews is "в работе".
    3. Pan to the wall: both groups with their sigils. Python → group page with the

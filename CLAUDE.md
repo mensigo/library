@@ -24,7 +24,7 @@ This is an [Eleventy](https://www.11ty.dev/) static site — a personal library/
 
 ### Key files
 
-- **`.eleventy.js`** — all Eleventy config: collections, filters, shortcodes, passthrough copies, and the markdown pipeline. Defines `anime`, `notes`, `pythonNotes`, `philosophyCategories`, `drafts`, `recentUpdates`, and `searchIndex` collections.
+- **`.eleventy.js`** — all Eleventy config: collections, filters, shortcodes, passthrough copies, and the markdown pipeline. Defines `anime`, `notes`, `pythonNotes`, `philosophyCategories`, `drafts`, `reviews`, and `searchIndex` collections.
 - **`src/_includes/`** — Nunjucks layouts: `base.njk` (shell), `note.njk` (notes), `page.njk` (reviews), `plain.njk` (index pages — no hero).
 - **`src/js/scripts.js`** — all client-side JS in one file. Top section exports pure utility functions (`applyTheme`, `highlightMatch`, `generateSlug`, `compareValues`, `resolvePalette`, `tocLinkClass`, `PALETTES`) for testability. Bottom section is browser-only initialization (`initTheme`, `initTableOfContents`, `initDrawer`, `initRail`, `initScrollSpy`, `initProgress`, `initCopy`, `initTerms`, `initTableSorting`, `initSearch`, `initConfig`, `initPalette`).
 - **`src/search-index.njk`** — generates `search-index.json` at build time from the `searchIndex` collection; consumed at runtime by Fuse.js for fuzzy search.

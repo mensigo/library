@@ -456,6 +456,13 @@ module.exports = function(eleventyConfig) {
             });
     });
 
+    // Опубликованные обзоры: их число на карточке «Обзоры» в комнате (src/index.njk)
+    eleventyConfig.addCollection("reviews", function(collection) {
+        return collection.getFilteredByGlob("src/reviews/**/*.md")
+            .filter(item => !item.inputPath.endsWith('index.md') && item.data.draft !== true)
+            .sort((a, b) => (a.data.title || '').toString().localeCompare((b.data.title || '').toString(), 'ru', { sensitivity: 'base' }));
+    });
+
     // Коллекция Python-заметок, отсортированная по title
     eleventyConfig.addCollection("pythonNotes", function(collection) {
         return collection.getFilteredByGlob("src/notes/python/*.md")
@@ -477,19 +484,6 @@ module.exports = function(eleventyConfig) {
                 const titleA = (a.data.title || '').toString();
                 const titleB = (b.data.title || '').toString();
                 return titleA.localeCompare(titleB, 'ru', { sensitivity: 'base' });
-            });
-    });
-
-    // Коллекция последних обновлений (по upd_date, включая черновики).
-    // При равной дате — по title, иначе порядок меняется от сборки к сборке.
-    eleventyConfig.addCollection("recentUpdates", function(collection) {
-        return collection.getAll()
-            .filter(item => item.data.upd_date)
-            .sort((a, b) => new Date(b.data.upd_date) - new Date(a.data.upd_date)
-                || (a.data.title || '').toString().localeCompare((b.data.title || '').toString(), 'ru', { sensitivity: 'base' }))
-            .map(item => {
-                item.data.categoryLabel = sectionLabel(item.url);
-                return item;
             });
     });
 
