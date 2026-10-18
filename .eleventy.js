@@ -311,9 +311,13 @@ module.exports = function(eleventyConfig) {
     // шаблоном src/cinema/bundles.njk — по одному файлу на страницу.
     eleventyConfig.addPassthroughCopy("src/cinema/**/*.html");
     eleventyConfig.addWatchTarget("src/cinema/_src/");
-    eleventyConfig.addFilter("cinemaBundle", (parts) => parts
-        .map(name => `/* ── ${name} ── */\n`
-            + fs.readFileSync(path.join(__dirname, "src/cinema/_src", name), "utf8"))
+    eleventyConfig.addWatchTarget("src/world/_src/");
+
+    // Склейка бандлов (src/cinema/bundles.njk, src/world/bundles.njk):
+    // части — пути от src/, например cinema/_src/cinema.css. Сами _src/ не публикуются.
+    eleventyConfig.addFilter("bundle", (parts) => parts
+        .map(name => `/* ── ${path.basename(name)} ── */\n`
+            + fs.readFileSync(path.join(__dirname, "src", name), "utf8"))
         .join("\n"));
 
     // Фильтр для читаемой даты
@@ -468,11 +472,13 @@ module.exports = function(eleventyConfig) {
             });
     });
 
-    // Коллекция последних обновлений (по upd_date, включая черновики)
+    // Коллекция последних обновлений (по upd_date, включая черновики).
+    // При равной дате — по title, иначе порядок меняется от сборки к сборке.
     eleventyConfig.addCollection("recentUpdates", function(collection) {
         return collection.getAll()
             .filter(item => item.data.upd_date)
-            .sort((a, b) => new Date(b.data.upd_date) - new Date(a.data.upd_date))
+            .sort((a, b) => new Date(b.data.upd_date) - new Date(a.data.upd_date)
+                || (a.data.title || '').toString().localeCompare((b.data.title || '').toString(), 'ru', { sensitivity: 'base' }))
             .map(item => {
                 item.data.categoryLabel = sectionLabel(item.url);
                 return item;
@@ -562,7 +568,9 @@ module.exports = function(eleventyConfig) {
             });
         });
 
-        return searchIndex;
+        // getAll() не даёт стабильного порядка, поэтому сортируем по title
+        return searchIndex.sort((a, b) =>
+            a.title.toString().localeCompare(b.title.toString(), 'ru', { sensitivity: 'base' }));
     });
 
     return {

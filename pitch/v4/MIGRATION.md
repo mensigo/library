@@ -24,7 +24,7 @@ Built markup works in G as is: `prose.css` already styles what `.eleventy.js` ou
 
 ## 1. Decisions first
 
-Decided, except 3 (phones), which is still open.
+Decided, except 3 (phones), which is still open. 8 was added during step 2.
 
 1. **Scope.** G covers `/`, `/notes/**` and the entrance to `/cinema/`. `/reviews/**` stays
    on the old shell (`base.njk` + `css/styles.css` + `js/scripts.js`, left where they are,
@@ -65,10 +65,19 @@ Decided, except 3 (phones), which is still open.
 6. **Global search is dropped on G pages.** The group filter covers notes;
    `search-index.json` still builds for the old shell's drawer.
 7. **Row order and numbers.** Rows are sorted by `upd_date` (newest first), as in the
-   pitch. `01..NN` is the position in that order, so the number of a note changes when
+   pitch, then by `title` when dates are equal (decision 8). `01..NN` is the position in that order, so the number of a note changes when
    another note is updated. The note's kicker `01 / python` uses the same number.
    "Fresh" (square/round marker) = `upd_date` within 45 days of the build date. It is
    computed at build time, so a note stays fresh until the first deploy after those 45 days.
+8. **Builds are deterministic: `title` breaks ties.** Eleventy's `getAll()` doesn't return
+   pages in a fixed order, so anything sorted only by date, or not sorted at all, could
+   come out in a different order on every build. Found in step 2: `assert` and `async`
+   (both 26 Sep) swapped on the home page, and `search-index.json` came out in a different
+   order on almost every build. Every list
+   the site outputs is sorted, and `title` (`localeCompare`, `'ru'`, `sensitivity: 'base'`,
+   as the other collections use) is the last key. Done in step 2 for `recentUpdates` and
+   `searchIndex`; `groupNotes` / `groupDrafts` follow it (section 7). This is what makes
+   "same as before the step" (`diff -r`) mean anything.
 
 ## 2. URL map
 
@@ -373,8 +382,8 @@ computed `undefined` could shadow the alias and break the group page permalinks.
 
 **New filters** in `lib/filters.js`:
 
-- `groupNotes(collection, id)` → published notes of the group, sorted by `upd_date` desc;
-  `groupDrafts` → the group's drafts (`draft: true` in its folder), same order.
+- `groupNotes(collection, id)` → published notes of the group, sorted by `upd_date` desc,
+  then `title` (decision 8); `groupDrafts` → the group's drafts (`draft: true` in its folder), same order.
 - `topics(notes, ownTag)` → `[{tag, count}]` for the side buttons, `все` first.
 - `toc(content)` → `[{id, text}]` from `<h2 id>` without `.u-kicker`. The TOC is built at build time
   (the pitch has a static `<ol>`) instead of by `initTableOfContents`, so G does not need a
@@ -459,16 +468,22 @@ The tests from section 10 are spread over the steps that make them possible.
    In the browser (met):
    1. `:8000/pitch/v4/index-g.html`: room and wall show; the Network tab loads `room.avif`
       and `wall.avif` from `src/images/world/`, nothing from `pitch/v4/img/`.
-2. **Bundle filter.** Rename `cinemaBundle` to `bundle`, resolve parts from `src/`, add the
-   `world/_src/` watch target. Cinema builds byte-for-byte the same.
+2. **Bundle filter.** Done. Rename `cinemaBundle` to `bundle`, resolve parts from `src/`, add the
+   `world/_src/` watch target. Cinema builds byte-for-byte the same. The comment header in
+   each bundle still names just the file (`/* ── cinema.css ── */`), so the output didn't change.
+   Also done in this step: `title` as the tie-breaker for `recentUpdates` and `searchIndex`
+   (decision 8).
 
-   Done when:
+   Done when (met):
    - `grep -r cinemaBundle .eleventy.js src/` finds nothing; `src/cinema/bundles.njk`
      writes its parts as `cinema/_src/…`.
-   - `diff -r` of `_site/` before and after shows nothing (Cinema included).
+   - `diff -r` of `_site/` before and after shows nothing (Cinema included). Met for
+     `_site/cinema/`. `index.html` and `search-index.json` differed only in order, because
+     those lists weren't sorted in a fixed way before the step (decision 8). With the
+     tie-breaker in place, two builds in a row are identical.
    - `addWatchTarget("src/world/_src/")` is in `.eleventy.js` (the rebuild itself is checked in step 3).
 
-   In the browser:
+   In the browser (met):
    1. `/cinema/` and `/cinema/bebop/` look and work as before.
 3. **Sources.** Copy the G CSS/JS into `world/_src/`, apply the splits, merges and cuts
    (sections 5-6), and add `world/bundles.njk`. Nothing uses the bundles yet.
