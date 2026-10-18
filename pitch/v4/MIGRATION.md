@@ -538,18 +538,27 @@ The tests from section 10 are spread over the steps that make them possible.
      order, own tag left out of `topics` with `все` first, `.u-kicker` `h2` skipped by `toc`,
      `26 сен`, and `isFresh` on both sides of 45 days.
 
-   In the browser:
+   In the browser (met):
    1. `/notes/python/slots/` and a review page still look as before; view source shows the
       `og:` tags in `<head>`.
-5. **Group pages.** `notes/group.njk`. Check `/notes/python/` against `notes-python.html`
+5. **Group pages.** Done. `notes/group.njk`. Check `/notes/python/` against `notes-python.html`
    by eye, side by side.
+   Also done in this step: the group page has `eleventyExcludeFromCollections`, so it
+   stays out of `search-index.json` and the old shell's lists. `<title>` is
+   `Python · заметки`; the kicker `01 / заметки` is the group's position in `groups.js`.
+   Where the site differs from the pitch, the data decides: `Assert` comes before `Async` and
+   `Classmethod / Staticmethod` before `Property` (decision 8), the topics also list
+   `Тесты` and `asyncio` (the pitch left them out), and `disassemble` reads in 7 min, not 8.
 
-   Done when:
+   `classmethod-staticmethod` and `property` had no `tags` and got `tags: [Python]`, so every
+   note in the folder carries its group's tag (section 7, `note-drafts.test.js` in step 10).
+
+   Done when (met):
    - `links.test.js` fails on any `a.row[href="#"]` in `_site/notes/` (section 10) and passes.
    - `_site/notes/python/index.html` loads `/world/note-group.{css,js}` and neither
      `css/styles.css` nor `js/scripts.js`.
 
-   In the browser (the first step with something new to see):
+   In the browser (met; the first step with something new to see):
    1. `/notes/python/` side by side with `notes-python.html`: layout, colours, mark, rows
       (including low rows), topic buttons and "к стене" match.
    2. Rows: every published Python note, newest `upd_date` first, numbered `01..NN`; fresh

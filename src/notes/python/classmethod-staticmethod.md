@@ -6,6 +6,9 @@ upd_date: 2026-06-22
 
 tg_desc: python-classmethod-staticmethod
 tg_pub_time: 2026-06-22
+
+tags:
+  - Python
 ---
 
 ## Интро

@@ -134,6 +134,31 @@ test('no missing src="…" files across all pages', () => {
   expect(broken).toHaveLength(0);
 });
 
+// The pitch's group pages had rows with href="#"; the dangling-link test skips
+// anchors, so a row that links nowhere needs its own check
+test('no a.row with an empty or "#" href in notes', () => {
+  const notesDir = path.join(SITE_DIR, 'notes');
+  if (!fs.existsSync(notesDir)) return;
+
+  const broken = [];
+
+  for (const file of collectHtmlFiles(notesDir)) {
+    const html = fs.readFileSync(file, 'utf8');
+    const page = '/' + path.relative(SITE_DIR, file);
+
+    for (const [tag] of html.matchAll(/<a\b[^>]*>/g)) {
+      if (!/\bclass="(?:[^"]*\s)?row(?:\s[^"]*)?"/.test(tag)) continue;
+      const href = (tag.match(/\bhref="([^"]*)"/) || [])[1];
+      if (href === undefined || href === '' || href.startsWith('#')) broken.push(`${page} → ${tag}`);
+    }
+  }
+
+  if (broken.length > 0) {
+    console.error('\nRows without a link:\n' + broken.map(l => '  ' + l).join('\n'));
+  }
+  expect(broken).toHaveLength(0);
+});
+
 test('no missing url(…) files in world and cinema bundles', () => {
   if (!fs.existsSync(SITE_DIR)) return;
 
