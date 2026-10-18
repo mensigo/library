@@ -568,18 +568,28 @@ The tests from section 10 are spread over the steps that make them possible.
    4. Click a row: the note opens (still the old shell); back returns to the group page.
    5. "к стене" goes to `/#notes`, which is still the old home until step 8.
    6. `/notes/docker/`: no rows, no embers, nothing broken (it fills in step 10).
-6. **Note layout.** Add `notes/notes.11tydata.js` and `_includes/world/note.njk`, and remove
+6. **Note layout.** Done. Add `notes/notes.11tydata.js` and `_includes/world/note.njk`, and remove
    `layout: note.njk` from every note in `src/notes/python/` (section 7). Check `slots` against `note-slots.html` (the page that has every prose element) and
-   `async` against `note-async.html`. The old `_includes/note.njk` is now unused.
+   `async` against `note-async.html`. Only the three drafts in `src/drafts/` still use the old
+   `_includes/note.njk`, until step 10 moves them.
+   The slots TOC has no "Чего в этой заметке нет" (a pitch-only section). Also done in this
+   step: async's headings got the pitch's ids (`## Интро {:#intro}` → `#intro`, `#coroutine`,
+   `#loop`, `#deeper`, `#when`). `prose.css` gained `.note-media`, the hand-written image
+   figure in `assert` that section 0 missed: only `css/styles.css` styled it, so its caption
+   ran together unstyled.
 
-   Done when:
+   Done when (met):
    - `grep -rl '^layout:' src/notes/python/` finds nothing.
    - The list of `_site/notes/**/index.html` is the same as before the step (no URL moved),
-     and every note page loads `/world/note.css`, none `css/styles.css`.
-   - The `<head>` of a note has the same OG/Telegram tags as before the step.
-   - Nothing in `src/` uses `_includes/note.njk` (grep for `note.njk` finds only `world/note.njk`).
+     and every note page loads `/world/note.css`, none `css/styles.css`. Outside the seven
+     note pages, `_site/` is the same as before the step.
+   - The `<head>` of a note has the same OG/Telegram tags as before the step. Only the
+     shell's own `charset`/`viewport` spelling differs.
+   - Nothing in `src/notes/` uses `_includes/note.njk`; grep for `note.njk` in `src/` finds
+     `world/note.njk` and the three drafts in `src/drafts/` (step 10).
+   - Each kicker number equals the note's row number on `/notes/python/`.
 
-   In the browser:
+   In the browser (met):
    1. `/notes/python/slots/` side by side with `note-slots.html`, element by element: code
       with highlighted and error lines, version badge, file name, `out`, callouts, figures,
       verdict, finale, footnotes, terms, tables.

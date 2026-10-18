@@ -1,7 +1,6 @@
 ---
 title: Кортеж
 reading_time: 20
-layout: note.njk
 
 upd_date: 2026-09-23
 

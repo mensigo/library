@@ -1,0 +1,84 @@
+---
+layout: world/shell.njk
+bundle: note
+---
+{#- Страница заметки (pitch note-slots.html). Раскладку и groupId дает
+    notes/notes.11tydata.js. Номер в kicker - номер строки заметки на странице
+    группы (groupNotes); у черновика его нет, kicker - только группа.
+    Оглавление собирается при сборке (фильтр toc), W/S/A и копирование - note.js. -#}
+{%- from "world/note-sigils.njk" import sigil -%}
+{%- set notes = collections.all | groupNotes(groupId) -%}
+<!-- Та же стена, что на странице группы, но только за шапкой заметки: она почти
+     погасла и уходит вверх вместе с шапкой, текст ниже лежит на ровном фоне. -->
+<div class="sky" aria-hidden="true">
+  <div class="backdrop"></div>
+  <div class="shade"></div>
+</div>
+
+<!-- Линия прочитанного -->
+<div class="progress" id="progress" aria-hidden="true"></div>
+
+<nav class="hud" id="bar" aria-label="Хлебные крошки">
+  <span class="dot"></span>
+  <a href="{{ pathPrefix }}/"><b>БИБЛИОТЕКА</b></a>
+  <span class="sep">/</span>
+  <a class="hud__opt" href="{{ pathPrefix }}/#notes">заметки</a>
+  <span class="sep hud__opt">/</span>
+  <!-- Знак и название группы со страницы группы: уменьшились и встали в крошки -->
+  <a class="hud__g" href="{{ pathPrefix }}/notes/{{ groupId }}/" data-back>
+    {{ sigil(groupId, "mark") }}
+    <span class="hud__gt">{{ groupId }}</span>
+  </a>
+  <span class="sep">/</span>
+  <span>{{ page.fileSlug }}</span>
+</nav>
+
+<main class="wrap">
+  <header class="nhead">
+    <span class="kicker">{% for n in notes %}{% if n.url == page.url %}{{ ("0" ~ loop.index).slice(-2) }} / {% endif %}{% endfor %}{{ groupId }}</span>
+    <h1>{% if titleHtml %}{{ titleHtml | safe }}{% else %}{{ title }}{% endif %}</h1>
+    <p class="meta"><span><b>{{ reading_time or (content | readingTime) }}</b> мин</span>
+      {%- if upd_date %}<span>{{ upd_date | shortDate }}</span>{% endif %}
+      {%- for g in noteGroups %}{% if g.id == groupId %}{% for t in (tags or []) | reject("equalto", g.tag) %}<i>{{ t }}</i>{% endfor %}{% endif %}{% endfor %}</p>
+  </header>
+
+  <div class="layout">
+    <article class="note prose">
+      {%- if lede %}
+      <p class="lede">{{ lede }}</p>
+      {%- endif %}
+      {%- if tldr %}
+
+      <ul class="tldr">
+        {%- for point in tldr %}
+        <li>{{ point | safe }}</li>
+        {%- endfor %}
+      </ul>
+      {%- endif %}
+
+{{ content | safe }}
+    </article>
+
+    <aside class="side">
+      {%- set sections = content | toc %}
+      {%- if sections | length %}
+      <nav class="toc" aria-label="Содержание">
+        <span class="kicker">Содержание</span>
+        <ol>
+          {%- for s in sections %}
+          <li><a href="#{{ s.id }}"><span>{{ ("0" ~ loop.index).slice(-2) }}</span>{{ s.text }}</a></li>
+          {%- endfor %}
+        </ol>
+        <p class="tockeys"><kbd>W</kbd><kbd>S</kbd> по разделам</p>
+      </nav>
+      {%- endif %}
+
+      <a class="back" href="{{ pathPrefix }}/notes/{{ groupId }}/" data-back><i>←</i> к списку <kbd>A</kbd></a>
+    </aside>
+  </div>
+
+  <div class="frameline frameline--foot">
+    <span>кальян дымит</span>
+    <span>утро подождет</span>
+  </div>
+</main>

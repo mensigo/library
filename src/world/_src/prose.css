@@ -268,6 +268,49 @@
   color: var(--acc);
 }
 
+/* Картинка, вставленная в заметку HTML-разметкой (assert): рамка как у .fig__frame,
+   но без полей, картинка до края. Подпись в голосе .fig figcaption. */
+.note-media {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin: 28px 0 0;
+}
+
+.note-media__image-wrapper {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(14, 11, 16, .5);
+  overflow: hidden;
+  line-height: 0;
+}
+
+.note-media__image {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* Иллюстрация-настроение: не должна перетягивать внимание с текста */
+.note-media--sm .note-media__image-wrapper,
+.note-media--sm .note-media__caption { max-width: 340px; }
+
+.note-media__caption {
+  font-size: 15px;
+  line-height: 1.45;
+  color: var(--ink-3);
+}
+
+.note-media__caption b {
+  margin-right: 12px;
+  font: 500 10px/1 var(--mono);
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--acc);
+}
+
 /* Краски схем из src/_includes/figures */
 .d-fill   { fill: rgba(243, 236, 228, .05); }
 .d-fill-2 { fill: rgba(7, 6, 10, .55); }

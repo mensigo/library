@@ -1,6 +1,5 @@
 ---
 title: Assert
-layout: note.njk
 reading_time: 5
 
 upd_date: 2026-09-26

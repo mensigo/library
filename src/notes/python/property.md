@@ -1,6 +1,5 @@
 ---
 title: Property
-layout: note.njk
 
 upd_date: 2026-06-22
 
