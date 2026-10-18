@@ -515,8 +515,6 @@ body { --acc: var(--g); --acc-soft: color-mix(in srgb, var(--g) 14%, transparent
     background: var(--acc-soft);
   }
 
-  .find kbd { display: none; }
-
   .row {
     grid-template-columns: minmax(0, 1fr);
     padding: 18px 0 20px;
@@ -536,6 +534,12 @@ body { --acc: var(--g); --acc-soft: color-mix(in srgb, var(--g) 14%, transparent
   .frameline--foot { justify-content: flex-start; margin-top: 48px; }
 
   .back { margin-top: 36px; }
+}
+
+/* Клавиши подсказываем только там, где есть клавиатура: правило то же, что у .keys
+   в room.css */
+@media (hover: none), (max-width: 1100px) {
+  .find kbd,
   .back kbd { display: none; }
 }
 

@@ -42,7 +42,10 @@
     heads.forEach(function (h, i) {
       if (h.getBoundingClientRect().top <= EDGE) at = i;
     });
-    links.forEach(function (a, i) { a.classList.toggle('is-on', i === at); });
+    // Оглавлений два (в колонке и свернутое на узком экране), поэтому ссылку ищем
+    // по id заголовка, а не по номеру
+    var on = at < 0 ? null : '#' + heads[at].id;
+    links.forEach(function (a) { a.classList.toggle('is-on', a.getAttribute('href') === on); });
   }
 
   window.addEventListener('scroll', onScroll, { passive: true });
@@ -79,6 +82,12 @@
   }
 
   backs.forEach(function (a) { a.addEventListener('click', leave); });
+
+  // Свернутое оглавление закрывается, как только выбран раздел. Закрываем до перехода
+  // по якорю, чтобы браузер считал положение заголовка уже без открытого списка.
+  Array.prototype.forEach.call(document.querySelectorAll('.toc--m a'), function (a) {
+    a.addEventListener('click', function () { a.closest('details').open = false; });
+  });
 
   // Кнопка в шапке блока копирует его код
   Array.prototype.forEach.call(document.querySelectorAll('.copy'), function (btn) {

@@ -8,6 +8,15 @@ bundle: note
     Оглавление собирается при сборке (фильтр toc), W/S/A и копирование - note.js. -#}
 {%- from "world/note-sigils.njk" import sigil -%}
 {%- set notes = collections.all | groupNotes(groupId) -%}
+{%- set sections = content | toc -%}
+{#- Один список на два оглавления: в боковой колонке и свернутое под шапкой на узком экране -#}
+{%- macro tocList(sections) %}
+        <ol>
+          {%- for s in sections %}
+          <li><a href="#{{ s.id }}"><span>{{ ("0" ~ loop.index).slice(-2) }}</span>{{ s.text }}</a></li>
+          {%- endfor %}
+        </ol>
+{%- endmacro -%}
 <!-- Та же стена, что на странице группы, но только за шапкой заметки: она почти
      погасла и уходит вверх вместе с шапкой, текст ниже лежит на ровном фоне. -->
 <div class="sky" aria-hidden="true">
@@ -43,6 +52,13 @@ bundle: note
   </header>
 
   <div class="layout">
+    {%- if sections | length %}
+    <details class="toc toc--m">
+      <summary><span class="kicker">Содержание</span><i>{{ sections | length }}</i></summary>
+      {{- tocList(sections) }}
+    </details>
+    {%- endif %}
+
     <article class="note prose">
       {%- if lede %}
       <p class="lede">{{ lede }}</p>
@@ -60,15 +76,10 @@ bundle: note
     </article>
 
     <aside class="side">
-      {%- set sections = content | toc %}
       {%- if sections | length %}
       <nav class="toc" aria-label="Содержание">
         <span class="kicker">Содержание</span>
-        <ol>
-          {%- for s in sections %}
-          <li><a href="#{{ s.id }}"><span>{{ ("0" ~ loop.index).slice(-2) }}</span>{{ s.text }}</a></li>
-          {%- endfor %}
-        </ol>
+        {{- tocList(sections) }}
         <p class="tockeys"><kbd>W</kbd><kbd>S</kbd> по разделам</p>
       </nav>
       {%- endif %}

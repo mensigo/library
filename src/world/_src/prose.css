@@ -131,6 +131,14 @@
 .copy.is-done .ico-copy { display: none; }
 .copy.is-done .ico-done { display: block; }
 
+/* Fence без языка выходит голым <pre> (схемы стека в tuple): прокручивается сам,
+   как код в .code */
+.prose pre { overflow-x: auto; }
+
+/* Длинный код в строке переносится, если иначе не помещается: break-word, а не
+   anywhere, чтобы не сужать ячейки таблиц */
+.prose :not(pre) > code { overflow-wrap: break-word; }
+
 .prose pre code {
   display: block;
   padding: 0;
@@ -587,7 +595,17 @@
   .split,
   .verdict { grid-template-columns: minmax(0, 1fr); }
 
-  .fig__frame { padding: 14px; }
+  /* Схема не сжимается мельче 720 px (подписи 9.5 становятся ~11 px), лишнее
+     прокручивается внутри рамки. Картинки (img) по-прежнему по ширине рамки. */
+  .fig__frame {
+    padding: 14px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: thin;
+    scrollbar-color: var(--line) transparent;
+  }
+
+  .fig__frame svg { min-width: 720px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

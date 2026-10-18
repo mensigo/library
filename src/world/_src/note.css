@@ -387,6 +387,41 @@ html {
 
 .tockeys kbd:last-of-type { margin-right: 6px; }
 
+/* Оглавление для узкого экрана: свернуто под шапкой, открывается касанием.
+   Список тот же, что в боковой колонке (note.njk), подсветку раздела ведет note.js. */
+.toc--m { display: none; }
+
+.toc--m summary {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding: 14px 0;
+  list-style: none;
+  cursor: pointer;
+}
+
+.toc--m summary::-webkit-details-marker { display: none; }
+
+.toc--m summary i {
+  font: 500 11px/1 var(--mono);
+  font-style: normal;
+  letter-spacing: .1em;
+  color: var(--ink-3);
+}
+
+.toc--m summary::after {
+  content: "+";
+  margin-left: auto;
+  font: 500 16px/1 var(--mono);
+  color: var(--ink-3);
+  transition: rotate .25s var(--ease);
+}
+
+.toc--m[open] summary::after { rotate: 45deg; }
+
+.toc--m ol { margin: 0 0 8px; }
+.toc--m li:last-child a { border-bottom: 0; }
+
 /* ---------- arrival ---------- */
 
 /* Название приезжает из строки списка, остальное поднимается следом сверху вниз */
@@ -394,11 +429,13 @@ html {
 .arriving .meta,
 .arriving .lede,
 .arriving .tldr,
+.arriving .toc--m,
 .arriving .note > section {
   animation: rise .6s var(--ease) calc(.35s + var(--i, 0) * 70ms) backwards;
 }
 
 .arriving .meta { --i: 1; }
+.arriving .toc--m,
 .arriving .lede { --i: 2; }
 .arriving .tldr { --i: 3; }
 .arriving .note > section { --i: 4; }
@@ -413,7 +450,20 @@ html {
   .note h2 { margin-top: 48px; }
 
   .h__n,
-  .toc { display: none; }
+  .toc:not(.toc--m) { display: none; }
+
+  .toc--m {
+    display: block;
+    margin-bottom: 30px;
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+  }
+}
+
+/* Клавиши подсказываем только там, где есть клавиатура: правило то же, что у .keys
+   в room.css */
+@media (hover: none), (max-width: 1100px) {
+  .tockeys { display: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -423,5 +473,8 @@ html {
   .arriving .meta,
   .arriving .lede,
   .arriving .tldr,
+  .arriving .toc--m,
   .arriving .note > section { animation: none; }
+
+  .toc--m summary::after { transition: none; }
 }

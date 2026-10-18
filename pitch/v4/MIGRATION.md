@@ -2,8 +2,8 @@
 
 Plan for moving pitch v4 variant G (`FINAL_STATE.md`) into `src/`. G replaces the home
 page, the notes section and the way into Cinema. Reviews stay on the current shell for now.
-Section 1 holds the decisions (all made except phones), section 9 the work order with a
-definition of done for each step.
+Section 1 holds the decisions, section 9 the work order with a definition of done for
+each step.
 
 ## 0. What we're merging
 
@@ -24,7 +24,7 @@ Built markup works in G as is: `prose.css` already styles what `.eleventy.js` ou
 
 ## 1. Decisions first
 
-Decided, except 3 (phones), which is still open. 8 was added during step 2.
+All decided. 8 was added during step 2; 3 (phones) was settled in step 7.
 
 1. **Scope.** G covers `/`, `/notes/**` and the entrance to `/cinema/`. `/reviews/**` stays
    on the old shell (`base.njk` + `css/styles.css` + `js/scripts.js`, left where they are,
@@ -32,8 +32,10 @@ Decided, except 3 (phones), which is still open. 8 was added during step 2.
    shell gets ported to G later, as its own migration.
 2. **URLs of published notes don't change.** `/notes/python/slots/` and the rest have been
    posted to Telegram (`tg_pub_time`). Only drafts may move.
-3. **Phones: open.** People open notes from Telegram, often on a phone. What the pitch does
-   at 390x844 now (Chrome phone emulation with touch; not checked on a real phone or in Safari):
+3. **Phones: figures scroll, TOC collapses under the header.** Decided in step 7: a figure
+   keeps a minimum width and scrolls inside its frame (full screen on tap may come later,
+   after the migration). People open notes from Telegram, often on a phone. What the pitch did
+   at 390x844 before step 7 (Chrome phone emulation with touch; not checked on a real phone or in Safari):
    - *Room*: title on top, then a strip of cards you swipe sideways (Cinema is off-screen
      to the right), the frame below cropped to the man and the window. No key hints.
    - *Wall* (`#notes`): the two groups stacked, the Python sigil drawn under them, then the shelf.
@@ -599,12 +601,31 @@ The tests from section 10 are spread over the steps that make them possible.
    5. W/S/A work; the copy button copies a code block.
    6. `/notes/python/` → a note → back: the group page finds the row again, as in the pitch.
    7. Open every other Python note once: nothing broken.
-7. **Phones** (decision 3): figures, TOC, key hint.
+7. **Phones** (decision 3): figures, TOC, key hint. Done.
+   - Figures: under 1100 px an SVG in `.fig__frame` keeps `min-width: 720px` and scrolls
+     inside the frame; 9.5 labels render at 11 px (desktop: 10.3). Images (`img`) still fit
+     the frame. To tune after the migration (no scroll cue yet, full screen on tap).
+   - TOC: `note.njk` renders the list once (`tocList` macro) into two places, the side
+     `.toc` and a `<details class="toc toc--m">` at the top of `.layout`, shown only under
+     1100 px, collapsed, with the section count. A tap on a section closes it before the
+     jump. `note.js` highlights the current section by heading id, since there are two lists.
+   - Key hints: `.tockeys`, `.find kbd` and `.back kbd` are hidden on
+     `(hover: none), (max-width: 1100px)`, the same rule as `.keys` in `room.css`. A touch
+     tablet above 1100 px keeps the docked TOC without the keys.
+   - Also done in this step: the page no longer scrolls sideways on a phone. `tuple`'s
+     language-less fences (bare `<pre>`, the stack diagrams) now scroll inside
+     (`.prose pre { overflow-x: auto }`), and a long inline `code` in `async` wraps
+     (`overflow-wrap: break-word`, not `anywhere`, so table cells don't shrink).
 
-   Done when:
+   Checked with headless Chrome over the DevTools protocol (390x844, mobile, touch,
+   `hover: none`): every Python note and both group pages are 390 px wide, no visible `kbd`.
+
+   Done when (met):
    - Nothing beyond `build:check`: this step is checked in the browser.
 
-   In the browser (DevTools device toolbar, 390x844, touch on):
+   In the browser (DevTools device toolbar, 390x844, touch on). **TODO:** items 1-4 are
+   not checked by hand yet, only by the headless run above; done before merging (section 11).
+   Item 5 met (headless screenshots at 1470x956).
    1. `/notes/python/slots/`: every figure can be read, labels at least ~11 px, by scrolling
       inside `.fig__frame` or by opening it full screen.
    2. The note has a table of contents, and its links jump to the headings.
@@ -722,6 +743,8 @@ The tests from section 10 are spread over the steps that make them possible.
   navigate correctly, even without the animation.
 - Production prefix: `NODE_ENV=production npm run build`, serve `_site/` under `/library/`,
   and go through all the loops (referrer checks, `sessionStorage.note`, VT names).
+- Phone view in Chrome DevTools (390x844, touch on): the step 7 browser list, items 1-4,
+  skipped by hand in step 7.
 - Real iPhone (Safari): a note opened by direct link, a figure, the TOC, and room → wall → note
   by taps (decision 3).
 - `prefers-reduced-motion`: every page reachable, nothing waits on an animation.
