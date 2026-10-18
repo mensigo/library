@@ -72,6 +72,6 @@ Content files use these frontmatter fields:
 
 ### Tests
 
-`test/scripts.test.js` covers the exported utility functions from `scripts.js`; `test/links.test.js` walks every `href` in `_site/` and fails on dangling internal links (run a build first). Jest runs with jsdom environment. Only `src/js/**/*.js` is included in coverage.
+`test/scripts.test.js` covers the exported utility functions from `scripts.js`; `test/links.test.js` walks every `href` in `_site/` and fails on dangling internal links (run a build first). Jest runs with jsdom environment. Coverage includes `src/js/**/*.js` and `lib/**/*.js`.
 
 `scripts.js` binds its bootstrap to `DOMContentLoaded` rather than calling `init()` immediately — that keeps the module safe to `require()` in jsdom, where the event never fires.

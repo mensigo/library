@@ -1,0 +1,37 @@
+{#- Оболочка всех страниц нового дизайна (комната, страница группы, заметка): <head>
+    и место под разметку страницы. Каждая страница несет свою разметку целиком, общих
+    кусков body здесь нет. Данные страницы:
+      title       - <title> и OG-теги (meta.njk)
+      bundle      - home | note-group | note: /world/<bundle>.css в <head>,
+                    /world/<bundle>.js в конце <body> (world/bundles.njk)
+      groupId     - страницы группы и заметки: цвет группы (data-g), стена за шапкой
+                    (preload wall.avif) и класс arriving, его снимает JS бандла
+      expectReady - комната: первый кадр ждет скриптов внизу страницы, чтобы при
+                    возврате камера уже стояла у стены -#}
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{{ title }}</title>
+{% include "meta.njk" %}
+<link rel="preload" href="{{ pathPrefix }}/fonts/YsabeauInfant-VariableFont_wght.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap">
+{% if groupId -%}
+<link rel="preload" as="image" href="{{ pathPrefix }}/images/world/wall.avif" type="image/avif">
+{% endif -%}
+<link rel="stylesheet" href="{{ pathPrefix }}/world/{{ bundle }}.css">
+{% if expectReady -%}
+<link rel="expect" blocking="render" href="#ready">
+{% endif -%}
+</head>
+<body{% if groupId %} class="arriving" data-g="{{ groupId }}"{% endif %}>
+{{ content | safe }}
+<script src="{{ pathPrefix }}/world/{{ bundle }}.js"></script>
+{% if expectReady -%}
+<i id="ready" hidden></i>
+{% endif -%}
+</body>
+</html>

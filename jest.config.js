@@ -12,7 +12,8 @@ module.exports = {
     '/_site/'
   ],
   collectCoverageFrom: [
-    'src/js/**/*.js'
+    'src/js/**/*.js',
+    'lib/**/*.js'
   ],
   setupFilesAfterEnv: ['<rootDir>/jest.setup.js']
 };

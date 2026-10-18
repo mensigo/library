@@ -6,6 +6,7 @@ const markdownItAttrs = require("markdown-it-attrs");
 const markdownItContainer = require("markdown-it-container");
 const markdownItFootnote = require("markdown-it-footnote");
 const markdownItAbbr = require("markdown-it-abbr");
+const worldFilters = require("./lib/filters");
 
 // Тот же алгоритм, что и generateSlug в src/js/scripts.js: якоря,
 // сгенерированные на сборке, должны совпадать с теми, что ищет TOC в браузере.
@@ -319,6 +320,13 @@ module.exports = function(eleventyConfig) {
         .map(name => `/* ── ${path.basename(name)} ── */\n`
             + fs.readFileSync(path.join(__dirname, "src", name), "utf8"))
         .join("\n"));
+
+    // Фильтры нового дизайна (lib/filters.js): строки и темы страницы группы,
+    // оглавление и даты заметки.
+    Object.entries(worldFilters).forEach(([name, fn]) => eleventyConfig.addFilter(name, fn));
+
+    // Группы заметок (src/notes/groups.js) нужны и вне notes/: стену рисует src/index.njk.
+    eleventyConfig.addGlobalData("noteGroups", () => require("./src/notes/groups.js"));
 
     // Фильтр для читаемой даты
     eleventyConfig.addFilter("readableDate", (dateObj) => {

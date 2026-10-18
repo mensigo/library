@@ -178,7 +178,7 @@ src/
 ├── index.njk                     + → /: the room, markup inline (pitch index-g.html)
 ├── index.md                      − replaced by index.njk
 ├── notes/
-│   ├── groups.js                 + note groups: id, title, desc, tag, embers, done, enabled;
+│   ├── groups.js                 + note groups: id, title, desc, tag, embers, find, enabled;
 │   │                               global data `noteGroups` (loaded in .eleventy.js), never published
 │   ├── notes.11tydata.js         + layout world/note.njk + group id from the folder name, for every note
 │   ├── index.njk                 + → /notes/: redirect to /#notes
@@ -344,10 +344,14 @@ It is never published: Eleventy builds only `md`/`njk` here, and no passthrough 
 
 ```js
 module.exports = [
-  { id: 'python', title: 'Python', desc: 'Изнутри: от tuple до async.', tag: 'Python', embers: 'Тлеет',  done: '…', enabled: true },
-  { id: 'docker', title: 'Docker', desc: 'Контейнеры без магии.',       tag: 'Docker', embers: 'В пути', done: '…', enabled: true },
+  { id: 'python', title: 'Python', desc: 'Изнутри: от tuple до async.', tag: 'Python', embers: 'Тлеет',  find: 'slots, байт-код, await...', enabled: true },
+  { id: 'docker', title: 'Docker', desc: 'Контейнеры без магии.',       tag: 'Docker', embers: 'В пути', find: 'слои, образ, кеш...',       enabled: true },
 ];
 ```
+
+`find` is the search placeholder on the group page. There is no `done`: a sigil's `--done`
+lives in `note-groups.css` (step 3), next to its colour, and its strokes' `--w`/`--d` in
+`note-sigils.njk`.
 
 `tag` is the group's own tag. It's left out of the topic buttons and the row tags, and it
 decides where a draft lives (decision 4). Every Python note has `Python` as its first tag.
@@ -384,7 +388,8 @@ computed `undefined` could shadow the alias and break the group page permalinks.
 
 - `groupNotes(collection, id)` → published notes of the group, sorted by `upd_date` desc,
   then `title` (decision 8); `groupDrafts` → the group's drafts (`draft: true` in its folder), same order.
-- `topics(notes, ownTag)` → `[{tag, count}]` for the side buttons, `все` first.
+- `topics(notes, ownTag)` → `[{tag, label, count}]` for the side buttons: first
+  `{tag: '', label: 'все'}` (`data-tag=""`, no filter), then by count, ties by name.
 - `toc(content)` → `[{id, text}]` from `<h2 id>` without `.u-kicker`. The TOC is built at build time
   (the pitch has a static `<ol>`) instead of by `initTableOfContents`, so G does not need a
   copy of `generateSlug` in the browser.
@@ -511,15 +516,22 @@ The tests from section 10 are spread over the steps that make them possible.
    1. `/world/home.css` and `/world/note.js` open; `/world/_src/shell.css` is a 404.
    2. With `npm run dev` running, change a value in `src/world/_src/shell.css`, reload
       `/world/home.css`: the change is there. Undo it.
-4. **Partials and data.** Add `meta.njk` (wire it into `base.njk` as well),
+4. **Partials and data.** Done. Add `meta.njk` (wire it into `base.njk` as well),
    `notes/groups.js` (and its `addGlobalData`), `note-sigils.njk`, `world/shell.njk`, and the
-   new filters with unit tests.
+   new filters with unit tests. Nothing uses the new partials yet.
+   Also done in this step: `groups.js` has `find` instead of `done` (section 7);
+   `jest.config.js` collects coverage from `lib/` too. `shell.njk` reads `title`,
+   `bundle` (`home` | `note-group` | `note`: CSS in `<head>`, JS at the end of `<body>`),
+   `groupId` (`data-g`, `class="arriving"`, the `wall.avif` preload) and `expectReady`
+   (the room's `rel=expect` + `#ready`). The group page has no computed `groupId`
+   (section 7), so step 5 sets it from `noteGroup.id`.
 
-   Done when:
+   Done when (met):
    - `_site/` is the same as before the step, apart from whitespace in `<head>`: `meta.njk`
-     outputs the same OG/Telegram tags `base.njk` did.
+     outputs the same OG/Telegram tags `base.njk` did. `diff -r -w -B` shows nothing; the
+     tags lost their 4-space indent.
    - `noteGroups` reaches templates, and under `npm run dev` an edit to `src/notes/groups.js`
-     rebuilds (or the fallback from section 7 is applied).
+     rebuilds (or the fallback from section 7 is applied). It rebuilds, no fallback needed.
    - `lib/filters.js` exports `groupNotes`, `groupDrafts`, `topics`, `toc`, `shortDate`,
      `isFresh`, and `.eleventy.js` registers them from there.
    - `test/filters.test.js` covers at least: drafts left out of `groupNotes`, `upd_date`

@@ -5,17 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <title>{{ title }}</title>
 
-    {% block meta %}
-    <meta name="title" content="{{ title }}">
-    <meta property="og:site_name" content="my-site.com">
-    <meta property="og:description" content="{{ tg_desc | default('Some description..') }}">
-    <meta property="og:type" content="article">
-    <meta property="og:title" content="{{ title }}">
-    <meta property="article:author" content="lonalone">
-    <meta property="article:published_time" content="{{ tg_pub_time | default('2025-11-01T00:00:00+03:00') | dateToRfc3339 }}">
-    <meta property="telegram:channel" content="@lonalone1">
-    <meta property="tg:site_verification" content="g7j8/rPFXfhyrq5q0QQV7EsYWv4=">
-    {% endblock %}
+    {% include "meta.njk" %}
 
     <!-- Предзагрузка шрифтов -->
     <link rel="preload" href="{{ pathPrefix }}/fonts/YsabeauInfant-VariableFont_wght.woff2" as="font" type="font/woff2" crossorigin>
