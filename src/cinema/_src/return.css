@@ -1,0 +1,85 @@
+/* Cinema и комната (src/index.njk): переход туда и обратно. Последняя часть лендинга
+   перед world/_src/vt.css (bundles.njk). Весь первый экран - это кадр, который в комнате
+   проектор вывел между черными полосами. При переходе он раскрывается из полосы 2.39:1
+   во весь экран (vt.css, cine.css). */
+.hero { view-transition-name: cinema-frame; }
+.hud { view-transition-name: cinema-hud; }
+
+/* ---------- возврат в комнату (return.js) ----------
+   Зеркало ухода из комнаты: въезжают черные полосы 2.39:1, потом кадр между ними
+   плавно гаснет, как лампа разгоралась (.7s). Комната открывается ровно в этом виде
+   (.is-cine-dark в cine.css), поэтому полосы те же: --bar повторяет cine.css. */
+.cine {
+  --bar: clamp(8svh, calc((100svh - 100vw / 2.39) / 2), 22svh);
+  position: fixed;
+  inset: 0;
+  z-index: 30;              /* выше HUD (20) и зерна (9) */
+  pointer-events: none;
+}
+
+.cine__bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: var(--bar);
+  background: #000;
+  transition: translate .5s cubic-bezier(.65, 0, .2, 1);
+}
+
+.cine__bar--top { top: 0; translate: 0 -100%; }
+.cine__bar--bot { bottom: 0; translate: 0 100%; }
+
+.cine__black {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: var(--bar);
+  bottom: var(--bar);
+  background: #000;
+  opacity: 0;
+  transition: opacity .7s ease-in-out .5s;
+}
+
+.is-leaving .cine__bar { translate: 0 0; }
+
+/* Пришли из комнаты, а переход браузер пропустил (return.js): полосы стоят с первого
+   кадра и уезжают обычным ходом */
+.is-arriving .cine__bar { translate: 0 0; transition: none; }
+.is-leaving .cine__black { opacity: 1; }
+
+/* Вместе с полосами гаснет текст героя: гаснуть остается одна картинка, как в комнате
+   перед уходом гаснет панель. К началу затемнения (.5s) текста уже почти нет.
+   Пробовали .3s на --ease страницы: кривая резкая в начале, текст пропадал рывком. */
+.hero-inner,
+.scrollcue { transition: opacity .6s cubic-bezier(.45, 0, .55, 1); }
+.is-leaving .hero-inner,
+.is-leaving .scrollcue { opacity: 0; }
+
+/* Кадр не едет в комнату: там он уже погашен, обе страницы в этот момент черные */
+.is-leaving .hero { view-transition-name: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .cine__bar, .cine__black, .hero-inner, .scrollcue { transition: none; }
+}
+
+/* Подсказка в HUD: клавиша A ведет в комнату (return.js) */
+.hud__keys { align-items: center; gap: 8px; }
+
+.hud__keys kbd {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  font: inherit;
+  letter-spacing: 0;
+  color: var(--ink-dim);
+}
+
+/* Клавиши подсказываем только там, где есть клавиатура: правило то же, что у .keys
+   в комнате (world/_src/room.css). Селектор из двух классов: иначе .hud .right
+   в cinema.css возвращает display: flex. */
+@media (hover: none), (max-width: 1100px) {
+  .hud .hud__keys { display: none; }
+}

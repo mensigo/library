@@ -674,16 +674,29 @@ The tests from section 10 are spread over the steps that make them possible.
    4. Open `/#notes` directly: the wall at once. Open `/notes/`: you land on `/#notes`.
    5. Network tab: the room loads `room.avif`.
    6. The Cinema card opens `/cinema/` (the full transition comes in step 9).
-9. **Cinema** (section 8). Check the whole room → Cinema → room loop by hand.
+9. **Cinema** (section 8). Done. Check the whole room → Cinema → room loop by hand.
+   `return.js` takes `cameFrom()` from `note.js` (referrer and `[data-back]` compared by
+   origin and pathname). Landing bundle order: `cinema, landing, return, vt` and
+   `cinema, landing, return`.
+   Also done in this step: the pitch's `A в комнату` hint did show on touch (decision 3),
+   because `.hud .right { display: flex }` in `cinema.css` outweighs `.hud__keys`. The rule is
+   now `.hud .hud__keys`, under the same `(hover: none), (max-width: 1100px)` as the room's
+   `.keys`, not the pitch's `(hover: none)` alone. The pitch still has the bug.
+   Check back/forward loops on a static server (`python3 -m http.server -d _site`), not
+   `npm run dev`: after a bfcache restore the dev server's live-reload client sometimes
+   reloads the page, and the room then shows up without its return.
 
-   Done when:
+   Done when (met):
    - `src/cinema/index.html` has the four changes from section 8; `cinema/_src/return.{css,js}`
      exist and `return.js` compares pathnames, no `index-g`.
    - The landing bundles contain `return.css` + `world/_src/vt.css` and `return.js`.
    - The room's `.cine__frame` and the Cinema hero both use `images/cinema/index/hero.jpg`.
-   - `_site/cinema/bebop/` is the same as before the step.
+   - `_site/cinema/bebop/` is the same as before the step. Outside `cinema/index.html`,
+     `landing.css` and `landing.js`, all of `_site/` is.
 
-   In the browser:
+   In the browser (met, by headless Chrome over the DevTools protocol at 1470x956 against
+   the static server: a scripted run with `pagereveal` logged, the room's `#hero` classes
+   sampled, and screenshots. Then checked by hand):
    1. `/` → Cinema card: the letterbox/projector transition plays.
    2. On Cinema, `A` and `БИБЛИОТЕКА` each bring you back to the room with the return.
    3. Open `/cinema/` directly, then back and forward: no stuck black screen.
@@ -767,7 +780,7 @@ The tests from section 10 are spread over the steps that make them possible.
 - Production prefix: `NODE_ENV=production npm run build`, serve `_site/` under `/library/`,
   and go through all the loops (referrer checks, `sessionStorage.note`, VT names).
 - Phone view in Chrome DevTools (390x844, touch on): the step 7 browser list, items 1-4,
-  skipped by hand in step 7.
+  skipped by hand in step 7, and step 9 item 4 (no `A в комнату` hint on `/cinema/`).
 - Real iPhone (Safari): a note opened by direct link, a figure, the TOC, and room → wall → note
   by taps (decision 3).
 - `prefers-reduced-motion`: every page reachable, nothing waits on an animation.
