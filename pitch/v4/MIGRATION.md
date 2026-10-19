@@ -821,19 +821,44 @@ The tests from section 10 are spread over the steps that make them possible.
 
 ## 11. Checks before merging to `main`
 
-- Chrome, MacBook screen (1470x956): every transition from `FINAL_STATE.md`, both directions,
-  direct visits and back/forward.
-- **Safari and Firefox**: not opened so far. Safari has cross-document view transitions;
+Done: Chrome on the MacBook screen, production prefix, `prefers-reduced-motion`.
+Left: Safari and Firefox, the phone view by hand, a real iPhone, short screens.
+
+- **Done.** Chrome, MacBook screen (1470x956): every transition from `FINAL_STATE.md`, both directions,
+  direct visits and back/forward. Checked by hand in steps 6, 8 and 9, and by the headless
+  run of the production-prefix check below.
+- **Left.** **Safari and Firefox**: not opened so far. Safari has cross-document view transitions;
   Firefox doesn't have `pagereveal` and takes the `pageshow` path. Both must at least
   navigate correctly, even without the animation.
-- Production prefix: `NODE_ENV=production npm run build`, serve `_site/` under `/library/`,
+- **Done.** Production prefix: `NODE_ENV=production npm run build`, serve `_site/` under `/library/`,
   and go through all the loops (referrer checks, `sessionStorage.note`, VT names).
-- Phone view in Chrome DevTools (390x844, touch on): the step 7 browser list, items 1-4,
+  Met, by headless Chrome over the DevTools protocol at 1470x956 (production build served
+  under `/library/`): room → wall → both groups → a note and back by `A`, a direct note →
+  group (row picked by `sessionStorage.note`) → wall (sign at once), room ⇄ Cinema, direct
+  `/cinema/` with back/forward, Bebop → room, `/notes/` (lands on `/#notes`, not kept in
+  history), the Reviews fog. No request outside `/library/`, no 4xx, no JS errors. Every
+  pair named in `docs/world.md` ran: `sigil` + `group-title` (wall ⇄ group), plus
+  `note-title` (group ⇄ note), and `cinema-frame`, `cine-bar-top/bot`, `cinema-hud` (room →
+  Cinema). With DevTools' "disable cache" on, forward transitions to group and note pages
+  abort (`ViewTransition opt-in disabled`); with a cleared cache and caching on (a real first
+  visit) they run, so it's the switch, not the site.
+  **Found, not fixed:** `tuple.md` and `assert.md` link to `disassemble` with a bare
+  `[Disassemble](/notes/python/disassemble/)`. Markdown links don't get `pathPrefix`, so in
+  production both point to `/notes/…` without `/library` and 404. Already the case on `main`.
+  `links.test.js` can't see it: it runs on the unprefixed build. How to fix it is a TODO for
+  the next session (section 13, "Root links in markdown").
+- **Left.** Phone view in Chrome DevTools (390x844, touch on): the step 7 browser list, items 1-4,
   skipped by hand in step 7, and step 9 item 4 (no `A в комнату` hint on `/cinema/`).
-- Real iPhone (Safari): a note opened by direct link, a figure, the TOC, and room → wall → note
+- **Left.** Real iPhone (Safari): a note opened by direct link, a figure, the TOC, and room → wall → note
   by taps (decision 3).
-- `prefers-reduced-motion`: every page reachable, nothing waits on an animation.
-- Short screen (< 560 px tall): known bar mismatch on return from Cinema. Accept it or fix it.
+- **Done.** `prefers-reduced-motion`: every page reachable, nothing waits on an animation.
+  Met, by the same headless run with `prefers-reduced-motion: reduce` emulated: no view
+  transitions (`@view-transition { navigation: none }`), every navigation leaves within
+  40 ms (holds are `still ? 0 : …`), and every page's content is at full opacity on arrival.
+  Fixed: on the wall the sign still waited 1300 ms for a pan that takes .01 s, and hovering a
+  group did nothing meanwhile; `wall.js` now uses `still ? 0 : 1300` there.
+  The Reviews fog still holds 3.2 s: that's reading time for "в работе", not an animation.
+- **Left.** Short screen (< 560 px tall): known bar mismatch on return from Cinema. Accept it or fix it.
 
 ## 12. Not migrated
 
@@ -842,6 +867,20 @@ files, `note-docker-image.html`, `note-docker-layers.html`, and every image exce
 two in section 3. They stay in `pitch/v4/` (untracked or gitignored) as reference.
 
 ## 13. TODO (not part of this migration)
+
+### Root links in markdown (next session)
+
+Broken on the live site now, and already on `main`: `tuple.md:50` and `assert.md:86` link
+with `[Disassemble](/notes/python/disassemble/)`. `pathPrefix` reaches templates only, not
+links written in markdown, so in production both lead to `/notes/…` without `/library` and
+404 (found by the production-prefix check, section 11). Decide between:
+
+- **Relative links** (recommended): `../disassemble/` in both notes, which works with or
+  without the prefix. Plus a test that fails on `](/` in `src/**/*.md`, so a bare root link
+  can't come back.
+- **Eleventy's HTML base plugin**: adds the prefix to every root link in the output, so
+  markdown can keep `/notes/…`. It changes how the whole site handles the prefix:
+  `{{ pathPrefix }}` in templates would have to go, or the prefix gets applied twice.
 
 ### Self-host JetBrains Mono
 

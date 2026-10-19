@@ -61,8 +61,8 @@
     clearTimeout(drawTimer);
     drawTimer = null;
     pickGroup(group, false);
-    // Знак проявляется, когда камера уже доехала
-    if (wall) drawTimer = setTimeout(function () { draw(group); }, 1300);
+    // Знак проявляется, когда камера уже доехала. Без движения она у стены сразу
+    if (wall) drawTimer = setTimeout(function () { draw(group); }, still ? 0 : 1300);
   }
 
   function leave() {
