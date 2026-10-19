@@ -606,6 +606,17 @@
   }
 
   .fig__frame svg { min-width: 720px; }
+
+  /* Подпись термина - полоса внизу экрана: от левого края термина она уезжала за
+     правый край и, даже скрытая, расширяла страницу. Fixed страницу не расширяет. */
+  .term::after {
+    position: fixed;
+    left: 16px;
+    right: 16px;
+    bottom: max(16px, env(safe-area-inset-bottom));
+    width: auto;
+    max-width: none;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

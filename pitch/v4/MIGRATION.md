@@ -61,7 +61,7 @@ All decided. 8 was added during step 2; 3 (phones) was settled in step 7.
      (`permalink: false` from `drafts.11tydata.js`) and isn't in any collection. These are
      todos.
    - The old drawer's `Черновики` group goes, so drafts don't appear there either.
-5. **Docker launches with `docker-1` as a published note**: `src/notes/docker/docker-1.md` → `/notes/docker/docker-1/` (file name kept; `/notes/docker/` itself is the group page),
+5. **Docker launches with `docker-1` as a published note**: `src/drafts/docker-1.md` → `src/notes/docker/docker-history.md` → `/notes/docker/docker-history/` (renamed in step 10, before it was ever posted; `/notes/docker/` itself is the group page),
    title `История Docker`, `draft: false` (section 7). The group is enabled on the wall.
    `.group--draft` / `aria-disabled` stay in the code for a future group that has no notes yet.
 6. **Global search is dropped on G pages.** The group filter covers notes;
@@ -91,7 +91,7 @@ All decided. 8 was added during step 2; 3 (phones) was settled in step 7.
 | `notes-python.html` | `/notes/python/` | `src/notes/group.njk`, paginated over `noteGroups` |
 | `notes-docker.html` | `/notes/docker/` | same |
 | `note-slots.html`, `note-async.html` | `/notes/python/slots/` etc. (unchanged) | `src/notes/python/*.md`, layout `world/note.njk` |
-| `note-docker-history.html` | `/notes/docker/docker-1/` | `src/drafts/docker-1.md` → `src/notes/docker/docker-1.md` |
+| `note-docker-history.html` | `/notes/docker/docker-history/` | `src/drafts/docker-1.md` → `src/notes/docker/docker-history.md` |
 | `note-docker-image/layers.html` | — | not migrated (test notes) |
 | — | `/notes/python/python-gil/`, `/notes/python/unlimited-ints/` | drafts moved from `src/drafts/` (decision 4) |
 | — | `/drafts/*` | gone: tagged drafts moved, untagged ones aren't built |
@@ -198,7 +198,7 @@ src/
 │   │   ├── python-gil.md         ← drafts/, still draft: true → embers "Тлеет"
 │   │   └── unlimited-ints.md     ← drafts/, still draft: true → embers "Тлеет"
 │   └── docker/                     same
-│       └── docker-1.md           ← drafts/, published → /notes/docker/docker-1/
+│       └── docker-history.md     ← drafts/docker-1.md, published → /notes/docker/docker-history/
 ├── drafts/                         drafts with no group tag: not built, not listed
 │   ├── drafts.11tydata.js        + permalink: false, eleventyExcludeFromCollections: true
 │   ├── docker_todo.md              (untracked)
@@ -417,7 +417,7 @@ W/S/A cover navigation. Notes get this layout from `notes.11tydata.js`; the only
 the note files is dropping `layout:` (above). A draft's page (decision 4) has no row number,
 so its kicker is just the group: `python`.
 
-**`docker/docker-1.md`** (moved from `src/drafts/`): `title: История Docker`,
+**`docker/docker-history.md`** (moved from `src/drafts/`): `title: История Docker`,
 `draft: true` removed, `tags` stay (`Docker`, `Linux`, `История`), plus `tg_desc` /
 `tg_pub_time`. The text starts with a `::: warn Черновик` callout: "check dates, kernel
 versions and names against primary sources before publishing". Do that check first, then
@@ -641,7 +641,7 @@ The tests from section 10 are spread over the steps that make them possible.
    pages, so `search-index.json` lost `Главная страница` and `Notes` (the two removed
    `index.md`). `<title>` is `Библиотека`. The wall draws `noteGroups`: an `enabled: false`
    group gets `.group--draft`, `aria-disabled` and `<embers> · N черновиков`, as in pitch D.
-   Docker reads `0 заметок` until step 10 publishes `docker-1`. `/notes/` is a bare page
+   Docker reads `0 заметок` until step 10 publishes `docker-history`. `/notes/` is a bare page
    (`layout: false`): `location.replace` so `/notes/` stays out of history, meta refresh
    without JS, `noindex`. The `.recent-update*` / `.badge-*` line is gone from `DESIGN.md`,
    and `CLAUDE.md` lists `reviews` instead of `recentUpdates`.
@@ -702,20 +702,37 @@ The tests from section 10 are spread over the steps that make them possible.
    3. Open `/cinema/` directly, then back and forward: no stuck black screen.
    4. Phone emulation: the `A в комнату` hint is hidden.
    5. `/cinema/bebop/` → `БИБЛИОТЕКА`: the room opens the normal way.
-10. **Drafts and Docker.** Move `python-gil` and `unlimited-ints` into `src/notes/python/`,
+10. **Drafts and Docker.** Done. Move `python-gil` and `unlimited-ints` into `src/notes/python/`,
     add `drafts.11tydata.js` (decision 4). Move `docker-1.md` to `src/notes/docker/` and publish it
     (decision 5). Drop `layout:` from all three. Until step 11 the two Python drafts still
-    show in the old drawer's `Черновики`; that's fine.
+    show in the old drawer's `Черновики`; that's fine. Their links there now point to the new URLs.
+    Also done in this step: `docker-1` became `docker-history.md` (the URL is
+    `/notes/docker/docker-history/`; it had never been deployed or posted) and got
+    `tg_desc: docker-history`, and its `upd_date` and `tg_pub_time` are the publishing day, 2026-10-20. The fact check changed two rows of the
+    "Истоки" table: LXC is the first tool to build containers on a stock kernel (OpenVZ and
+    Linux-VServer came earlier, on patched kernels), and the namespaces row lists those ready by
+    2013 (the cgroup and time namespaces came in 2016 and 2020). Solaris Zones stays at 2004 (the beta).
+    `note-drafts.test.js` checks one folder per test, so an empty `src/drafts/` (a fresh
+    clone, the todo files are untracked) doesn't trip Jest's empty `test.each`.
+    Eleventy never empties `_site/`, so the old `_site/drafts/` lingers after a build: compare
+    against a build from an empty `_site/` (`rm -rf _site` first).
+    `docker-history` is the first G note with terms (`*[CNCF]` etc.), and on a phone it came out
+    577 px wide: the hidden `.term::after` hangs off the term's left edge (up to 320 px) and
+    widened the page past the right edge. Under 1100 px the caption is now a `position: fixed`
+    strip at the bottom of the screen (`prose.css`), and the page is 390 px again (checked over
+    the DevTools protocol, 390x844, touch). Whether a tap shows it on iOS is for the iPhone run
+    (section 11).
 
-    Done when:
-    - `docker-1.md` has `title: История Docker`, `tg_desc`, `tg_pub_time`, no `draft`, no
+    Done when (met):
+    - `docker-history.md` has `title: История Docker`, `tg_desc`, `tg_pub_time`, no `draft`, no
       `layout:`; the facts are checked and the `::: warn Черновик` callout is gone.
     - `src/drafts/` holds only untagged files plus `drafts.11tydata.js`; `_site/drafts/`
       doesn't exist and `search-index.json` has no drafts.
     - `test/note-drafts.test.js` passes, and fails when a `Python`-tagged file is put in
       `src/drafts/` (try it once).
 
-    In the browser:
+    In the browser (met, headless Chrome screenshots at 1470x956 of the group pages and
+    two notes; the room checked from the built HTML: Notes card 8, Docker `1 заметка`):
     1. `/notes/python/`: both drafts under `Тлеет`, as plain text; rows and topic counts
        unchanged.
     2. `/notes/python/python-gil/` and `/notes/python/unlimited-ints/` open, with the kicker
