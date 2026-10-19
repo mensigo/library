@@ -19,12 +19,12 @@ Build output goes to `_site/`. In production (`NODE_ENV=production`), the path p
 
 This is an [Eleventy](https://www.11ty.dev/) static site — a personal library/notes site with two main sections:
 
-- **Reviews** (`src/reviews/`) — anime (`reviews/anime/*.md`) and philosophy (`reviews/philosophy/<author>/*.md`)
+- **Reviews** (`src/reviews/`) — anime (`reviews/anime/*.md`) and philosophy (`reviews/philosophy/<author>/*.md`). Hidden for now: `reviews/reviews.11tydata.js` sets `permalink: false`, so none is built; the room's Reviews card still counts them
 - **Notes** (`src/notes/`) — technical notes organized by topic (e.g. `notes/python/`)
 
 ### Key files
 
-- **`.eleventy.js`** — all Eleventy config: collections, filters, shortcodes, passthrough copies, and the markdown pipeline. Defines `anime`, `notes`, `pythonNotes`, `philosophyCategories`, `drafts`, `reviews`, and `searchIndex` collections.
+- **`.eleventy.js`** — all Eleventy config: collections, filters, shortcodes, passthrough copies, and the markdown pipeline. Defines `anime`, `notes`, `philosophyCategories`, `reviews`, and `searchIndex` collections.
 - **`src/_includes/`** — Nunjucks layouts: `base.njk` (shell), `note.njk` (notes), `page.njk` (reviews), `plain.njk` (index pages — no hero).
 - **`src/js/scripts.js`** — all client-side JS in one file. Top section exports pure utility functions (`applyTheme`, `highlightMatch`, `generateSlug`, `compareValues`, `resolvePalette`, `tocLinkClass`, `PALETTES`) for testability. Bottom section is browser-only initialization (`initTheme`, `initTableOfContents`, `initDrawer`, `initRail`, `initScrollSpy`, `initProgress`, `initCopy`, `initTerms`, `initTableSorting`, `initSearch`, `initConfig`, `initPalette`).
 - **`src/search-index.njk`** — generates `search-index.json` at build time from the `searchIndex` collection; consumed at runtime by Fuse.js for fuzzy search.
@@ -68,7 +68,7 @@ Content files use these frontmatter fields:
 - `tags` — rendered as `.chip`s in the hero (first one gets the accent)
 - `lede` — optional one-paragraph subtitle; `tldr` — optional list rendered as a key-points block
 - `score`, `anime_status`, `manga_status`, `manga_author` — reviews only; surface in the rail's `.railcard`
-- `draft: true` — excludes item from search index, includes it in the Черновики nav group
+- `draft: true` — excludes item from search index and from the group's rows; a draft in `notes/<group>/` is listed in the group page's embers block
 
 ### Tests
 

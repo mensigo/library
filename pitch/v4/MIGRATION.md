@@ -30,6 +30,11 @@ All decided. 8 was added during step 2; 3 (phones) was settled in step 7.
    on the old shell (`base.njk` + `css/styles.css` + `js/scripts.js`, left where they are,
    section 4) and its pages are not touched. The Reviews card keeps `data-soon`. The old
    shell gets ported to G later, as its own migration.
+   Changed in step 11: reviews are hidden until then. `src/reviews/reviews.11tydata.js` sets
+   `permalink: false`, so no `/reviews/**` page is built (`made-in-abyss`, posted with
+   `tg_pub_time`, returns 404; accepted). They stay in collections, so the card still counts
+   them (`3 обзора`). No built page uses the old shell now; its files stay for the port.
+   To open the section, delete that data file.
 2. **URLs of published notes don't change.** `/notes/python/slots/` and the rest have been
    posted to Telegram (`tg_pub_time`). Only drafts may move.
 3. **Phones: figures scroll, TOC collapses under the header.** Decided in step 7: a figure
@@ -96,7 +101,7 @@ All decided. 8 was added during step 2; 3 (phones) was settled in step 7.
 | — | `/notes/python/python-gil/`, `/notes/python/unlimited-ints/` | drafts moved from `src/drafts/` (decision 4) |
 | — | `/drafts/*` | gone: tagged drafts moved, untagged ones aren't built |
 | `cinema-g.html` | `/cinema/` | `src/cinema/index.html`, patched (section 8) |
-| — | `/reviews/**` | unchanged |
+| — | `/reviews/**` | not built while the section is hidden (decision 1) |
 
 All links in templates go through `{{ pathPrefix }}` (`/library` in production).
 
@@ -739,17 +744,34 @@ The tests from section 10 are spread over the steps that make them possible.
        `python` and no number.
     3. `/notes/docker/`: one row `01`. Open it: `История Docker`, no draft callout.
     4. `/`: the Notes card count is up by one; on the wall, Docker opens its group page.
-11. **Old shell.** In `base.njk`, the drawer's notes group links to `/notes/python/` etc.
+11. **Old shell.** Done. In `base.njk`, the drawer's notes group links to `/notes/python/` etc.
     and the brand links to `/`; the `Черновики` group is removed. Remove `src/_includes/note.njk`,
     the `drafts` collection and the `/drafts/` → `Черновики` breadcrumb in `.eleventy.js`
     (nothing uses them now).
+    Also done in this step: the drawer's `Python` group (every note by title) became `Заметки`,
+    one link per `enabled` entry of `noteGroups`, so Docker shows up too. `Заметки` under
+    `Библиотека` goes to `/#notes`, not through the `/notes/` redirect. The brand already
+    linked to `/`, so `_site/` has no brand change. Removed along with `note.njk`, since
+    only it used them: the `pythonNotes` collection, the `headingCount` and `neighbours`
+    filters, and the `/notes/` lines of `sectionLabel` (no note page is on the old shell).
+    `CLAUDE.md` no longer lists `pythonNotes` / `drafts` or the `Черновики` nav group; the
+    rest of its rewrite is step 12. The `.pager` rules in `css/styles.css` and their line in
+    `DESIGN.md` have no user now either; they go in step 12.
+    Then reviews were hidden (decision 1): `src/reviews/reviews.11tydata.js` with
+    `permalink: false`, and `searchIndex` skips pages that aren't built (`item.url === false`),
+    so `search-index.json` holds only notes. `_site/` has no `reviews/`, and no page loads
+    `css/styles.css`, `js/scripts.js` or `search-index.json`; they still get published until
+    the old shell goes. The browser checks below need the data file deleted for a moment.
 
-    Done when:
+    Done when (met):
     - `src/_includes/note.njk` is gone; grepping `.eleventy.js` and `src/` for `Черновики`
-      and for the `drafts` collection finds nothing.
+      and for the `drafts` collection finds nothing. (`Черновики` remains only in comments:
+      `drafts.11tydata.js`, `group.njk`, `lib/filters.js`.)
     - `_site/reviews/` differs from before the step only in the drawer and the brand link.
+      With `<nav class="drawer__body">` cut out, the four review pages are byte-identical,
+      and outside `reviews/` all of `_site/` is (both builds from an empty `_site/`).
 
-    In the browser:
+    In the browser (with `src/reviews/reviews.11tydata.js` moved aside, since reviews are hidden):
     1. A review page (`/reviews/anime/made-in-abyss/`): the drawer's notes group opens the
        group pages, there's no `Черновики`, the brand opens the room.
     2. Drawer search finds a note and opens it.
