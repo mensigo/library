@@ -1062,23 +1062,6 @@ table.tbl .no { color: var(--danger); }
 }
 .term:hover::after, .term:focus::after { opacity: 1; visibility: visible; }
 
-/* ------------------------------------------------------------- пагинация */
-.pager { display: grid; gap: 12px; margin-top: 3em; }
-@media (min-width: 720px) { .pager { grid-template-columns: 1fr 1fr; } }
-.pager a {
-    display: flex; flex-direction: column; gap: 4px;
-    padding: 15px 18px; border: 1px solid var(--line); border-radius: 12px;
-    background: var(--surface); text-decoration: none;
-    transition: border-color var(--fast), transform var(--fast), box-shadow var(--fast);
-}
-.pager a:hover { border-color: var(--acc-line); transform: translateY(-1px); box-shadow: var(--shadow-1); }
-.pager .l {
-    font-family: var(--mono); font-size: 9.5px; letter-spacing: .18em;
-    text-transform: uppercase; color: var(--ink-3);
-}
-.pager .t { font-size: 16px; font-weight: 600; color: var(--ink); }
-@media (min-width: 720px) { .pager .next { text-align: right; grid-column: 2; } }
-
 /* ---------------------------------------------------------- подвал доки */
 .doc__foot {
     margin-top: 2.4em; padding-top: 16px; border-top: 1px solid var(--line);

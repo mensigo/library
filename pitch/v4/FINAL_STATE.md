@@ -1,5 +1,9 @@
 # Pitch v4, variant G
 
+> **Frozen, reference only.** Variant G now lives in `src/` (`MIGRATION.md`), and its
+> current description is `docs/world.md`. Nothing in `pitch/v4/` is updated any more, and
+> it still has bugs fixed on the site (`MIGRATION.md`, steps 8 and 9).
+
 `index-g.html`: a still frame of the room (no video) and a wall to the right of it that
 the camera pans to. From the room: Cinema card → film-frame transition to `cinema-g.html`;
 `#notes` → pan to the wall → group page → note page. Reviews card has `data-soon` and

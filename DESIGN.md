@@ -2,6 +2,8 @@
 
 This project uses a lightweight design foundation, not a full design system. Keep the site readable, calm, text-first, and consistent across notes and reviews.
 
+**Scope.** This file describes the old shell (`base.njk`, `css/styles.css`, `js/scripts.js`), which only reviews use now (and they are hidden). The room, the note groups, the note pages and the way into Cinema have their own design: see [`docs/world.md`](docs/world.md). The markdown authoring syntax at the end of this file applies to both.
+
 ## Principles
 
 - Prioritize long-form reading over dense interface decoration.
@@ -87,13 +89,12 @@ Keep the reading width constrained. If a page needs wider content, add a modifie
 - `.finale`: the closing verdict block; its `h2` is a `.u-kicker`, not a section heading.
 - `.notes-block` + `.fnref` + `.back`: footnotes, generated from `[^1]` by `markdown-it-footnote`.
 - `.term`: a word with a dotted underline and a short explanation that pops up on hover or focus. The text lives in `data-tip` and is drawn by `::after`; `initTerms` only nudges it back when it would cross the window edge.
-- `.pager` with `.l` / `.t` / `.next`: previous/next links, built by `note.njk` from the `neighbours` filter.
 - `.fig`, `.fig__frame`, `figcaption`, and the `.d-*` SVG tokens for theme-aware diagrams.
 - `.note-media`, `.note-media__image-wrapper`, `.note-media__image`, `.note-media__caption`: raw-HTML images that swap source per theme. Framed like `.fig__frame` but edge-to-edge; `--sm` caps it at 340px for mood illustrations, `--full` lifts the 720px cap. The caption takes a `<b>Метка</b>` like `.fig figcaption`.
 - `.tablewrap` + `table.tbl`: every table, markdown or shortcode-generated.
 - `.rail`, `.rail__head`, `.toc` (`.lvl-2` / `.lvl-3` / `.lvl-4`), `.railcard`.
 - `.cfg`, `.cfg__group`, `.seg` / `.seg__btn`, `.cfg__pick` / `.cfg__list` / `.cfg__opt`: settings popover.
-- `.totop`, `.skip-link`, `.u-sr`, `.u-mono`, `.u-dim` (muted inline text), `.u-kicker` (small mono caps label; on an `h2` it also opts the heading out of the TOC, the section counter, and the section count).
+- `.totop`, `.skip-link`, `.u-sr`, `.u-mono`, `.u-dim` (muted inline text), `.u-kicker` (small mono caps label; on an `h2` it also opts the heading out of the TOC and the section counter).
 - `.sortable`, `.sort-asc`, `.sort-desc`: sortable table headers.
 - `.navlink--cinema` (with `.go`; `.is-soon` for a door whose target does not exist): the door into `/cinema/`, in the drawer directly under «Обзоры аниме». See the exception below.
 
@@ -131,7 +132,7 @@ Do not treat this as licence for a second exception. If another component wants 
 
 ## Content Conventions
 
-Notes use `layout: note.njk`; reviews use `layout: page.njk`; index pages use `layout: plain.njk` (no hero, so they start at `h1`).
+Reviews use `layout: page.njk`; review index pages use `layout: plain.njk` (no hero, so they start at `h1`). Notes set no `layout:`: `src/notes/notes.11tydata.js` gives them `world/note.njk` (`docs/world.md`).
 
 Frontmatter: `title` (required, drives search and the hero), optional `titleHtml` (markup for the hero heading when the title needs it, e.g. muted dunders), `upd_date`, `tags` (become `.chip`s; the first one gets the accent), optional `lede` (one-paragraph subtitle) and `tldr` (a list rendered as the key-points block). Reviews add `score`, `anime_status`, `manga_status`, `manga_author`, which surface in the `.railcard`. `draft: true` keeps a page out of the search index.
 

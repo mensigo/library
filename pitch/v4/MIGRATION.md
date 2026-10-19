@@ -776,13 +776,23 @@ The tests from section 10 are spread over the steps that make them possible.
        group pages, there's no `Черновики`, the brand opens the room.
     2. Drawer search finds a note and opens it.
     3. Theme and accent still switch on the review page.
-12. **Docs.** Turn `FINAL_STATE.md` into `docs/world.md`, updating paths and file names
+12. **Docs.** Done. Turn `FINAL_STATE.md` into `docs/world.md`, updating paths and file names
     (keep "Values that must stay in sync" and "Don't repeat" word for word). Add a pointer
     to it in `DESIGN.md`, and rewrite the Architecture/Layout sections of `CLAUDE.md`,
     naming the old shell's files (section 4) as reviews-only.
     Mark `pitch/v4/` as reference only, frozen.
+    Also done in this step: one line of "Values that must stay in sync" changed beyond file
+    names. "The `.mark` paths are a copy of the sigil in `index-g.html`" stopped being true in
+    step 4: both come from `note-sigils.njk`, so the line says that now. `docs/world.md`
+    gained what the site added to the pitch: bundles, lists and numbers (decisions 7, 8),
+    phones (steps 7, 10), the two `wall.js` fixes (step 8), adding a note or a group. The image
+    recipe starts from `library_static`'s `room.png` / `wall.png`, not `pitch/v4/img/`. Open
+    issues lost the copy button TODO (done in step 6). The `.pager` rules left over from step 11
+    are gone from `css/styles.css` and `DESIGN.md`, and so is the `headingCount` mention in
+    `CLAUDE.md` and `DESIGN.md` (the filter went in step 11). `DESIGN.md` says at its top that
+    it covers the old shell, and its content conventions no longer give notes a `layout:`.
 
-    Done when:
+    Done when (met):
     - Every `src/` path in `docs/world.md` exists; the two kept sections are identical to
       `FINAL_STATE.md` apart from paths and file names.
     - `DESIGN.md` links to `docs/world.md`.
