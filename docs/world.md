@@ -52,7 +52,9 @@ Bundles (`src/world/bundles.njk`), in this order:
 
 Nothing under `world/_src/` is published. Every bundle sits in `/world/`, so every `url()` in
 a source is relative to `/world/` (`../fonts/`, `../images/`) and works with or without
-the `/library` prefix. All links in templates go through `{{ pathPrefix }}`.
+the `/library` prefix. All links in templates go through `{{ pathPrefix }}`. Markdown doesn't
+get it, so a note links another note relatively (`../disassemble/`);
+`test/markdown-links.test.js` fails on a root link in markdown.
 
 Fonts: Ysabeau Infant from `src/fonts/` (`shell.css`), JetBrains Mono from Google Fonts
 (`shell.njk`).

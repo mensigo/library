@@ -821,7 +821,8 @@ The tests from section 10 are spread over the steps that make them possible.
 
 ## 11. Checks before merging to `main`
 
-Done: Chrome on the MacBook screen, production prefix, `prefers-reduced-motion`.
+Done: Chrome on the MacBook screen, production prefix (and the root links it found),
+`prefers-reduced-motion`.
 Left: Safari and Firefox, the phone view by hand, a real iPhone, short screens.
 
 - **Done.** Chrome, MacBook screen (1470x956): every transition from `FINAL_STATE.md`, both directions,
@@ -842,11 +843,11 @@ Left: Safari and Firefox, the phone view by hand, a real iPhone, short screens.
   Cinema). With DevTools' "disable cache" on, forward transitions to group and note pages
   abort (`ViewTransition opt-in disabled`); with a cleared cache and caching on (a real first
   visit) they run, so it's the switch, not the site.
-  **Found, not fixed:** `tuple.md` and `assert.md` link to `disassemble` with a bare
+  Found and fixed afterwards: `tuple.md` and `assert.md` linked to `disassemble` with a bare
   `[Disassemble](/notes/python/disassemble/)`. Markdown links don't get `pathPrefix`, so in
-  production both point to `/notes/…` without `/library` and 404. Already the case on `main`.
-  `links.test.js` can't see it: it runs on the unprefixed build. How to fix it is a TODO for
-  the next session (section 13, "Root links in markdown").
+  production both pointed to `/notes/…` without `/library` and 404ed (already the case on
+  `main`). `links.test.js` can't see it: it runs on the unprefixed build. Both links are now
+  `../disassemble/`, and `test/markdown-links.test.js` keeps root links out of markdown.
 - **Left.** Phone view in Chrome DevTools (390x844, touch on): the step 7 browser list, items 1-4,
   skipped by hand in step 7, and step 9 item 4 (no `A в комнату` hint on `/cinema/`).
 - **Left.** Real iPhone (Safari): a note opened by direct link, a figure, the TOC, and room → wall → note
@@ -868,19 +869,14 @@ two in section 3. They stay in `pitch/v4/` (untracked or gitignored) as referenc
 
 ## 13. TODO (not part of this migration)
 
-### Root links in markdown (next session)
+### Root links in markdown
 
-Broken on the live site now, and already on `main`: `tuple.md:50` and `assert.md:86` link
-with `[Disassemble](/notes/python/disassemble/)`. `pathPrefix` reaches templates only, not
-links written in markdown, so in production both lead to `/notes/…` without `/library` and
-404 (found by the production-prefix check, section 11). Decide between:
-
-- **Relative links** (recommended): `../disassemble/` in both notes, which works with or
-  without the prefix. Plus a test that fails on `](/` in `src/**/*.md`, so a bare root link
-  can't come back.
-- **Eleventy's HTML base plugin**: adds the prefix to every root link in the output, so
-  markdown can keep `/notes/…`. It changes how the whole site handles the prefix:
-  `{{ pathPrefix }}` in templates would have to go, or the prefix gets applied twice.
+Done. The two bare root links (`tuple.md`, `assert.md`) became relative `../disassemble/`,
+which works with or without the prefix. `test/markdown-links.test.js` fails on an inline
+`](/…)`, a reference `[id]: /…`, or a raw `href="/…"` / `src="/…"` in `src/**/*.md` (code
+spans and fences aside, `src/drafts/` skipped since it isn't built). Raw HTML in markdown
+keeps using `{{ pathPrefix }}`, as `assert.md`'s image does. The HTML base plugin was not
+used: it would have meant dropping `{{ pathPrefix }}` from every template.
 
 ### Self-host JetBrains Mono
 
