@@ -94,7 +94,9 @@ Fonts: Ysabeau Infant from `src/fonts/` (`shell.css`), JetBrains Mono from Googl
 - `sigil-pulse` / `sigil-blink` durations = the 350 ms hold in `wall.js`.
 - Dim transitions in `notes.css` = the 300 ms hold in `note-group.js`.
 - `LEAVE` in `cine.js` = delay + duration of `cine-on`.
-- `--bar` formula is repeated in `cine.css` (room) and `return.css` (Cinema return bars).
+- `--bar` formula is repeated in `cine.css` (room) and `return.css` (Cinema return bars);
+  both sets of bars are `position: fixed`, sized from `--bar-h: max(100svh, 500px)`
+  (also repeated): 40 px bars on a screen under 500 px tall.
 - `--done` per sigil = when its last stroke ends; a new sigil needs its own value.
 - The `.mark` on group/note pages and the `.sigil` on the wall are drawn from the same
   paths in `note-sigils.njk`; only `--done` lives apart, in `room.css` / `note-groups.css`.
@@ -106,8 +108,13 @@ Fonts: Ysabeau Infant from `src/fonts/` (`shell.css`), JetBrains Mono from Googl
 
 **Leaving** (`cine.js`, `cine.css`), click held 1600 ms with `.is-cine`:
 - panel, key hints, HUD, bottom line fade (.4 s ease-in-out);
-- black 2.39:1 bars slide in (`--bar` = space above/below a 2.39:1 frame, clamped 8-22%
-  of height; bars `z-index: 1`);
+- black 2.32:1 bars slide in (`--bar` = space above/below a 2.32:1 frame, clamped 8-22%
+  of `--bar-h`, the screen's height but at least 500 px; bars `z-index: 1`). Bars and
+  `.cine__black` are fixed to the screen, like Cinema's: on a screen under 560 px tall the
+  hero is taller than the screen, and the bottom bar used to sit below the edge. The 500 px
+  floor was picked by eye: from the screen alone (36 px at 450 px tall) the bars looked thin,
+  from the 560 px hero (45 px) thick. 2.32, not the cinema 2.39, was also picked by eye, by
+  where the bottom bar cuts the room and Cinema pictures: 90 px at 1336x755 (98 with 2.39);
 - eight lanterns go out left to right through `filter` (`flicker` owns `opacity`);
   room dims to `brightness(.36)`;
 - 0.6-0.9 s the band between bars goes black (`.cine__frame` black background), so the
@@ -315,8 +322,6 @@ pixel sizes can change without CSS changes. The px numbers below are for the cur
 - Checked by hand in Chrome on the MacBook's built-in screen (1470x956 CSS px), transitions
   included. Not opened in Safari or Firefox, not on a real iPhone, not with the
   `/library` prefix served; that list is `pitch/v4/MIGRATION.md` section 11.
-- Short screens (under 560 px tall): room bars use the 560 px hero, Cinema bars use the
-  viewport, so they won't match on return.
 - Phones: figures have no scroll cue and no full screen on tap. The full mobile view is
   a separate feature.
 - JetBrains Mono comes from Google Fonts; self-hosting it is a TODO

@@ -822,8 +822,8 @@ The tests from section 10 are spread over the steps that make them possible.
 ## 11. Checks before merging to `main`
 
 Done: Chrome on the MacBook screen, production prefix (and the root links it found),
-`prefers-reduced-motion`.
-Left: Safari and Firefox, the phone view by hand, a real iPhone, short screens.
+`prefers-reduced-motion`, short screens.
+Left: Safari and Firefox, the phone view by hand, a real iPhone.
 
 - **Done.** Chrome, MacBook screen (1470x956): every transition from `FINAL_STATE.md`, both directions,
   direct visits and back/forward. Checked by hand in steps 6, 8 and 9, and by the headless
@@ -859,7 +859,25 @@ Left: Safari and Firefox, the phone view by hand, a real iPhone, short screens.
   Fixed: on the wall the sign still waited 1300 ms for a pan that takes .01 s, and hovering a
   group did nothing meanwhile; `wall.js` now uses `still ? 0 : 1300` there.
   The Reviews fog still holds 3.2 s: that's reading time for "в работе", not an animation.
-- **Left.** Short screen (< 560 px tall): known bar mismatch on return from Cinema. Accept it or fix it.
+- **Done.** Short screen (< 560 px tall): the bars didn't match on return from Cinema. The room's
+  hero keeps `min-height: 560px`, and its bars were sized from the hero (`--H`) and placed
+  in it, so at 1470x450 they were 45 px with the bottom one below the edge (or the top one
+  scrolled away), while Cinema's were 36 px, sized from the screen (`svh`). Fixed: the room's
+  bars and `.cine__black` are `position: fixed` (`cine.css`), and both pages size them from
+  `--bar-h: max(100svh, 500px)` (`cine.css`, `return.css`); the room's `--H` (560 px) is left
+  to the frame picture. The 500 px floor (40 px bars at 1470x450) was picked by eye on a
+  throwaway debug page that applied the formula to both pages side by side; 36 px (screen)
+  looked thin, 45 px (hero) thick. Measured by headless Chrome over the DevTools protocol,
+  bars and black band in the room (`.is-cine-dark`) and on Cinema (`.is-leaving`):
+  identical, 0..40 / 410..450 at 1470x450 (scrolled 0 and 110), 42 px at 1280x520, 110 px at
+  390x500, and unchanged at 1470x956 and 390x844. Only `world/home.css` and
+  `cinema/landing.css` changed in `_site/`. The room ⇄ Cinema loop ran at 1470x450 (A and
+  `БИБЛИОТЕКА`).
+  Then, with a throwaway panel on both pages that set the bar size by hand, the frame's
+  aspect went from 2.39 to 2.32, picked by where the bottom bar cuts the pictures: 90 px bars
+  at 1336x755 (98 before), 161 at 1470x956 (170), 126 at 1920x1080. Short screens and phones
+  are unchanged (the 8% floor and the 22% cap govern there: 40 px at 1470x450, 110 at
+  390x500, 186 at 390x844).
 
 ## 12. Not migrated
 
