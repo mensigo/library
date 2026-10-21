@@ -935,3 +935,51 @@ flag:
 
 Publishing then stays a one-line change: remove `draft: true`. The note was already
 readable in dev with the final layout.
+
+### Room heading: text and font
+
+Done, apart from the checks below. The room's `h1` (`src/index.njk`) changed from
+"Сижу, смотрю, / записываю." to "Сгорает суета, / разогревая разум.", with the accent
+(`.co`) on the two nouns only; line 2 sits in `.panel__l2`. The sub line ("Аниме по ночам,
+Python до байткода, Сенека под чай.") is gone: the heading stands alone next to the cards.
+Tried on the way and dropped: "Что продумано, / то и записано.", "Каждый вдох продуман,
+каждый выдох записан." (21 characters a line, too long for the column), and Cormorant
+Garamond or Spectral italic as the font.
+
+The font is Caveat, self-hosted: `src/fonts/Caveat-Cyrillic-VariableFont_wght.woff2` and
+`Caveat-Latin-VariableFont_wght.woff2` (the fontsource 5.3.0 subsets, weights 400-700),
+`@font-face` in `room.css`, since only the room uses it. No Google Fonts request on the room.
+In `room.css`: line 1 at 600, line 2 at 400 and indented `.6em`, size ×1.02 of the `h1`
+clamp, line height 1.04 (tracking `-.01em` stays from the shared `h1`), and `.panel__head`
+shifted `36px` right. Caveat stops at 400, so a lower weight renders as 400. Below 1100 px
+the `16px` margins and the `clamp(32px, 6vw, 48px)` size stay as they were, now on
+`.panel__head h1`.
+
+Licences: `src/fonts/Caveat-OFL.txt` and `src/fonts/YsabeauInfant-OFL.txt`, published next
+to the fonts at `/fonts/`. JetBrains Mono's goes there the same way when it moves in.
+
+`shell.css` gained the italic Ysabeau Infant `@font-face`. The new design only declared the
+upright face, so every italic (code comments in `prose.css` too) was a faked slant.
+
+The stand stays: `src/_includes/world/fontlab.njk`, switched off. Its include at the end of
+`src/index.njk` sits inside a `{# #}` comment, so nothing of it is built. To use it, take the
+include out of the comment and open `localhost:8080/?lab`. It sets the font, weight and
+italic per line, size, tracking, line height, case, accent, glow, line 2 size and indent,
+the block's shift (with a guide line) and the sub on/off; it reports the block's x and
+whether the lines fit the column, and "скопировать настройки" gives the JSON. Its defaults
+match `room.css`, so "сброс" is the live heading; settings persist in `localStorage`
+(`fontlab3`). Fonts other than Caveat and Ysabeau come from Google Fonts, only with `?lab`.
+
+The settings that went into CSS, as the stand gave them (`w2` 200 rendered as 400):
+
+```json
+{ "f1": "Caveat", "f2": "Caveat", "w1": 600, "w2": 200, "i1": false, "i2": false,
+  "k": 1.02, "k2": 1, "ls": -0.01, "lh": 1.04, "cs": "none", "accent": "both",
+  "glow": 0, "indent": 0.6, "x": 36, "guide": false, "sub": false }
+```
+
+Left:
+
+- Check the phone view: below 1100 px Caveat runs at the old sizes, not tuned for it.
+- Check the fit at 1101 and 1920 (line 2 with its indent is the widest), and that the
+  heading stays off the hookah at 1920.

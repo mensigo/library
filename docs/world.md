@@ -56,8 +56,10 @@ the `/library` prefix. All links in templates go through `{{ pathPrefix }}`. Mar
 get it, so a note links another note relatively (`../disassemble/`);
 `test/markdown-links.test.js` fails on a root link in markdown.
 
-Fonts: Ysabeau Infant from `src/fonts/` (`shell.css`), JetBrains Mono from Google Fonts
-(`shell.njk`).
+Fonts: Ysabeau Infant from `src/fonts/` (`shell.css`), Caveat from `src/fonts/` for the room's
+title only (`room.css`, Cyrillic and Latin subsets of the variable font, weights 400-700),
+JetBrains Mono from Google Fonts (`shell.njk`). Both local fonts are OFL 1.1; their license texts
+sit next to the files (`src/fonts/*-OFL.txt`) and ship with them.
 
 `sessionStorage` keys: `fog`, `wall`, `note`, `cine`, `cineIn`. The old shell's
 `localStorage` keys (`theme`, `rail`, `accent`) don't overlap with them.

@@ -1,0 +1,265 @@
+{# TEMP: стенд шрифтов для заголовка комнаты. Показывается только с ?lab в адресе.
+   Удалить вместе со строкой include в src/index.njk. #}
+<style>
+  .fl { position: fixed; left: 16px; bottom: 56px; z-index: 9999; width: 300px; max-height: calc(100vh - 120px);
+        overflow: auto; padding: 12px 14px; border: 1px solid rgba(243,236,228,.18); border-radius: 10px;
+        background: rgba(10,8,14,.88); backdrop-filter: blur(8px); color: #f3ece4;
+        font: 12px/1.35 "JetBrains Mono", ui-monospace, monospace; }
+  .fl.is-min > :not(.fl__top) { display: none; }
+  .fl__top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .fl__top b { color: #f0a94a; letter-spacing: .08em; }
+  .fl label { display: grid; grid-template-columns: 88px 1fr 40px; gap: 6px; align-items: center; margin: 5px 0; }
+  .fl label.fl__chk { grid-template-columns: 88px 1fr; }
+  .fl select, .fl input[type=range] { width: 100%; min-width: 0; }
+  .fl select, .fl button, .fl textarea { font: inherit; color: inherit; background: #1a1620;
+        border: 1px solid rgba(243,236,228,.2); border-radius: 5px; padding: 3px 5px; }
+  .fl button { cursor: pointer; }
+  .fl output { text-align: right; color: rgba(243,236,228,.6); }
+  .fl hr { border: 0; border-top: 1px solid rgba(243,236,228,.12); margin: 9px 0; }
+  .fl__row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+  .fl__fit { margin-top: 6px; color: rgba(243,236,228,.6); }
+  .fl__fit.is-bad { color: #ff7a6b; }
+  .fl-guide { position: fixed; top: 0; bottom: 0; width: 0; z-index: 9998; pointer-events: none;
+              border-left: 1px dashed rgba(240,169,74,.7); }
+  .fl-guide[hidden] { display: none; }
+  .fl textarea { width: 100%; height: 120px; margin-top: 8px; resize: vertical; box-sizing: border-box; }
+</style>
+
+<script>
+(function () {
+  if (!/[?&]lab\b/.test(location.search)) return;
+
+  var LOCAL = 'Ysabeau Infant';
+  // [семья, оси для css2, группа]
+  var FONTS = [
+    [LOCAL, '', 'Сейчас'],
+    ['Ysabeau', 'ital,wght@0,100..1000;1,100..1000', 'Та же семья'],
+    ['Ysabeau Office', 'ital,wght@0,100..1000;1,100..1000', 'Та же семья'],
+    ['Ysabeau SC', 'wght@100..1000', 'Та же семья'],
+    ['Cormorant Garamond', 'ital,wght@0,300..700;1,300..700', 'Антиква'],
+    ['Cormorant Infant', 'ital,wght@0,300..700;1,300..700', 'Антиква'],
+    ['Playfair Display', 'ital,wght@0,400..900;1,400..900', 'Антиква'],
+    ['Lora', 'ital,wght@0,400..700;1,400..700', 'Антиква'],
+    ['EB Garamond', 'ital,wght@0,400..800;1,400..800', 'Антиква'],
+    ['Spectral', 'ital,wght@0,200;0,300;0,400;0,500;0,600;0,700;0,800;1,200;1,300;1,400;1,500;1,600;1,700;1,800', 'Антиква'],
+    ['Literata', 'ital,opsz,wght@0,7..72,200..900;1,7..72,200..900', 'Антиква'],
+    ['PT Serif', 'ital,wght@0,400;0,700;1,400;1,700', 'Антиква'],
+    ['Old Standard TT', 'ital,wght@0,400;0,700;1,400', 'Антиква'],
+    ['Prata', '', 'Антиква'],
+    ['Forum', '', 'Антиква'],
+    ['Alice', '', 'Антиква'],
+    ['Yeseva One', '', 'Антиква'],
+    ['Philosopher', 'ital,wght@0,400;0,700;1,400;1,700', 'Антиква'],
+    ['Kurale', '', 'Антиква'],
+    ['Tenor Sans', '', 'Гротеск'],
+    ['Manrope', 'wght@200..800', 'Гротеск'],
+    ['Montserrat', 'ital,wght@0,100..900;1,100..900', 'Гротеск'],
+    ['Raleway', 'ital,wght@0,100..900;1,100..900', 'Гротеск'],
+    ['Jost', 'ital,wght@0,100..900;1,100..900', 'Гротеск'],
+    ['Commissioner', 'wght@100..900', 'Гротеск'],
+    ['Rubik', 'ital,wght@0,300..900;1,300..900', 'Гротеск'],
+    ['Unbounded', 'wght@200..900', 'Гротеск'],
+    ['Comfortaa', 'wght@300..700', 'Гротеск'],
+    ['Podkova', 'wght@400..800', 'Гротеск'],
+    ['Caveat', 'wght@400..700', 'Рукописные'],
+    ['Neucha', '', 'Рукописные'],
+    ['Marck Script', '', 'Рукописные'],
+    ['Bad Script', '', 'Рукописные'],
+    ['Amatic SC', 'wght@400;700', 'Рукописные'],
+    ['Pacifico', '', 'Рукописные'],
+    ['Lobster', '', 'Рукописные'],
+    ['Great Vibes', '', 'Рукописные'],
+    ['Ruslan Display', '', 'Акцидентные'],
+    ['Oranienbaum', '', 'Акцидентные'],
+    ['JetBrains Mono', 'ital,wght@0,100..800;1,100..800', 'Моно']
+  ];
+
+  // BASE - то, что сейчас в room.css; k считается от кегля из CSS
+  var BASE = { f1: 'Caveat', f2: '', w1: 600, w2: 400, i1: false, i2: false, k: 1, k2: 1,
+               ls: -0.01, lh: 1.04, cs: 'none', accent: 'both', glow: 0, indent: .6, x: 36, guide: false, sub: true };
+  var PRESETS = {
+    'Сейчас': {},
+    'Тихий курсив': { w1: 300, w2: 300, i1: true, i2: true, accent: 'word', k: 1.05 },
+    'Курсив в акценте': { i2: true, w2: 500 },
+    'Cormorant курсив': { f1: 'Cormorant Garamond', w1: 500, w2: 500, i1: true, i2: true, k: 1.25, ls: 0, lh: .95 },
+    'Playfair + Caveat': { f1: 'Playfair Display', w1: 600, f2: 'Caveat', w2: 600, k2: 1.3, indent: 1.2 },
+    'Рукой': { f1: 'Marck Script', w1: 400, w2: 400, k: 1.2, ls: 0 },
+    'Ysabeau SC': { f1: 'Ysabeau SC', w1: 500, w2: 500, ls: .04, k: .9 },
+    'Forum капсом': { f1: 'Forum', w1: 400, w2: 400, cs: 'uppercase', ls: .06, k: .82, lh: 1.1 },
+    'Unbounded': { f1: 'Unbounded', w1: 500, w2: 500, k: .78, ls: -.02, lh: 1.1 },
+    'Свечение': { glow: .7, accent: 'word' }
+  };
+
+  var KEY = 'fontlab3';
+  var s = Object.assign({}, BASE);
+  try { Object.assign(s, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch (e) {}
+
+  var h1 = document.querySelector('.panel__head h1');
+  var head = h1.parentElement;
+  var sub = head.querySelector('.sub');
+  h1.innerHTML = '<span class="fl-l1">Сгорает <span class="fl-w1">суета</span>,</span><br>' +
+                 '<span class="fl-l2">разогревая <span class="fl-w2">разум</span>.</span>';
+  var l1 = h1.querySelector('.fl-l1'), l2 = h1.querySelector('.fl-l2');
+  var w1 = h1.querySelector('.fl-w1'), w2 = h1.querySelector('.fl-w2');
+
+  var loaded = {};
+  loaded[LOCAL] = true;
+  loaded['Caveat'] = true;
+  function load(name) {
+    if (!name || loaded[name]) return;
+    var spec = FONTS.find(function (f) { return f[0] === name; })[1];
+    var link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = 'https://fonts.googleapis.com/css2?family=' + name.replace(/ /g, '+') +
+                (spec ? ':' + spec : '') + '&display=swap';
+    link.onload = fit;
+    document.head.appendChild(link);
+    loaded[name] = true;
+  }
+
+  // ---------- панель ----------
+  var opts = '', group = '';
+  FONTS.forEach(function (f) {
+    if (f[2] !== group) { opts += (group ? '</optgroup>' : '') + '<optgroup label="' + f[2] + '">'; group = f[2]; }
+    opts += '<option>' + f[0] + '</option>';
+  });
+  opts += '</optgroup>';
+
+  var box = document.createElement('div');
+  box.className = 'fl';
+  box.innerHTML =
+    '<div class="fl__top"><b>FONT LAB</b><button data-act="min" type="button">свернуть</button></div>' +
+    '<label>пресет<select data-act="preset"><option value="">—</option>' +
+      Object.keys(PRESETS).map(function (p) { return '<option>' + p + '</option>'; }).join('') + '</select><span></span></label>' +
+    '<hr>' +
+    '<label>шрифт 1<select data-k="f1">' + opts + '</select><span></span></label>' +
+    '<label>вес 1<input type="range" data-k="w1" min="100" max="1000" step="50"><output></output></label>' +
+    '<label class="fl__chk">курсив 1<input type="checkbox" data-k="i1"></label>' +
+    '<hr>' +
+    '<label>шрифт 2<select data-k="f2"><option value="">как строка 1</option>' + opts + '</select><span></span></label>' +
+    '<label>вес 2<input type="range" data-k="w2" min="100" max="1000" step="50"><output></output></label>' +
+    '<label class="fl__chk">курсив 2<input type="checkbox" data-k="i2"></label>' +
+    '<label>размер 2<input type="range" data-k="k2" min=".6" max="1.8" step=".02"><output></output></label>' +
+    '<label>отступ 2, em<input type="range" data-k="indent" min="0" max="4" step=".1"><output></output></label>' +
+    '<hr>' +
+    '<label>размер<input type="range" data-k="k" min=".5" max="1.8" step=".02"><output></output></label>' +
+    '<label>трекинг, em<input type="range" data-k="ls" min="-.06" max=".2" step=".005"><output></output></label>' +
+    '<label>интерлиньяж<input type="range" data-k="lh" min=".75" max="1.5" step=".01"><output></output></label>' +
+    '<label>регистр<select data-k="cs"><option value="none">как есть</option><option value="uppercase">ВЕРХНИЙ</option>' +
+      '<option value="small-caps">капитель</option><option value="all-small-caps">вся капитель</option></select><span></span></label>' +
+    '<label>акцент<select data-k="accent"><option value="l2">строка 2</option><option value="word">только «разум»</option>' +
+      '<option value="both">«суета» + «разум»</option><option value="none">нет</option></select><span></span></label>' +
+    '<label>свечение<input type="range" data-k="glow" min="0" max="1" step=".05"><output></output></label>' +
+    '<hr>' +
+    '<label>сдвиг блока, px<input type="range" data-k="x" min="-400" max="240" step="4"><output></output></label>' +
+    '<label class="fl__chk">линия<input type="checkbox" data-k="guide"></label>' +
+    '<label class="fl__chk">подзаголовок<input type="checkbox" data-k="sub"></label>' +
+    '<div class="fl__fit" id="flFit"></div>' +
+    '<div class="fl__row"><button data-act="reset" type="button">сброс</button>' +
+      '<button data-act="copy" type="button">скопировать настройки</button></div>' +
+    '<textarea id="flOut" readonly hidden></textarea>';
+  document.body.appendChild(box);
+
+  var guide = document.createElement('div');
+  guide.className = 'fl-guide';
+  guide.hidden = true;
+  document.body.appendChild(guide);
+
+  // W/A/S/D комнаты слушают document: из панели клавиши не выпускаем
+  box.addEventListener('keydown', function (e) { e.stopPropagation(); });
+
+  function sync() {
+    box.querySelectorAll('[data-k]').forEach(function (el) {
+      var v = s[el.dataset.k];
+      if (el.type === 'checkbox') el.checked = !!v; else el.value = v;
+      var out = el.nextElementSibling;
+      if (out && out.tagName === 'OUTPUT') out.textContent = (+v).toFixed(el.step.indexOf('.') > -1 ? 2 : 0).replace(/^0\./, '.').replace(/^-0\./, '-.');
+    });
+  }
+
+  function apply() {
+    load(s.f1); load(s.f2);
+    var f2 = s.f2 || s.f1;
+    var fam = function (n) { return '"' + n + '", "Ysabeau Infant", serif'; };
+
+    h1.style.fontSize = '';
+    var base = parseFloat(getComputedStyle(h1).fontSize);
+    h1.style.fontSize = (base * s.k).toFixed(2) + 'px';
+    h1.style.letterSpacing = s.ls + 'em';
+    h1.style.lineHeight = s.lh;
+    h1.style.textTransform = s.cs === 'uppercase' ? 'uppercase' : 'none';
+    h1.style.fontVariantCaps = /small-caps/.test(s.cs) ? s.cs : 'normal';
+    h1.style.whiteSpace = 'nowrap';
+
+    l1.style.fontFamily = fam(s.f1);
+    l1.style.fontWeight = s.w1;
+    l1.style.fontStyle = s.i1 ? 'italic' : 'normal';
+    l2.style.fontFamily = fam(f2);
+    l2.style.fontWeight = s.w2;
+    l2.style.fontStyle = s.i2 ? 'italic' : 'normal';
+    l2.style.fontSize = s.k2 + 'em';
+    l2.style.display = 'inline-block';
+    l2.style.paddingLeft = s.indent + 'em';
+
+    l2.classList.toggle('co', s.accent === 'l2');
+    w2.classList.toggle('co', s.accent === 'word' || s.accent === 'both');
+    w1.classList.toggle('co', s.accent === 'both');
+    // Левый край колонки: по нему выровнены kicker, заголовок и sub
+    head.style.marginLeft = s.x + 'px';
+    if (sub) sub.style.display = s.sub ? '' : 'none';
+    h1.style.textShadow = s.glow ?'0 0 ' + Math.round(s.glow * 28) + 'px rgba(240,169,74,' + (s.glow * .55).toFixed(2) + ')' : '';
+
+    try { localStorage.setItem(KEY, JSON.stringify(s)); } catch (e) {}
+    sync();
+    fit();
+  }
+
+  // Влезает ли каждая строка в колонку заголовка (52vw минус карточки)
+  function fit() {
+    var col = head.clientWidth, left = h1.getBoundingClientRect().left;
+    var wide = Math.max(l1.getBoundingClientRect().right, l2.getBoundingClientRect().right) - left;
+    guide.style.left = Math.round(left) + 'px';
+    guide.hidden = !s.guide;
+    var el = document.getElementById('flFit');
+    el.textContent = 'линия ' + Math.round(left) + ' px от края, ' +
+                     'колонка ' + col + ' px, строка ' + Math.round(wide) + ' px, кегль ' +
+                     Math.round(parseFloat(h1.style.fontSize)) + ' px' + (wide > col ? ' - НЕ ВЛЕЗАЕТ' : '');
+    el.classList.toggle('is-bad', wide > col);
+  }
+
+  box.addEventListener('input', function (e) {
+    var el = e.target, k = el.dataset.k;
+    if (!k) return;
+    s[k] = el.type === 'checkbox' ? el.checked : (el.type === 'range' ? +el.value : el.value);
+    apply();
+  });
+
+  box.addEventListener('change', function (e) {
+    if (e.target.dataset.act !== 'preset' || !e.target.value) return;
+    s = Object.assign({}, BASE, PRESETS[e.target.value]);
+    e.target.value = '';
+    apply();
+  });
+
+  box.addEventListener('click', function (e) {
+    var act = e.target.dataset.act;
+    if (act === 'min') {
+      box.classList.toggle('is-min');
+      e.target.textContent = box.classList.contains('is-min') ? 'открыть' : 'свернуть';
+    } else if (act === 'reset') {
+      s = Object.assign({}, BASE);
+      apply();
+    } else if (act === 'copy') {
+      var out = document.getElementById('flOut');
+      out.hidden = false;
+      out.value = JSON.stringify(s, null, 1);
+      out.select();
+      try { navigator.clipboard.writeText(out.value); } catch (err) {}
+    }
+  });
+
+  addEventListener('resize', apply);
+  if (document.fonts) document.fonts.addEventListener('loadingdone', fit);
+  apply();
+})();
+</script>
