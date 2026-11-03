@@ -1,7 +1,6 @@
 ---
 title: __slots__
 titleHtml: '<span class="u-dim">__</span>slots<span class="u-dim">__</span>'
-layout: note.njk
 
 upd_date: 2026-06-22
 

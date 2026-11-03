@@ -1,0 +1,28 @@
+---
+# Склейка CSS/JS нового дизайна (комната, страницы групп заметок, заметки). Исходники
+# лежат в _src/ и сами не публикуются: Eleventy собирает только md/njk, а passthrough
+# на world/_src/ нет. Каждая запись — один файл в /world/; части — пути от src/.
+# Все бандлы лежат на одном уровне, поэтому url() в любом исходнике — относительно
+# /world/ (../fonts/, ../images/). note-groups.css идет после частей, чьи правила
+# перекрашивает; vt.css — последней.
+pagination:
+  data: bundles
+  size: 1
+  alias: entry
+bundles:
+  - out: home.css
+    parts: [world/_src/shell.css, world/_src/room.css, world/_src/cine.css, world/_src/note-groups.css, world/_src/vt.css]
+  - out: note-group.css
+    parts: [world/_src/shell.css, world/_src/notes.css, world/_src/note-groups.css, world/_src/vt.css]
+  - out: note.css
+    parts: [world/_src/shell.css, world/_src/notes.css, world/_src/note.css, world/_src/prose.css, world/_src/note-groups.css, world/_src/vt.css]
+  - out: home.js
+    parts: [world/_src/fog.js, world/_src/wall.js, world/_src/cine.js, world/_src/smoke.js]
+  - out: note-group.js
+    parts: [world/_src/note-group.js]
+  - out: note.js
+    parts: [world/_src/note.js]
+permalink: "/world/{{ entry.out }}"
+eleventyExcludeFromCollections: true
+---
+{{ entry.parts | bundle | safe }}

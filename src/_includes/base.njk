@@ -5,17 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <title>{{ title }}</title>
 
-    {% block meta %}
-    <meta name="title" content="{{ title }}">
-    <meta property="og:site_name" content="my-site.com">
-    <meta property="og:description" content="{{ tg_desc | default('Some description..') }}">
-    <meta property="og:type" content="article">
-    <meta property="og:title" content="{{ title }}">
-    <meta property="article:author" content="lonalone">
-    <meta property="article:published_time" content="{{ tg_pub_time | default('2025-11-01T00:00:00+03:00') | dateToRfc3339 }}">
-    <meta property="telegram:channel" content="@lonalone1">
-    <meta property="tg:site_verification" content="g7j8/rPFXfhyrq5q0QQV7EsYWv4=">
-    {% endblock %}
+    {% include "meta.njk" %}
 
     <!-- Предзагрузка шрифтов -->
     <link rel="preload" href="{{ pathPrefix }}/fonts/YsabeauInfant-VariableFont_wght.woff2" as="font" type="font/woff2" crossorigin>
@@ -181,20 +171,19 @@
         <div class="navgroup">
             <div class="navgroup__title">Библиотека</div>
             <a class="navlink" href="{{ pathPrefix }}/" {% if page.url == '/' %}aria-current="page"{% endif %}><span class="dot"></span><span>Главная</span></a>
-            <a class="navlink" href="{{ pathPrefix }}/notes/" {% if page.url == '/notes/' %}aria-current="page"{% endif %}><span class="dot"></span><span>Заметки</span></a>
+            <a class="navlink" href="{{ pathPrefix }}/#notes"><span class="dot"></span><span>Заметки</span></a>
             <a class="navlink" href="{{ pathPrefix }}/reviews/anime/" {% if page.url == '/reviews/anime/' %}aria-current="page"{% endif %}><span class="dot"></span><span>Обзоры аниме</span></a>
             {# Дверь в /cinema/ — отдельный рукописный мир, см. DESIGN.md. #}
             <a class="navlink navlink--cinema" href="{{ pathPrefix }}/cinema/"><span class="dot"></span><span>Cinema</span><span class="go" aria-hidden="true">→</span></a>
         </div>
 
-        {% if collections.pythonNotes | length %}
+        {# Группы заметок - страницы /notes/<id>/ (notes/groups.js); сами заметки - уже на новом дизайне. #}
         <div class="navgroup">
-            <div class="navgroup__title">Python</div>
-            {% for note in collections.pythonNotes %}
-            <a class="navlink" href="{{ pathPrefix }}{{ note.url }}" {% if page.url == note.url %}aria-current="page"{% endif %}><span class="dot"></span><span>{{ note.data.title }}</span></a>
-            {% endfor %}
+            <div class="navgroup__title">Заметки</div>
+            {% for group in noteGroups %}{% if group.enabled %}
+            <a class="navlink" href="{{ pathPrefix }}/notes/{{ group.id }}/"><span class="dot"></span><span>{{ group.title }}</span></a>
+            {% endif %}{% endfor %}
         </div>
-        {% endif %}
 
         {% if collections.anime | length %}
         <div class="navgroup">
@@ -213,15 +202,6 @@
             {% endfor %}
         </div>
         {% endfor %}
-
-        {% if collections.drafts | length %}
-        <div class="navgroup">
-            <div class="navgroup__title">Черновики</div>
-            {% for draft in collections.drafts %}
-            <a class="navlink" href="{{ pathPrefix }}{{ draft.url }}" {% if page.url == draft.url %}aria-current="page"{% endif %}><span class="dot"></span><span>{{ draft.data.title }}</span></a>
-            {% endfor %}
-        </div>
-        {% endif %}
     </nav>
 </aside>
 

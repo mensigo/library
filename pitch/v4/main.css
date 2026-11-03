@@ -1,0 +1,501 @@
+@font-face {
+  font-family: "Ysabeau Infant";
+  src: url("../../src/fonts/YsabeauInfant-VariableFont_wght.woff2") format("woff2");
+  font-weight: 100 900;
+  font-display: swap;
+}
+
+:root {
+  --bg: #07060a;
+  --ink: #f3ece4;
+  --ink-2: rgba(243, 236, 228, .72);
+  --ink-3: rgba(243, 236, 228, .46);
+  --line: rgba(243, 236, 228, .14);
+  --acc: #f0a94a;          /* свет фонарей */
+  --acc-soft: rgba(240, 169, 74, .14);
+  --sans: "Ysabeau Infant", "Segoe UI", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --ease: cubic-bezier(.2, .7, .2, 1);
+  /* Ширина сцены: кадр 1672x941 всегда закрывает окно целиком */
+  --ratio: 1.7768;
+  --sw: max(100vw, calc(100svh * var(--ratio)));
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 17px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---------- hero ---------- */
+
+.hero {
+  position: relative;
+  height: 100svh;
+  min-height: 560px;
+  overflow: hidden;
+}
+
+.stage {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: var(--sw);
+  aspect-ratio: 1672 / 941;
+  /* Слои сцены (дым, огни) лежат выше панели и иначе перехватывают клики по карточкам */
+  pointer-events: none;
+}
+
+.stage__img,
+.stage__smoke,
+.glows {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+video.stage__img { object-fit: cover; }
+
+/* Ролики проявляются из темноты и друг из друга; прозрачностью управляет loop.js */
+.stage__loop { opacity: 0; }
+
+.glow {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  width: var(--d);
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 184, 96, .5), rgba(255, 138, 48, .2) 38%, transparent 68%);
+  mix-blend-mode: screen;
+  animation: flicker var(--t) linear var(--s) infinite;
+}
+
+/* Едва заметный отсвет (стекло колбы кальяна) */
+.glow--faint {
+  background: radial-gradient(circle, rgba(255, 184, 96, .14), rgba(255, 138, 48, .05) 40%, transparent 68%);
+}
+
+/* Поверх роликов, которым loop.js выставляет z-index 1 и 2 */
+.glows, .stage__smoke { z-index: 3; }
+
+/* Неровный ритм: пламя то разгорается, то проседает, без заметного цикла */
+@keyframes flicker {
+  0%   { opacity: .72; scale: 1; }
+  8%   { opacity: .95; scale: 1.03; }
+  17%  { opacity: .55; scale: .97; }
+  23%  { opacity: .88; scale: 1.02; }
+  31%  { opacity: .66; scale: .98; }
+  44%  { opacity: 1;   scale: 1.05; }
+  52%  { opacity: .6;  scale: .97; }
+  61%  { opacity: .86; scale: 1.01; }
+  70%  { opacity: .7;  scale: .99; }
+  83%  { opacity: .97; scale: 1.04; }
+  91%  { opacity: .62; scale: .98; }
+  100% { opacity: .72; scale: 1; }
+}
+
+.scrim {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(to bottom, rgba(7, 6, 10, .6), transparent 26%),
+    linear-gradient(to top, rgba(7, 6, 10, .55), transparent 22%);
+}
+
+/* Приглушенный вариант: кадр темнее и спокойнее по цвету, свечение слабее,
+   левый край и зона под заголовком притемнены. Проба настроения до перегенерации. */
+.hero--dim .stage__img { filter: brightness(.76) saturate(.8) contrast(1.05); }
+
+.hero--dim .glows { opacity: .5; }
+
+.hero--dim .scrim {
+  background:
+    radial-gradient(42% 36% at 56% 25%, rgba(7, 6, 10, .6), transparent),
+    linear-gradient(to right, rgba(7, 6, 10, .5), transparent 30%),
+    linear-gradient(to bottom, rgba(7, 6, 10, .6), transparent 26%),
+    linear-gradient(to top, rgba(7, 6, 10, .55), transparent 22%);
+}
+
+/* ---------- hud ---------- */
+
+.hud {
+  position: absolute;
+  top: 22px;
+  left: 26px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font: 500 11px/1 var(--mono);
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+
+.hud b { color: var(--ink); font-weight: 700; }
+.hud .sep { color: var(--ink-3); }
+
+.dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--acc);
+  box-shadow: 0 0 12px var(--acc);
+  animation: ember 3.2s ease-in-out infinite;
+}
+
+@keyframes ember {
+  50% { opacity: .45; }
+}
+
+/* ---------- settings ---------- */
+
+.settings {
+  position: absolute;
+  top: 14px;
+  right: clamp(16px, 5vw, 84px);
+  z-index: 5;
+}
+
+.gear {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: rgba(14, 11, 16, .44);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  color: var(--ink-2);
+  cursor: pointer;
+  transition: color .25s var(--ease), border-color .25s var(--ease);
+}
+
+.gear svg {
+  width: 18px;
+  height: 18px;
+  transition: rotate .5s var(--ease);
+}
+
+.gear:hover,
+.gear:focus-visible,
+.gear[aria-expanded="true"] {
+  color: var(--ink);
+  border-color: var(--acc);
+  outline: none;
+}
+
+.gear[aria-expanded="true"] svg { rotate: 60deg; }
+
+.settings__pop {
+  position: absolute;
+  top: 46px;
+  right: 0;
+  width: 272px;
+  padding: 14px 16px 16px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: rgba(14, 11, 16, .84);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, .45);
+}
+
+.settings__pop[hidden] { display: none; }
+
+.settings__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 14px;
+}
+
+.settings__label { font-size: 16px; line-height: 1.2; }
+
+.settings__label small {
+  display: block;
+  margin-top: 5px;
+  font: 500 10px/1.3 var(--mono);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.switch {
+  position: relative;
+  flex: none;
+  width: 42px;
+  height: 24px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: rgba(243, 236, 228, .08);
+  cursor: pointer;
+  transition: background .25s var(--ease), border-color .25s var(--ease);
+}
+
+.switch::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--ink-2);
+  transition: translate .25s var(--ease), background .25s var(--ease);
+}
+
+.switch[aria-checked="true"] {
+  border-color: var(--acc);
+  background: var(--acc-soft);
+}
+
+.switch[aria-checked="true"]::after {
+  translate: 18px 0;
+  background: var(--acc);
+}
+
+.switch:focus-visible { outline: 2px solid var(--acc); outline-offset: 2px; }
+
+/* ---------- panel ---------- */
+
+.panel {
+  position: absolute;
+  top: clamp(76px, 13vh, 150px);
+  right: clamp(20px, 5vw, 84px);
+  /* Заголовок висит в дыму над кальяном, карточки — колонкой правее него,
+     чтобы не ложиться на сам кальян */
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 270px;
+  column-gap: 36px;
+  align-items: start;
+  width: min(720px, 52vw);
+}
+
+.kicker {
+  font: 500 11px/1 var(--mono);
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: var(--acc);
+}
+
+h1 {
+  margin: 14px 0 0;
+  font-size: clamp(32px, 3.5vw, 54px);
+  font-weight: 600;
+  line-height: 1.02;
+  letter-spacing: -.01em;
+  text-wrap: balance;
+}
+
+h1 .co { color: var(--acc); }
+
+.sub {
+  margin: 16px 0 0;
+  max-width: 34ch;
+  font-size: clamp(16px, 1.35vw, 20px);
+  color: var(--ink-2);
+}
+
+/* ---------- cards ---------- */
+
+.cards {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: rgba(14, 11, 16, .44);
+  -webkit-backdrop-filter: blur(10px) saturate(1.2);
+  backdrop-filter: blur(10px) saturate(1.2);
+  color: inherit;
+  text-decoration: none;
+  transition: transform .35s var(--ease), border-color .35s var(--ease), background .35s var(--ease);
+  animation: drift 7s ease-in-out infinite;
+}
+
+.card:nth-child(2) { animation-delay: -2.3s; }
+.card:nth-child(3) { animation-delay: -4.6s; }
+
+@keyframes drift {
+  50% { translate: 0 -7px; }
+}
+
+.card:hover,
+.card:focus-visible {
+  transform: translateY(-6px);
+  border-color: var(--acc);
+  background: rgba(30, 20, 14, .6);
+  outline: none;
+}
+
+.card__k {
+  font: 500 10px/1 var(--mono);
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.card__t {
+  margin-top: 10px;
+  font-size: 23px;
+  font-weight: 600;
+  line-height: 1.1;
+}
+
+.card__d {
+  margin-top: 6px;
+  font-size: 15px;
+  line-height: 1.35;
+  color: var(--ink-2);
+}
+
+.card__m {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin-top: auto;
+  padding-top: 12px;
+  font: 500 11px/1 var(--mono);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.card__m b { color: var(--acc); font-size: 14px; }
+
+.card__m i {
+  margin-left: auto;
+  font-style: normal;
+  color: var(--ink);
+  transition: translate .35s var(--ease);
+}
+
+.card:hover .card__m i { translate: 4px 0; }
+
+/* ---------- frameline ---------- */
+
+.frameline {
+  position: absolute;
+  right: clamp(20px, 5vw, 84px);
+  bottom: 22px;
+  display: flex;
+  gap: 22px;
+  font: 500 10px/1 var(--mono);
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+/* ---------- fog transition ---------- */
+
+.fog {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  opacity: 0;
+  background:
+    radial-gradient(90% 70% at 28% 62%, rgba(226, 205, 214, .96), transparent 70%),
+    radial-gradient(80% 80% at 74% 30%, rgba(150, 168, 178, .9), transparent 72%),
+    #2a2430;
+  transition: opacity .9s var(--ease);
+}
+
+.fog.on { opacity: 1; }
+
+.fog__inner {
+  text-align: center;
+  opacity: 0;
+  translate: 0 10px;
+  transition: opacity .5s var(--ease) .45s, translate .5s var(--ease) .45s;
+}
+
+.fog.on .fog__inner { opacity: 1; translate: 0 0; }
+
+.fog .kicker { color: #3a2c22; }
+
+.fog strong {
+  display: block;
+  margin-top: 12px;
+  font-size: clamp(44px, 8vw, 110px);
+  font-weight: 600;
+  line-height: 1;
+  color: #17121a;
+}
+
+/* ---------- narrow screens ---------- */
+
+@media (max-width: 1100px) {
+  /* Сцена уходит в нижние 62% экрана, верх остается под текст и карточки */
+  :root { --sw: max(100vw, calc(62svh * var(--ratio))); }
+
+  .stage {
+    left: calc(var(--sw) * -.05);
+    -webkit-mask-image: linear-gradient(to bottom, transparent, #000 28%);
+    mask-image: linear-gradient(to bottom, transparent, #000 28%);
+  }
+
+  .hud { top: 16px; left: 16px; }
+
+  .panel {
+    display: block;
+    top: 58px;
+    left: 0;
+    right: 0;
+    width: auto;
+  }
+
+  .panel__head { margin: 0 16px; }
+
+  h1 { font-size: clamp(32px, 6vw, 48px); }
+
+  /* На телефоне три карточки не помещаются в ряд — здесь карусель уместна */
+  .cards {
+    flex-direction: row;
+    gap: 10px;
+    margin-top: 20px;
+    padding: 0 16px 8px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+  }
+
+  .cards::-webkit-scrollbar { display: none; }
+
+  .card {
+    flex: 0 0 min(68%, 280px);
+    min-height: 150px;
+    scroll-snap-align: start;
+    animation: none;
+  }
+
+  .frameline { left: 16px; right: auto; bottom: 14px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card, .dot, .glow { animation: none; }
+  .patch { animation: none; filter: none; }
+  .fog, .fog__inner { transition-duration: .01s; transition-delay: 0s; }
+}

@@ -1,11 +1,13 @@
 ---
 title: Property
-layout: note.njk
 
 upd_date: 2026-06-22
 
 tg_desc: python-property
 tg_pub_time: 2026-06-22
+
+tags:
+  - Python
 ---
 
 ## Интро

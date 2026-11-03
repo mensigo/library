@@ -1,6 +1,5 @@
 ---
 title: GIL, субинтерпретаторы, free-threading
-layout: note.njk
 draft: true
 
 upd_date: 2026-09-30

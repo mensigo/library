@@ -6,6 +6,7 @@ const markdownItAttrs = require("markdown-it-attrs");
 const markdownItContainer = require("markdown-it-container");
 const markdownItFootnote = require("markdown-it-footnote");
 const markdownItAbbr = require("markdown-it-abbr");
+const worldFilters = require("./lib/filters");
 
 // Тот же алгоритм, что и generateSlug в src/js/scripts.js: якоря,
 // сгенерированные на сборке, должны совпадать с теми, что ищет TOC в браузере.
@@ -25,9 +26,6 @@ function sectionLabel(url) {
         const category = url.split('/').filter(Boolean)[2];
         return category ? category.charAt(0).toUpperCase() + category.slice(1) : 'Философия';
     }
-    if (url.startsWith('/notes/python/')) return 'Python';
-    if (url.startsWith('/notes/')) return 'Заметки';
-    if (url.startsWith('/drafts/')) return 'Черновики';
     return '';
 }
 
@@ -311,10 +309,21 @@ module.exports = function(eleventyConfig) {
     // шаблоном src/cinema/bundles.njk — по одному файлу на страницу.
     eleventyConfig.addPassthroughCopy("src/cinema/**/*.html");
     eleventyConfig.addWatchTarget("src/cinema/_src/");
-    eleventyConfig.addFilter("cinemaBundle", (parts) => parts
-        .map(name => `/* ── ${name} ── */\n`
-            + fs.readFileSync(path.join(__dirname, "src/cinema/_src", name), "utf8"))
+    eleventyConfig.addWatchTarget("src/world/_src/");
+
+    // Склейка бандлов (src/cinema/bundles.njk, src/world/bundles.njk):
+    // части — пути от src/, например cinema/_src/cinema.css. Сами _src/ не публикуются.
+    eleventyConfig.addFilter("bundle", (parts) => parts
+        .map(name => `/* ── ${path.basename(name)} ── */\n`
+            + fs.readFileSync(path.join(__dirname, "src", name), "utf8"))
         .join("\n"));
+
+    // Фильтры нового дизайна (lib/filters.js): строки и темы страницы группы,
+    // оглавление и даты заметки.
+    Object.entries(worldFilters).forEach(([name, fn]) => eleventyConfig.addFilter(name, fn));
+
+    // Группы заметок (src/notes/groups.js) нужны и вне notes/: стену рисует src/index.njk.
+    eleventyConfig.addGlobalData("noteGroups", () => require("./src/notes/groups.js"));
 
     // Фильтр для читаемой даты
     eleventyConfig.addFilter("readableDate", (dateObj) => {
@@ -338,12 +347,6 @@ module.exports = function(eleventyConfig) {
         return Math.max(1, Math.ceil(wordCount / wordsPerMinute));
     });
 
-    // Количество разделов верхнего уровня (h2) в отрендеренном HTML.
-    // Служебные заголовки (.u-kicker: «Итог», «Примечания») разделами не считаются.
-    eleventyConfig.addFilter("headingCount", (content) => {
-        return (String(content).match(/<h2(?![^>]*u-kicker)[\s>]/g) || []).length;
-    });
-
     // Русское склонение по числу: 1 раздел, 2 раздела, 5 разделов
     eleventyConfig.addFilter("plural", (n, one, few, many) => {
         const mod10 = n % 10;
@@ -364,26 +367,8 @@ module.exports = function(eleventyConfig) {
         return str.startsWith(prefix);
     });
 
-    // Метка раздела — для крошек в topbar и для списка последних обновлений
+    // Метка раздела — для крошек в topbar старой оболочки
     eleventyConfig.addFilter('sectionLabel', sectionLabel);
-
-    // Соседи по разделу — для пагинации внизу заметки.
-    // Порядок тот же, что в навигации: по title, с русской сортировкой.
-    eleventyConfig.addFilter('neighbours', (collection, url) => {
-        if (!collection || !url) return {};
-        const folder = (u) => u.slice(0, u.lastIndexOf('/', u.length - 2) + 1);
-        const dir = folder(url);
-        const items = collection
-            .filter(item => item.url && folder(item.url) === dir)
-            .sort((a, b) => {
-                const titleA = (a.data.title || '').toString();
-                const titleB = (b.data.title || '').toString();
-                return titleA.localeCompare(titleB, 'ru', { sensitivity: 'base' });
-            });
-        const i = items.findIndex(item => item.url === url);
-        if (i === -1) return {};
-        return { prev: items[i - 1] || null, next: items[i + 1] || null };
-    });
 
     // Коллекция аниме
     eleventyConfig.addCollection("anime", function(collection) {
@@ -444,39 +429,11 @@ module.exports = function(eleventyConfig) {
             });
     });
 
-    // Коллекция Python-заметок, отсортированная по title
-    eleventyConfig.addCollection("pythonNotes", function(collection) {
-        return collection.getFilteredByGlob("src/notes/python/*.md")
-            .filter(item => {
-                return !item.inputPath.includes('index.md') && item.data.draft !== true;
-            })
-            .sort((a, b) => {
-                const titleA = (a.data.title || '').toString();
-                const titleB = (b.data.title || '').toString();
-                return titleA.localeCompare(titleB, 'ru', { sensitivity: 'base' });
-            });
-    });
-
-    // Коллекция черновиков (draft: true)
-    eleventyConfig.addCollection("drafts", function(collection) {
-        return collection.getAll()
-            .filter(item => item.data.draft === true && item.data.title)
-            .sort((a, b) => {
-                const titleA = (a.data.title || '').toString();
-                const titleB = (b.data.title || '').toString();
-                return titleA.localeCompare(titleB, 'ru', { sensitivity: 'base' });
-            });
-    });
-
-    // Коллекция последних обновлений (по upd_date, включая черновики)
-    eleventyConfig.addCollection("recentUpdates", function(collection) {
-        return collection.getAll()
-            .filter(item => item.data.upd_date)
-            .sort((a, b) => new Date(b.data.upd_date) - new Date(a.data.upd_date))
-            .map(item => {
-                item.data.categoryLabel = sectionLabel(item.url);
-                return item;
-            });
+    // Опубликованные обзоры: их число на карточке «Обзоры» в комнате (src/index.njk)
+    eleventyConfig.addCollection("reviews", function(collection) {
+        return collection.getFilteredByGlob("src/reviews/**/*.md")
+            .filter(item => !item.inputPath.endsWith('index.md') && item.data.draft !== true)
+            .sort((a, b) => (a.data.title || '').toString().localeCompare((b.data.title || '').toString(), 'ru', { sensitivity: 'base' }));
     });
 
     // Shortcode для сортируемых таблиц
@@ -519,8 +476,8 @@ module.exports = function(eleventyConfig) {
         const searchIndex = [];
 
         collection.getAll().forEach(item => {
-            // Пропускаем служебные файлы и drafts
-            if (item.data.draft === true || !item.inputPath.includes('src')) {
+            // Пропускаем служебные файлы, drafts и несобираемые страницы (скрытые обзоры)
+            if (item.data.draft === true || item.url === false || !item.inputPath.includes('src')) {
                 return;
             }
 
@@ -562,7 +519,9 @@ module.exports = function(eleventyConfig) {
             });
         });
 
-        return searchIndex;
+        // getAll() не даёт стабильного порядка, поэтому сортируем по title
+        return searchIndex.sort((a, b) =>
+            a.title.toString().localeCompare(b.title.toString(), 'ru', { sensitivity: 'base' }));
     });
 
     return {

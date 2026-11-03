@@ -1,0 +1,106 @@
+---
+# Страница группы заметок: /notes/<id>/ на каждую запись из notes/groups.js
+# (pitch notes-python.html). Строки - опубликованные заметки группы, новые выше,
+# номер строки - позиция в этом порядке; блок черновиков - черновики из папки группы.
+# Из коллекций исключена: в поиск старой оболочки и в ее списки она не входит.
+layout: world/shell.njk
+bundle: note-group
+pagination:
+  data: noteGroups
+  size: 1
+  alias: noteGroup
+permalink: "/notes/{{ noteGroup.id }}/"
+eleventyExcludeFromCollections: true
+eleventyComputed:
+  title: "{{ noteGroup.title }} · заметки"
+  groupId: "{{ noteGroup.id }}"
+---
+{%- from "world/note-sigils.njk" import sigil -%}
+{%- set notes = collections.all | groupNotes(noteGroup.id) -%}
+{%- set drafts = collections.all | groupDrafts(noteGroup.id) -%}
+<!-- Та же стена, на которой выбирали группу, в том же месте, где встала камера:
+     при переходе фон не меняется, только темнеет под список. -->
+<div class="backdrop" aria-hidden="true"></div>
+<div class="shade" aria-hidden="true"></div>
+
+<nav class="hud" aria-label="Хлебные крошки">
+  <span class="dot"></span>
+  <a href="{{ pathPrefix }}/"><b>БИБЛИОТЕКА</b></a>
+  <span class="sep">/</span>
+  <a href="{{ pathPrefix }}/#notes" data-back>заметки</a>
+  <span class="sep">/</span>
+  <span>{{ noteGroup.id }}</span>
+</nav>
+
+<main class="wrap">
+  <header class="head">
+    <div class="head__text">
+      <span class="kicker">{{ ("0" ~ (pagination.pageNumber + 1)).slice(-2) }} / заметки</span>
+      <h1>{{ noteGroup.title }}</h1>
+      <p class="sub">{{ noteGroup.desc }}</p>
+    </div>
+    <!-- Знак группы со стены, уже дорисованный -->
+    {{ sigil(noteGroup.id, "mark") }}
+  </header>
+
+  <div class="layout">
+    <section class="list" aria-label="Заметки о {{ noteGroup.title }}">
+      <label class="find">
+        <span class="find__k">найти</span>
+        <input id="find" type="search" placeholder="{{ noteGroup.find }}" autocomplete="off">
+        <kbd>/</kbd>
+      </label>
+
+      <div id="rows">
+        {%- for note in notes %}
+        {%- set tags = (note.data.tags or []) | reject("equalto", noteGroup.tag) | list %}
+        <a class="row{% if note.data.upd_date | isFresh %} row--fresh{% endif %}" href="{{ pathPrefix }}{{ note.url }}" data-tags="{{ tags | join(',') }}">
+          <span class="row__n">{{ ("0" ~ loop.index).slice(-2) }}</span>
+          <span class="row__body">
+            <span class="row__t">{% if note.data.titleHtml %}{{ note.data.titleHtml | safe }}{% else %}{{ note.data.title }}{% endif %}</span>
+            {%- if note.data.lede %}
+            <span class="row__d">{{ note.data.lede }}</span>
+            {%- endif %}
+            {%- if tags | length %}
+            <span class="row__tags">{% for t in tags %}<i>{{ t }}</i>{% endfor %}</span>
+            {%- endif %}
+          </span>
+          <span class="row__m"><span><b>{{ note.data.reading_time or (note.templateContent | readingTime) }}</b> мин</span><span>{{ note.data.upd_date | shortDate }}</span></span>
+        </a>
+        {%- endfor %}
+      </div>
+
+      <p class="empty" id="empty" hidden>Пусто. Попробуй другое слово или сними тему.</p>
+    </section>
+
+    <aside class="side">
+      <div class="topics">
+        <span class="kicker">Темы</span>
+        <div class="topics__list" role="group" aria-label="Фильтр по теме">
+          {%- for t in notes | topics(noteGroup.tag) %}
+          <button class="topic" type="button" data-tag="{{ t.tag }}" aria-pressed="{{ 'true' if loop.first else 'false' }}">{{ t.label }} <b>{{ t.count }}</b></button>
+          {%- endfor %}
+        </div>
+      </div>
+      {%- if drafts | length %}
+
+      <!-- Черновики этой группы: еще не заметки, но уже видно, что на подходе -->
+      <div class="embers">
+        <span class="kicker">{{ noteGroup.embers }}</span>
+        <ul>
+          {%- for draft in drafts %}
+          <li><span class="dot"></span><span class="embers__t">{{ draft.data.title }}</span><small>черновик · {{ draft.data.upd_date | shortDate }}</small></li>
+          {%- endfor %}
+        </ul>
+      </div>
+      {%- endif %}
+
+      <a class="back" href="{{ pathPrefix }}/#notes" data-back><i>←</i> к стене <kbd>A</kbd></a>
+    </aside>
+  </div>
+
+  <div class="frameline frameline--foot">
+    <span>кальян дымит</span>
+    <span>утро подождет</span>
+  </div>
+</main>

@@ -1,6 +1,5 @@
 ---
 title: Неограниченные int в Python
-layout: note.njk
 draft: true
 
 upd_date: 2026-08-17

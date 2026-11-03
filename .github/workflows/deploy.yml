@@ -33,7 +33,7 @@ jobs:
         run: |
           rm -rf src/images/notes src/images/reviews
           mkdir -p src/images/notes src/images/reviews
-          rsync -a --delete --exclude 'logo.png' images_repo/src/images/ src/images/
+          rsync -a --delete --exclude 'logo.png' --exclude '/world/*.png' images_repo/src/images/ src/images/
           rm -rf images_repo
 
       - name: Setup Node

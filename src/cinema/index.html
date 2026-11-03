@@ -13,6 +13,9 @@
   });
 </script>
 <link rel="stylesheet" href="landing.css">
+<!-- Первый кадр ждет return.js: пришли из комнаты без перехода - полосы
+     должны стоять с первого кадра -->
+<link rel="expect" blocking="render" href="#ready">
 </head>
 <body>
 
@@ -20,9 +23,11 @@
 
 <div class="hud">
   <span class="dot"></span>
-  <a href="../"><b>БИБЛИОТЕКА</b></a>
+  <a href="../" data-back><b>БИБЛИОТЕКА</b></a>
   <span class="sep">/</span>
   <span>аниме</span>
+  <!-- Подсказка: A (стрелка влево, Escape) ведет в комнату, как у стены (return.js) -->
+  <span class="right hud__keys" aria-hidden="true"><kbd>A</kbd>в комнату</span>
 </div>
 
 <!-- ================= HERO =================
@@ -129,6 +134,15 @@
   <h2>«Свет в зале гаснет..»</h2>
 </div>
 
+<!-- Возврат в комнату (return.js, return.css): въезжают полосы, кадр между ними
+     гаснет, комната открывается в том же виде (world/_src/cine.js) -->
+<div class="cine" aria-hidden="true">
+  <i class="cine__bar cine__bar--top"></i>
+  <i class="cine__black"></i>
+  <i class="cine__bar cine__bar--bot"></i>
+</div>
+
 <script src="landing.js"></script>
+<i id="ready" hidden></i>
 </body>
 </html>

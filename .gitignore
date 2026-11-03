@@ -22,4 +22,14 @@ node_modules/
 
 123_files/
 src/images/
-images/
+images/**
+!images/**/
+!images/**/meta.md
+
+# Temporary
+pitch/legacy/
+pitch/v3/
+/*.md
+!/CLAUDE.md
+!/DESIGN.md
+!/README.md

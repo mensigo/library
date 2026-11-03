@@ -1,6 +1,5 @@
 ---
 title: Disassemble
-layout: note.njk
 
 upd_date: 2026-09-23
 
