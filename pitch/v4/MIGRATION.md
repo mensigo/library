@@ -628,8 +628,8 @@ The tests from section 10 are spread over the steps that make them possible.
    Done when (met):
    - Nothing beyond `build:check`: this step is checked in the browser.
 
-   In the browser (DevTools device toolbar, 390x844, touch on). **TODO:** items 1-4 are
-   not checked by hand yet, only by the headless run above; done before merging (section 11).
+   In the browser (DevTools device toolbar, 390x844, touch on). Items 1-4 met, checked by
+   hand in Chrome's device toolbar before merging (section 11).
    Item 5 met (headless screenshots at 1470x956).
    1. `/notes/python/slots/`: every figure can be read, labels at least ~11 px, by scrolling
       inside `.fig__frame` or by opening it full screen.
@@ -821,16 +821,18 @@ The tests from section 10 are spread over the steps that make them possible.
 
 ## 11. Checks before merging to `main`
 
-Done: Chrome on the MacBook screen, production prefix (and the root links it found),
-`prefers-reduced-motion`, short screens.
-Left: Safari and Firefox, the phone view by hand, a real iPhone.
+Done: Chrome on the MacBook screen, Safari, production prefix (and the root links it found),
+`prefers-reduced-motion`, short screens, the phone view in Chrome DevTools.
+Skipped: Firefox.
+Left: a real iPhone.
 
 - **Done.** Chrome, MacBook screen (1470x956): every transition from `FINAL_STATE.md`, both directions,
   direct visits and back/forward. Checked by hand in steps 6, 8 and 9, and by the headless
   run of the production-prefix check below.
-- **Left.** **Safari and Firefox**: not opened so far. Safari has cross-document view transitions;
-  Firefox doesn't have `pagereveal` and takes the `pageshow` path. Both must at least
-  navigate correctly, even without the animation.
+- **Done.** **Safari** (macOS): checked by hand, the site runs fine. Safari has cross-document
+  view transitions.
+- **Skipped.** **Firefox**: left out by choice. It doesn't have `pagereveal` and takes the
+  `pageshow` path; that path is untested in a real browser.
 - **Done.** Production prefix: `NODE_ENV=production npm run build`, serve `_site/` under `/library/`,
   and go through all the loops (referrer checks, `sessionStorage.note`, VT names).
   Met, by headless Chrome over the DevTools protocol at 1470x956 (production build served
@@ -848,8 +850,11 @@ Left: Safari and Firefox, the phone view by hand, a real iPhone.
   production both pointed to `/notes/…` without `/library` and 404ed (already the case on
   `main`). `links.test.js` can't see it: it runs on the unprefixed build. Both links are now
   `../disassemble/`, and `test/markdown-links.test.js` keeps root links out of markdown.
-- **Left.** Phone view in Chrome DevTools (390x844, touch on): the step 7 browser list, items 1-4,
-  skipped by hand in step 7, and step 9 item 4 (no `A в комнату` hint on `/cinema/`).
+- **Done.** Phone view in Chrome DevTools (iPhone 12 Pro, 390x844, touch on): the step 7
+  browser list, items 1-4 (figures readable by dragging inside `.fig__frame`, the collapsed
+  TOC jumps to its headings, no key hints on note and group pages, topics a swipeable chip
+  strip over one column of rows), and step 9 item 4 (no `A в комнату` hint on `/cinema/`).
+  Checked by hand. Where the pictures sit on a phone is a TODO (section 13).
 - **Left.** Real iPhone (Safari): a note opened by direct link, a figure, the TOC, and room → wall → note
   by taps (decision 3).
 - **Done.** `prefers-reduced-motion`: every page reachable, nothing waits on an animation.
@@ -983,3 +988,21 @@ Left:
 - Check the phone view: below 1100 px Caveat runs at the old sizes, not tuned for it.
 - Check the fit at 1101 and 1920 (line 2 with its indent is the widest), and that the
   heading stays off the hookah at 1920.
+
+### Image placement on phones
+
+The phone view passed its checks (section 11), but where the pictures sit below 1100 px
+was never tuned by eye; the full mobile view is a later feature (decision 3). Now:
+
+- Room (`room.css`, narrow screens): the frame `.stage` is shifted left by 5% of its width
+  and fades in from the top (mask to 28%) under the heading and the card carousel.
+- Wall at `/#notes`: the camera stops with the lanterns at the right edge
+  (`--cam: wall-x + wall-w * .8 - 100vw`), the wall fades from the top the same way and is
+  cut along the post.
+- Group and note pages: the same wall behind the header (`notes.css`, `left center / cover`),
+  placed by `--cam-at: .8` under 1100 px.
+
+To do: at 390x844 (and a real iPhone), decide what part of each picture should show
+behind the text and move it there. `--cam` in `room.css` and `--cam-at` in `notes.css` must
+change together, or the wall jumps between the room and a group page. Record the change in
+`docs/world.md` ("Phones" and "Values that must stay in sync").
