@@ -1,0 +1,654 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ковбой Бибоп — обзор · Библиотека</title>
+
+<!-- main.css дает каркас: переменные, .hud, .kicker, .rise, грейды.
+     Вариант C: та же «папка с делом», что и в B, но собрана по людям.
+     Часть 1 — кто на борту и как там оказался (без спойлеров).
+     Часть 2 — почему все дела оказались одним делом, и чем каждая
+     история кончается (развязки спрятаны под запечатанный блок).
+     Часть 3 — что от сериала остается после. -->
+<link rel="stylesheet" href="main.css">
+<style>
+/* ======================================================================
+   ОБЗОР · ВАРИАНТ C · «дело по людям»
+   Страница притворяется папкой с делом. Моно, капс, номера, штампы,
+   поля с прочерками. Развязки лежат в опечатанном конверте: открывать
+   на свой страх.
+   ====================================================================== */
+.review{--acc:var(--ga);--acc-t:var(--ga-text);--acc-l:var(--gal)}
+.review .hud{backdrop-filter:none;
+  background:linear-gradient(to bottom,rgba(10,11,14,.72) 0%,rgba(10,11,14,.45) 55%,rgba(10,11,14,0) 100%)}
+
+.mono{font-family:var(--mono);text-transform:uppercase;letter-spacing:.18em;font-size:10px}
+
+/* Штамп: обычный текст в рамке под углом, а не картинка. */
+.stamp{display:inline-block;padding:6px 12px;border:2px solid currentColor;border-radius:2px;
+  font-family:var(--mono);font-size:11px;letter-spacing:.22em;text-transform:uppercase;
+  transform:rotate(-3deg);opacity:.85}
+.stamp.open{color:#d8654a}
+.stamp.closed{color:var(--muted-2)}
+
+/* --- шапка: лист дела --- */
+.rv-hero{position:relative;min-height:clamp(560px,88svh,900px);display:flex;align-items:flex-end;
+  overflow:hidden;isolation:isolate;border-bottom:1px solid var(--gl)}
+.rv-hero .bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
+  object-position:var(--hero-pos,50% 38%);z-index:0;animation:drift 30s ease-in-out infinite alternate}
+.rv-hero .veil{position:absolute;inset:0;z-index:1;
+  background:
+    linear-gradient(to top,var(--gp) 2%,rgba(13,15,19,.74) 26%,rgba(13,15,19,.18) 58%,transparent 88%),
+    linear-gradient(to right,rgba(13,15,19,.55) 0%,rgba(13,15,19,.18) 40%,transparent 68%)}
+.rv-hero .scanline{position:absolute;inset:0;z-index:2;pointer-events:none;opacity:.3;
+  background:repeating-linear-gradient(to bottom,transparent 0 2px,rgba(0,0,0,.16) 2px 3px)}
+.rv-hero .cnt{position:relative;z-index:3;width:100%;max-width:var(--maxw);margin:0 auto;
+  padding:0 24px clamp(38px,6vw,64px)}
+
+.rv-case{display:flex;align-items:center;gap:14px;color:var(--gm);margin-bottom:18px}
+.rv-case .no{color:var(--acc-t);margin-right:auto}
+
+.rv-hero h1{font-weight:800;line-height:.9;letter-spacing:-.03em;color:var(--gi);
+  font-size:clamp(2.6rem,7.6vw,5.4rem);margin:.1em 0 .26em}
+.rv-hero .orig{font-family:var(--mono);font-size:.82rem;letter-spacing:.08em;color:var(--gm)}
+.rv-hero .tagline{font-weight:300;font-style:italic;font-size:clamp(1.05rem,2.2vw,1.4rem);
+  color:var(--gid);max-width:46ch;text-wrap:balance}
+@media(prefers-reduced-motion:reduce){.rv-hero .bg{animation:none}}
+
+.rv-fields{margin-top:30px;border:1px solid var(--gl);border-radius:3px;
+  background:rgba(13,15,19,.5);backdrop-filter:blur(4px);overflow:hidden;
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr))}
+.rv-fields div{padding:13px 18px;border-right:1px solid var(--gl);border-bottom:1px solid var(--gl)}
+.rv-fields span{display:block;font-family:var(--mono);font-size:10px;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--gm);margin-bottom:5px}
+.rv-fields b{font-weight:500;font-size:15px;letter-spacing:.02em;color:var(--gi)}
+.rv-fields .pay b{color:var(--acc-t)}
+
+/* --- тело --- */
+.rv-body{max-width:820px;margin:0 auto;padding:clamp(56px,8vw,96px) 24px 0}
+
+/* Часть. Крупный номер слева от заголовка держит единственную явную
+   иерархию на странице: частей ровно три, идут по порядку. */
+.rv-pass{padding-bottom:clamp(56px,7vw,88px)}
+.rv-pass + .rv-pass{border-top:1px solid var(--line);padding-top:clamp(52px,7vw,80px)}
+.rv-pass-head{display:flex;align-items:flex-start;gap:clamp(16px,3vw,28px);margin-bottom:26px}
+.rv-pass .num{font-family:var(--mono);font-weight:500;line-height:.8;color:var(--acc);
+  font-size:clamp(2.6rem,7vw,4.2rem);opacity:.5;flex:none}
+.rv-pass .kicker{color:var(--acc-t)}
+.rv-pass .kicker::before{background:var(--acc)}
+.rv-pass h2{font-weight:800;font-size:clamp(1.6rem,3.4vw,2.35rem);line-height:1.06;
+  letter-spacing:-.018em;margin:12px 0 0}
+.rv-pass p{color:var(--ink-dim);font-weight:300;font-size:1.07rem;line-height:1.72;margin-bottom:1.05em}
+.rv-pass p b{font-weight:600;color:var(--ink)}
+.rv-pass em{font-style:italic;color:var(--ink)}
+
+.rv-quote{margin:32px 0;padding:6px 0 6px 22px;border-left:2px solid var(--acc);
+  font-style:italic;font-weight:300;font-size:clamp(1.12rem,2.4vw,1.45rem);
+  line-height:1.42;color:var(--ink);text-wrap:balance}
+.rv-quote span{display:block;margin-top:10px;font-style:normal;font-family:var(--mono);
+  font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted-2)}
+
+/* --- личные дела экипажа ---
+   Формат розыскного листа, но поле «долг» заменено на «на борту с»:
+   в первой части сериал еще ничего никому не должен. */
+.rv-wanted{display:grid;grid-template-columns:1fr;gap:16px;margin:28px 0 32px}
+.rv-w{border:1px solid var(--line);border-radius:8px;background:var(--panel);
+  border-top:2px solid var(--pc,var(--acc));padding:0;position:relative;overflow:hidden;
+  display:grid;grid-template-columns:minmax(140px,220px) 1fr}
+.rv-w .ph{position:relative;background:#15171c;min-height:220px;overflow:hidden}
+.rv-w .ph img{width:100%;height:100%;object-fit:cover;display:block}
+.rv-w .ph.empty{display:flex;align-items:center;justify-content:center;
+  background:repeating-linear-gradient(135deg,rgba(255,255,255,.03) 0 10px,rgba(255,255,255,.06) 10px 20px)}
+.rv-w .ph.empty span{font-family:var(--mono);font-size:9px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--muted-2)}
+.rv-w .body{padding:18px 20px}
+.rv-w .tag{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--pc,var(--acc))}
+.rv-w h4{font-weight:600;font-size:1.12rem;margin:6px 0 12px}
+.rv-w dl{display:grid;grid-template-columns:auto 1fr;gap:5px 14px;margin:0 0 12px;
+  padding-bottom:12px;border-bottom:1px dashed var(--line)}
+.rv-w dt{font-family:var(--mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--muted-2);padding-top:3px}
+.rv-w dd{margin:0;font-size:.9rem;color:var(--ink-dim)}
+.rv-w dd.first{color:var(--ink)}
+.rv-w p{font-size:.94rem;line-height:1.62;color:var(--muted);margin:0}
+@media(max-width:640px){.rv-w{grid-template-columns:1fr}.rv-w .ph{min-height:180px}}
+
+/* --- термин со сноской ---
+   Пунктир вместо ссылки: не уводит со страницы, подсказка всплывает
+   по наведению и по фокусу (клавиатура/тач через tabindex). */
+.term{position:relative;border-bottom:1px dotted var(--muted-2);cursor:help}
+.term::after{content:attr(data-tip);position:absolute;left:0;bottom:calc(100% + 9px);
+  width:max-content;max-width:260px;padding:9px 12px;border-radius:6px;
+  background:var(--panel);border:1px solid var(--line);box-shadow:0 8px 24px rgba(0,0,0,.35);
+  color:var(--ink-dim);font-family:var(--mono);text-transform:none;letter-spacing:.01em;
+  font-size:11px;line-height:1.5;text-align:left;
+  opacity:0;visibility:hidden;pointer-events:none;
+  transform:translateY(4px);transition:opacity .2s var(--ease),transform .2s var(--ease);z-index:10}
+.term:hover::after,.term:focus-visible::after{opacity:1;visibility:visible;transform:translateY(0)}
+
+.rv-fig{margin:34px 0}
+.rv-fig img{width:100%;height:auto;display:block;border:1px solid var(--gl);border-radius:6px}
+.rv-fig figcaption{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--muted-2);margin-top:10px}
+
+/* --- запечатанный блок с развязками ---
+   Нативный <details>: доступен с клавиатуры, читается скринридером,
+   без JS. Закрыт по умолчанию, вскрывается кликом. Красная метка «!»
+   предупреждает про спойлеры до того, как их видно. */
+.spoiler{border:1px solid var(--gl);border-radius:9px;background:rgba(216,101,74,.045);
+  margin:34px 0;overflow:hidden}
+.spoiler>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:13px;
+  padding:16px 20px;font-family:var(--mono);font-size:11px;letter-spacing:.15em;
+  text-transform:uppercase;color:var(--gid);user-select:none;transition:background .25s var(--ease)}
+.spoiler>summary::-webkit-details-marker{display:none}
+.spoiler>summary:hover{background:rgba(216,101,74,.06)}
+.spoiler>summary .warn{display:grid;place-items:center;width:21px;height:21px;flex:none;
+  border:1.6px solid #d8654a;color:#d8654a;border-radius:50%;font-weight:800;font-size:12px;
+  letter-spacing:0}
+.spoiler>summary .act{margin-left:auto;color:#d8654a;letter-spacing:.2em}
+.spoiler>summary .act::after{content:"вскрыть"}
+.spoiler[open]>summary{border-bottom:1px dashed var(--gl)}
+.spoiler[open]>summary .act::after{content:"скрыть"}
+.spoiler>summary:focus-visible{outline:2px solid var(--acc);outline-offset:-4px}
+.spoiler .in{padding:20px 22px 24px}
+.spoiler .in>p:first-child{margin-top:0}
+
+/* Развязки: имя моно-капсом, следом короткий абзац. */
+.rv-res{display:grid;gap:17px;margin:6px 0 0}
+.rv-res h5{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--acc-t);margin:0 0 5px}
+.rv-res p{margin:0;font-weight:300;font-size:.99rem;line-height:1.62;color:var(--ink-dim)}
+
+/* --- карусель ---
+   Без JS работает как полоса со snap; скрипт внизу дорисовывает
+   стрелки и точки. */
+.rv-carousel{margin:34px 0 8px}
+.rv-carousel .track{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;
+  scroll-behavior:smooth;scrollbar-width:none;border-radius:6px}
+.rv-carousel .track::-webkit-scrollbar{display:none}
+.rv-carousel .track figure{flex:0 0 100%;scroll-snap-align:center}
+.rv-carousel .track img{width:100%;aspect-ratio:16/9;object-fit:cover;display:block;
+  border:1px solid var(--gl);border-radius:6px}
+.rv-carousel .bar{display:flex;align-items:center;gap:14px;margin-top:12px}
+.rv-carousel .cap{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--muted-2);margin-right:auto}
+.rv-carousel .dots{display:flex;gap:7px}
+.rv-carousel .dots button{width:7px;height:7px;padding:0;border-radius:50%;cursor:pointer;
+  border:1px solid var(--muted-2);background:transparent;transition:.3s var(--ease)}
+.rv-carousel .dots button[aria-current="true"]{background:var(--acc);border-color:var(--acc);
+  box-shadow:0 0 0 3px color-mix(in srgb,var(--acc) 18%,transparent)}
+.rv-carousel .nav{display:none;gap:6px}
+.rv-carousel .nav button{width:32px;height:32px;display:grid;place-items:center;cursor:pointer;
+  border:1px solid var(--line);border-radius:3px;background:transparent;color:var(--ink-dim);
+  font-family:var(--mono);font-size:13px;line-height:1;transition:.25s var(--ease)}
+.rv-carousel .nav button:hover{border-color:var(--acc);color:var(--acc-t)}
+.rv-carousel button:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.js .rv-carousel .nav{display:flex}
+
+/* --- расчет ---
+   Вердикт как строка выплаты: гонорар всегда мимо кассы, поэтому в
+   графе «получено» ноль, а оценка идет отдельной строкой. */
+.rv-payout{border:1px solid var(--gl);border-radius:10px;background:var(--panel);
+  padding:clamp(22px,4vw,32px);margin-top:8px}
+.rv-payout .n{font-family:var(--mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--acc-t)}
+.rv-payout h3{font-weight:800;font-size:clamp(1.3rem,2.8vw,1.8rem);margin:12px 0 14px;letter-spacing:-.015em}
+.rv-payout p{color:var(--muted);font-weight:300;font-size:1rem;line-height:1.7;margin-bottom:1em}
+.rv-payout p:last-of-type{margin-bottom:0}
+.rv-ledger{margin-top:24px;padding-top:20px;border-top:1px solid var(--line)}
+.rv-ledger .l{display:flex;align-items:baseline;gap:14px;padding:7px 0;
+  font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted-2)}
+.rv-ledger .l .d{flex:1;height:1px;border-bottom:1px dotted var(--line)}
+.rv-ledger .l .v{color:var(--ink-dim);letter-spacing:.04em}
+.rv-ledger .l.total{margin-top:8px;padding-top:14px;border-top:1px solid var(--line)}
+.rv-ledger .l.total .v{font-size:2.2rem;font-weight:500;color:var(--acc-t);letter-spacing:0;line-height:1}
+
+/* --- дальше --- */
+.rv-next{border-top:1px solid var(--line);margin-top:clamp(50px,7vw,80px)}
+.rv-next a{display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap;
+  max-width:var(--maxw);margin:0 auto;padding:30px 24px;text-decoration:none;color:inherit;
+  transition:background .35s var(--ease)}
+.rv-next a:hover{background:rgba(255,255,255,.02)}
+.rv-next .l{font-family:var(--mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
+.rv-next .t{font-weight:600;font-size:1.35rem;margin-top:6px}
+.rv-next .go{font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--sig)}
+</style>
+</head>
+<body class="review grade-noir">
+
+<div class="atmo grain"></div>
+
+<div class="hud">
+  <span class="dot"></span>
+  <b>БИБЛИОТЕКА</b>
+  <span class="sep">/</span>
+  <span>аниме</span>
+  <span class="sep hide">/</span>
+  <span class="hide">ковбой бибоп</span>
+  <span class="right">
+    <a href="index-alt.html">← ко всем обзорам</a>
+  </span>
+</div>
+
+<!-- ================= ШАПКА: ЛИСТ ДЕЛА ================= -->
+<header class="rv-hero" style="--hero-pos:50% 0%">
+  <img class="bg" src="../../images/bebop/together/characters.webp"
+       alt="Джет, Спайк, Фэй и Эд у ростовой линейки полицейского участка">
+  <div class="veil"></div>
+  <div class="scanline"></div>
+
+  <div class="cnt">
+    <div class="rv-case mono">
+      <span>дело</span>
+      <span class="no">№ 1998–26</span>
+      <!-- <span class="stamp open">не закрыто</span> -->
+    </div>
+
+    <div class="orig">カウボーイビバップ · 1998 · Sunrise</div>
+    <h1>Ковбой Бибоп</h1>
+    <p class="tagline">Четверо должников на разваливающемся корабле перебиваются с одной награды
+      на другую. Денег в итоге все равно нет, а прошлое не отпускает.</p>
+
+    <div class="rv-fields">
+      <div><span>эпизодов</span><b>26</b></div>
+      <div><span>год</span><b>1998</b></div>
+      <div><span>режиссер</span><b>Синъитиро Ватанабэ</b></div>
+      <div><span>музыка</span><b>The Seatbelts</b></div>
+      <div class="pay"><span>оценка</span><b>8.4 / 10</b></div>
+    </div>
+  </div>
+</header>
+
+<main class="rv-body">
+
+  <!-- ================= ЧАСТЬ ПЕРВАЯ: ЛИЧНЫЕ ДЕЛА =================
+       Кто на борту и как там оказался. Только завязки, без развязок —
+       эту часть можно читать, даже если сериал еще не смотрел.
+  ================================================================= -->
+  <section class="rv-pass rise">
+    <div class="rv-pass-head">
+      <div class="num">01</div>
+      <div>
+        <span class="kicker">Часть первая · личные дела</span>
+        <h2>Кто на борту и как там оказался</h2>
+      </div>
+    </div>
+
+    <p>2071 год. Прошло полвека с момента, как гиперврата над Землей (предназначенные для
+      межзвездных путешествий) разорвало на куски, засыпав обломками Луны половину планеты.
+      С тех пор Земля — непригодный для жизни камень в оспинах. Человечество расселилось
+      по Марсу, Ганимеду (спутнику Юпитера), Титану (спутнику Сатурна) и десяткам станций поменьше.</p>
+
+    <p>Порядок на всей этой территории пытается поддерживать единое управление полиции — ISSP
+      (Inter-Solar System Police), но структура физически не справляется с масштабом. Коррупция и
+      синдикаты типа «Красного дракона» только подкидывают дров в топку. Закономерные дыры
+      в системе закрывают частники — <em>ковбои</em>,
+      живущие с наградных объявлений.</p>
+
+    <p>Эта история — про одну из таких команд, странствующую на корабле «Бибоп».
+      Название не случайное: бибоп — стиль джаза 1940-х, быстрый и импровизационный,
+      и вся музыка сериала построена вокруг него. В холодильнике обычно одни яйца,
+      двигатель в вечном ремонте, гонорар уходит туда же.</p>
+
+    <p>Экипаж собирается не сразу и без всякого плана: двое с первой серии, остальные
+      прибиваются по ходу дела, кто по случайности, кто без спроса. Знакомиться проще
+      начать с них: сюжет тут держится именно на людях.</p>
+
+    <div class="rv-wanted">
+      <div class="rv-w" style="--pc:#d9b04a">
+        <div class="ph">
+          <img src="../../images/bebop/spike/spike_lookup_2_cropped.jpeg" alt="Спайк Шпигель смотрит вверх, прикуривает сигарету">
+        </div>
+        <div class="body">
+        <div class="tag">борт · 01</div>
+        <h4>Спайк Шпигель</h4>
+        <dl>
+          <dt>возраст</dt><dd>27</dd>
+          <dt>в прошлом</dt><dd>синдикат «Красный дракон»</dd>
+          <dt>на борту с</dt><dd class="first">эпизод 1</dd>
+        </dl>
+        <p>Сериал начинается с него, и это единственное, что понятно сразу. Спайк уже на
+          «Бибопе», уже напарник Джета, откуда взялся — не сказано. Ленивый до безразличия,
+          дерется в стиле <span class="term" tabindex="0" data-tip="Джит Кун-До — боевая философия Брюса Ли: без фиксированных стоек и форм, ставка на прямоту, простоту и свободную импровизацию под противника.">Джит Кун-До</span>, смотрит на мир так, будто ему все это уже показывали.
+          Про прошлое ни слова, и это осознанный ход: его придется собирать по кускам до
+          самого финала.</p>
+        </div>
+      </div>
+
+      <div class="rv-w" style="--pc:#c98a4b">
+        <div class="ph">
+          <img src="../../images/bebop/jet/jet_2.jpeg" alt="Джет Блэк">
+        </div>
+        <div class="body">
+        <div class="tag">борт · 02</div>
+        <h4>Джет Блэк</h4>
+        <dl>
+          <dt>возраст</dt><dd>36</dd>
+          <dt>в прошлом</dt><dd>полиция Ганимеда</dd>
+          <dt>на борту с</dt><dd class="first">эпизод 1</dd>
+        </dl>
+        <p>Хозяин корабля и старший по возрасту. Бывший коп с Ганимеда, ушел из полиции,
+          обзавелся кибернетической рукой и теперь охотится за наградами сам. Рядом со
+          Спайком с первого кадра: готовит, чинит двигатель, ворчит на всех и один на весь
+          экипаж хоть что-то планирует наперед.</p>
+        </div>
+      </div>
+
+      <div class="rv-w" style="--pc:#b6708f">
+        <div class="ph">
+          <img src="../../images/bebop/faye/faye_1_cropped.jpeg" alt="Фэй Валентайн">
+        </div>
+        <div class="body">
+        <div class="tag">борт · 03</div>
+        <h4>Фэй Валентайн</h4>
+        <dl>
+          <dt>возраст</dt><dd>77 по документам · 23 на вид</dd>
+          <dt>в прошлом</dt><dd>полвека криосна</dd>
+          <dt>на борту с</dt><dd class="first">эпизод 3</dd>
+        </dl>
+        <p>Появляется в казино, где разводит всех подряд и сама висит в розыске. С экипажем
+          сталкивается по чужому делу и вступать никуда не собирается: врет, обчищает Спайка
+          с Джетом и сбегает. Но зачем-то возвращается, потом еще раз, и постепенно оседает
+          на «Бибопе» — не потому что позвали, а потому что деваться особо некуда.</p>
+        </div>
+      </div>
+
+      <div class="rv-w" style="--pc:#d8654a">
+        <div class="ph">
+          <img src="../../images/bebop/edward/ed_1.jpeg" alt="Эдвард Вонг Хау Пеппелу Тивруски Четвертый">
+        </div>
+        <div class="body">
+        <div class="tag">борт · 04</div>
+        <h4>Эдвард</h4>
+        <dl>
+          <dt>возраст</dt><dd>13</dd>
+          <dt>в прошлом</dt><dd>Земля, взлом от скуки</dd>
+          <dt>на борту с</dt><dd class="first">эпизод 9</dd>
+        </dl>
+        <p>Почти треть сериала команда живет втроем плюс пес. Эд — ребенок-хакер с Земли,
+          которая выслеживает экипаж по сети, помогает расколоть одно дело и напрашивается
+          на борт сама, особо не спрашивая. Ходит босиком, спит где придется, говорит о себе
+          в третьем лице. С ее появлением сериал заметно светлеет.</p>
+        </div>
+      </div>
+
+      <div class="rv-w" style="--pc:#9a9a86">
+        <div class="ph">
+          <img src="../../images/bebop/ein/ein_the_dog.jpeg" alt="Эйн, корги-дата">
+        </div>
+        <div class="body">
+        <div class="tag">борт · 05</div>
+        <h4>Эйн</h4>
+        <dl>
+          <dt>возраст</dt><dd>корги-дата</dd>
+          <dt>в прошлом</dt><dd>лабораторный эксперимент</dd>
+          <dt>на борту с</dt><dd class="first">эпизод 2</dd>
+        </dl>
+        <p>Дело второй серии — похищенная «дата-собака», корги с чем-то очень дорогим,
+          вживленным в мозг. Награду в итоге толком никто не получает, а пес просто остается
+          на корабле. Относятся к нему без сантиментов, хотя по факту это самый спокойный и,
+          кажется, самый сообразительный член экипажа.</p>
+        </div>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- ================= ЧАСТЬ ВТОРАЯ: ЧЕМ КОНЧИЛОСЬ ДЕЛО =================
+       Тезис про процедурал открыт (это не спойлер). Развязки каждого
+       героя и финал спрятаны в опечатанный <details>. Претензии идут
+       после, чтобы вердикт не читался как реклама.
+  ================================================================= -->
+  <section class="rv-pass rise">
+    <div class="rv-pass-head">
+      <div class="num">02</div>
+      <div>
+        <span class="kicker">Часть вторая · ход дела</span>
+        <h2>Все дела оказались одним делом</h2>
+      </div>
+    </div>
+
+    <figure class="rv-fig">
+      <img src="../../images/bebop/spike/spike_smoking_with_fay_2.jpeg"
+           alt="Спайк курит рядом с Фэй">
+    </figure>
+
+    <p>На первый раз «Бибоп» смотрится как процедурал: серия — дело, дело — гонорар,
+      гонорар мимо кассы. Бандит недели меняется, декорации меняются. А на пересмотре
+      наполнителя не остается: <b>каждая серия про человека, который не может отпустить
+      свое прошлое.</b> Бывшая напарница, потерянная пленка, старый долг, забытое имя.
+      Меняется только тональность, тема — никогда.</p>
+
+    <p>Экипаж, если приглядеться, набран по тому же признаку. Это не команда и даже не
+      друзья, скорее <em>сожители по необходимости</em>. Речей о дружбе тут не произносят,
+      помогают друг другу неохотно и с ворчанием, но в нужный момент почему-то оказываются
+      рядом. Общее у них ровно одно, и это не корабль — это то, от чего каждый бежит.</p>
+
+    <div class="rv-quote">
+      Сериал никуда не спешит и почти ничего не объясняет. Включает музыку
+      и показывает, как живут люди, которым некуда возвращаться.
+    </div>
+
+    <!-- ==== опечатанный блок: развязки ==== -->
+    <details class="spoiler">
+      <summary>
+        <span class="warn" aria-hidden="true">!</span>
+        <span>спойлеры · чем все заканчивается для каждого</span>
+        <span class="act"></span>
+      </summary>
+      <div class="in">
+        <p>Дальше — про то, как закрывается линия каждого из пятерых. Если сериал еще не
+          смотрели, этот блок лучше оставить запечатанным.</p>
+
+        <div class="rv-res">
+          <div>
+            <h5>Спайк</h5>
+            <p>Узнает, что Джулии больше нет, и идет закрывать старый счет с Вишесом. Убивает
+              его, сам едва держится на ногах, спускается по лестнице синдиката и падает.
+              Умер он или нет — сериал не говорит, и это принципиально: он шел не побеждать,
+              а проверить, был ли вообще жив.</p>
+          </div>
+          <div>
+            <h5>Джет</h5>
+            <p>Остается. Свое прошлое, историю с Ганимеда, он отпускает еще в середине, и к
+              финалу оказывается единственным, кто никуда не делся. На нем, по сути, все и
+              держалось.</p>
+          </div>
+          <div>
+            <h5>Фэй</h5>
+            <p>Находит место, где стоял ее дом. Там давно пусто, только контур фундамента в
+              траве. Она вспоминает, кем была до криосна, и возвращается на «Бибоп», где к
+              тому моменту почти никого не осталось.</p>
+          </div>
+          <div>
+            <h5>Эд</h5>
+            <p>Находит отца и уходит с корабля сама, без драмы и уговоров. У нее единственной
+              прошлое не тянет назад, поэтому она уходит первой и легко.</p>
+          </div>
+          <div>
+            <h5>Эйн</h5>
+            <p>Уходит следом за Эд. Молча, как и все, что он делал.</p>
+          </div>
+        </div>
+
+        <div class="rv-quote" style="margin-bottom:0">
+          Я иду туда не умирать. Я иду проверить, был ли я вообще жив.
+          <span>спайк шпигель · эпизод 26</span>
+        </div>
+
+        <!-- ==== карусель: финал (визуальные спойлеры под замком) ==== -->
+        <div class="rv-carousel rise">
+          <div class="track" tabindex="0" role="group" aria-label="Кадры: финальные серии">
+            <figure><img src="../../images/bebop/s22_spike.png" alt="Спайк, крупный план"></figure>
+            <figure><img src="../../images/bebop/s24_boat.png" alt="Лодка на воде"></figure>
+            <figure><img src="../../images/bebop/s24_city.png" alt="Город в финальных сериях"></figure>
+          </div>
+          <div class="bar">
+            <span class="cap" data-label="финал">финал · 1 / 3</span>
+            <div class="dots"></div>
+            <div class="nav">
+              <button type="button" class="prev" aria-label="Предыдущий кадр">←</button>
+              <button type="button" class="next" aria-label="Следующий кадр">→</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </details>
+
+    <p>В первый раз концовка выглядит как отказ от обязательств: катарсиса нет, никого не
+      наградили и не наказали, объяснять ничего не стали. Через неделю это кажется
+      единственным возможным вариантом, а еще позже — единственным честным. <b>Сериал
+      двадцать шесть серий говорил, что прошлое не отпускает, и закончить иначе было бы
+      враньем.</b></p>
+
+    <p>Претензии тоже есть. Середина провисает: несколько серий сделаны скорее как
+      джем-сейшн, и при просмотре подряд ритм сбивается. Вишес прописан слабее всех, он тут
+      ближе к <em>функции</em> сюжета, чем к человеку, и рядом с живыми Фэй и Джетом это
+      бросается в глаза. Сериал этим не портится, но зазор между «очень хорошо» и «идеально»
+      держат именно они.</p>
+
+    <!-- ==== карусель: Фэй (без финальных спойлеров) ==== -->
+    <div class="rv-carousel rise">
+      <div class="track" tabindex="0" role="group" aria-label="Кадры: Фэй Валентайн">
+        <figure><img src="../../images/bebop/e20_fay.png" alt="Фэй Валентайн, крупный план"></figure>
+        <figure><img src="../../images/bebop/e20_fay2.png" alt="Фэй Валентайн в кадре"></figure>
+        <figure><img src="../../images/bebop/e22_fay.png" alt="Фэй Валентайн в разговоре"></figure>
+        <figure><img src="../../images/bebop/e22_fay2.png" alt="Фэй Валентайн, сцена в помещении"></figure>
+      </div>
+      <div class="bar">
+        <span class="cap" data-label="фэй">фэй · 1 / 4</span>
+        <div class="dots"></div>
+        <div class="nav">
+          <button type="button" class="prev" aria-label="Предыдущий кадр">←</button>
+          <button type="button" class="next" aria-label="Следующий кадр">→</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= ЧАСТЬ ТРЕТЬЯ: РАСЧЕТ =================
+       Что от сериала остается после. Общее впечатление, кому смотреть,
+       и ведомость с итоговой оценкой.
+  ================================================================= -->
+  <section class="rv-pass rise">
+    <div class="rv-pass-head">
+      <div class="num">03</div>
+      <div>
+        <span class="kicker">Часть третья · расчет</span>
+        <h2>Что остается после</h2>
+      </div>
+    </div>
+
+    <figure class="rv-fig">
+      <img src="../../images/bebop/spike/spike_orange_steep.jpeg"
+           alt="Спайк">
+    </figure>
+
+    <p>После финала не остается ощущения, что тебе что-то доказали. Остается интонация.
+      «Бибоп» не подводит итог и не объясняет, что ты должен был почувствовать: он доигрывает
+      и выключает музыку. Про чувства Спайка не говорят ничего, зато показывают, как он курит
+      на ступеньках, и этого хватает.</p>
+
+    <p>Работает это сегодня примерно так же, как в 1998-м. Обычно «классику жанра» смотрят из
+      уважения к возрасту; тут другое — сериал держится на монтаже и на том, как собран звук,
+      а это не стареет. Половину сцен монтировали под музыку The Seatbelts, а не наоборот,
+      и Ёко Канно перебирает би-боп, блюз, кантри и церковный хорал так, будто подбирает
+      сцене освещение.</p>
+
+    <!-- ==== расчет ==== -->
+    <div class="rv-payout">
+      <div class="n">расчет по делу</div>
+      <h3>Смотреть без спешки, по серии за вечер</h3>
+      <p>Хорошая точка входа для тех, кто аниме вообще не смотрит: контекст тут не нужен,
+        терпения к жанровым условностям — тоже. Включаешь <em>Tank!</em>, дальше сериал
+        справляется сам.</p>
+      <p>Подряд середина проваливается, а по одной серии за вечер каждая успевает остаться
+        отдельным номером, каким ее и задумывали. Двадцать шесть серий, и ни одной лишней:
+        продолжений не сняли, вселенную под франшизу не растили, поэтому Bebop и смотрится
+        сегодня нормально — он закончился там, где закончился.</p>
+
+      <div class="rv-ledger">
+        <div class="l"><span>гонорар получен</span><span class="d"></span><span class="v">0 вулонгов</span></div>
+        <div class="l"><span>дело закрыто</span><span class="d"></span><span class="v">нет</span></div>
+        <div class="l"><span>пересмотров</span><span class="d"></span><span class="v">2</span></div>
+        <div class="l total"><span>итого</span><span class="d"></span><span class="v">8.4</span></div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ================= ДАЛЬШЕ ================= -->
+<nav class="rv-next">
+  <a href="#">
+    <span>
+      <span class="l">следующее дело</span>
+      <span class="t">Созданный в бездне</span>
+    </span>
+    <span class="go">читать →</span>
+  </a>
+</nav>
+
+<div class="signoff">
+  <div class="sc">конец передачи</div>
+  <h2>«See you space cowboy…»</h2>
+  <p>обзор · ковбой бибоп · 26 эпизодов · 1998</p>
+</div>
+
+<!-- main.js общий: поднимает .rise при скролле, блоки главной не находит и молчит. -->
+<script src="main.js"></script>
+
+<!-- Карусели — только на этой странице, поэтому скрипт локальный. -->
+<script>
+(function () {
+  'use strict';
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  document.documentElement.classList.add('js');
+
+  document.querySelectorAll('.rv-carousel').forEach(function (car) {
+    var track = car.querySelector('.track');
+    var slides = Array.prototype.slice.call(track.children);
+    var dots = car.querySelector('.dots');
+    var cap = car.querySelector('.cap');
+    if (slides.length < 2) return;
+
+    slides.forEach(function (s, i) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.setAttribute('aria-label', 'Кадр ' + (i + 1));
+      b.addEventListener('click', function () { go(i); });
+      dots.appendChild(b);
+    });
+
+    function go(i) {
+      track.scrollTo({ left: slides[i].offsetLeft - track.offsetLeft, behavior: reduce ? 'auto' : 'smooth' });
+    }
+    function current() {
+      var mid = track.scrollLeft + track.clientWidth / 2, best = 0, dist = Infinity;
+      slides.forEach(function (s, i) {
+        var d = Math.abs(s.offsetLeft - track.offsetLeft + s.clientWidth / 2 - mid);
+        if (d < dist) { dist = d; best = i; }
+      });
+      return best;
+    }
+    function sync() {
+      var i = current();
+      dots.querySelectorAll('button').forEach(function (b, n) {
+        b.setAttribute('aria-current', String(n === i));
+      });
+      if (cap) cap.textContent = cap.dataset.label + ' · ' + (i + 1) + ' / ' + slides.length;
+    }
+
+    car.querySelector('.prev').addEventListener('click', function () { go(Math.max(0, current() - 1)); });
+    car.querySelector('.next').addEventListener('click', function () { go(Math.min(slides.length - 1, current() + 1)); });
+
+    var tick;
+    track.addEventListener('scroll', function () { clearTimeout(tick); tick = setTimeout(sync, 90); });
+    sync();
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,171 @@
+/* Вариант G: новый стоп-кадр комнаты без видео (room.avif и запасной room.jpg)
+   и стена под него (wall.avif и запасной wall.jpg) из src/images/world/, как на сайте;
+   исходники и экспорт - FINAL_STATE.md, «Images and geometry». Левые 500 px стены -
+   правые 500 px кадра, пиксель в пиксель: если кадр меняется, эту вклейку надо обновить.
+   Раскладка стены та же, что в F: диван кончается у столба, дальше низкая книжная
+   полка, пустая стена, бумажные фонари, свиток и бамбук.
+   Подключается после wall.css вместо f.css. */
+
+/* Стена начинается ровно со столба (16.7% ее длины): кадр главной доходит до него
+   своим диваном, а дорисованный кусок дивана левее столба не показывается вовсе. */
+:root { --lap: calc(var(--wall-w) * .1675); }
+
+/* Мир всегда свой слой. Без этого в комнате стена (z-index 4) вылезала поверх .scrim,
+   и ее ковер у правого края кадра был светлее затемненного пола, а с началом
+   проезда мир получал translate, стена уходила под .scrim и пол гас. */
+.world { isolation: isolate; }
+
+.wall {
+  background-image: url("../../src/images/world/wall.jpg");
+  /* AVIF там, где браузер его понимает; без поддержки type() остается строка выше */
+  background-image: image-set(url("../../src/images/world/wall.avif") type("image/avif"), url("../../src/images/world/wall.jpg") type("image/jpeg"));
+  /* Верх режется по левой грани столба жестко. Пол (нижние 15%) заходит на кадр:
+     левые 11% картинки стены на полу - это сам правый край кадра, пиксель в пиксель,
+     поэтому наложение в комнате не видно. Дальше, до столба, ковер кадра уже в самой
+     картинке перетекает в ковер стены, дорисованный как его продолжение. */
+  -webkit-mask-image:
+    linear-gradient(to right, transparent 16.7%, #000 16.7%),
+    linear-gradient(to right, transparent 4%, #000 10%);
+  mask-image:
+    linear-gradient(to right, transparent 16.7%, #000 16.7%),
+    linear-gradient(to right, transparent 4%, #000 10%);
+  -webkit-mask-size: 100% 85%, 100% 15.2%;
+  mask-size: 100% 85%, 100% 15.2%;
+  -webkit-mask-position: top, bottom;
+  mask-position: top, bottom;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+}
+
+/* Пустая стена здесь длиннее (до 72% длины) и ниже: полка поднимается до 61% высоты.
+   Знак стоит посередине между списком групп и фонарями и не задевает полку. */
+/* Камера встает чуть дальше, чем в D (95% длины стены): ваза и фонарик на полке
+   уходят левее списка групп, справа в кадр входит бамбук. */
+@media (min-width: 1101px) {
+  :root { --cam: calc(var(--wall-x) + var(--wall-w) * .95 - 100vw); }
+}
+
+.sigil {
+  left: calc(83.5% - 46.5vw + 160px);
+  bottom: 60svh;
+  width: min(42svh, 28vw);
+}
+
+/* Под списком групп оказываются ваза и фонарик на полке: приглушаем их тенью */
+.wallui::before {
+  content: "";
+  position: absolute;
+  inset: -50px -60px -70px -80px;
+  z-index: -1;
+  background: radial-gradient(closest-side, rgba(7, 6, 10, .7), transparent);
+  pointer-events: none;
+}
+
+@media (max-width: 1100px) {
+  .wallui::before { display: none; }
+
+  /* На узком экране стена еще и растворяется кверху; срез по столбу идет на всю высоту */
+  .wall {
+    -webkit-mask-image: linear-gradient(to right, transparent 16.7%, #000 16.7%), linear-gradient(to bottom, transparent, #000 28%);
+    mask-image: linear-gradient(to right, transparent 16.7%, #000 16.7%), linear-gradient(to bottom, transparent, #000 28%);
+    -webkit-mask-size: auto;
+    mask-size: auto;
+    -webkit-mask-position: 0 0;
+    mask-position: 0 0;
+  }
+
+  .sigil {
+    left: calc(80% - 66vw);
+    bottom: 38svh;
+    width: min(24svh, 52vw);
+  }
+}
+
+/* ---------- уход на страницу группы (g.js, vt.css) ---------- */
+
+/* Что переезжает на страницу группы: знак выбранной группы и ее название.
+   Название ужато до своего текста, иначе при переезде оно растянется. */
+.sigil.on { view-transition-name: sigil; }
+.group__t { align-self: flex-start; }
+.group.is-on .group__t { view-transition-name: group-title; }
+
+/* Пауза перед уходом: остальное гаснет */
+.wallui h2,
+.wallui .kicker,
+.group,
+.back { transition-property: opacity, border-color, background, box-shadow, color; }
+
+.is-going .wallui h2,
+.is-going .group:not(.is-going),
+.is-going .back { opacity: .22; transition-duration: .35s; }
+
+/* Цвет ореола в анимациях задан переменной --c, а не через currentColor: с ним
+   браузер не умеет плавно переходить от кадра к кадру и ореол мигает скачком. */
+.sigil {
+  --c: var(--g-python);
+  --done: 1.6s;
+  /* Ореол в покое: нижняя точка дыхания, ниже нее свечение не опускается */
+  filter: drop-shadow(0 0 16px color-mix(in srgb, var(--c) 70%, transparent));
+}
+.sigil[data-g="docker"] { --c: var(--g-docker); --done: 2.4s; }
+
+/* Дорисованный знак дышит: ореол за ним мерно разгорается и спадает, пока группа
+   выбрана. --done - когда дорисован последний штрих (задержки штрихов заданы в
+   index-g.html), до этого знак не пульсирует. */
+.sigil.on { animation: sigil-breathe 3.2s ease-in-out var(--done) infinite; }
+
+@keyframes sigil-breathe {
+  0%, 100% { filter: drop-shadow(0 0 16px color-mix(in srgb, var(--c) 70%, transparent)); }
+  50%      { filter: drop-shadow(0 0 19px color-mix(in srgb, var(--c) 95%, transparent)); }
+}
+
+/* Импульс перед уходом: ореол сначала гаснет совсем, затем один раз вспыхивает
+   (разгорается и втягивается обратно в линию). Сам знак цвета не меняет. На страницу
+   группы он переезжает уже без ореола. Длительность та же, что пауза в g.js. */
+.is-going .sigil.on { animation: sigil-pulse .35s ease-in-out forwards; }
+
+@keyframes sigil-pulse {
+  0%   { filter: drop-shadow(0 0 16px color-mix(in srgb, var(--c) 70%, transparent)); }
+  30%  { filter: drop-shadow(0 0 0 color-mix(in srgb, var(--c) 0%, transparent)); }
+  65%  { filter: drop-shadow(0 0 17px color-mix(in srgb, var(--c) 95%, transparent)); }
+  100% { filter: drop-shadow(0 0 0 color-mix(in srgb, var(--c) 0%, transparent)); }
+}
+
+/* На вспышке знак моргает: глаз сжимается в щелку и раскрывается обратно. Закрыт он
+   в тот же момент, когда ореол ярче всего (65%). */
+.sigil__dot { transform-box: fill-box; transform-origin: center; }
+.is-going .sigil.on .sigil__dot { animation: sigil-blink .35s ease-in-out; }
+
+@keyframes sigil-blink {
+  0%, 40%, 90%, 100% { scale: 1 1; }
+  65%                { scale: 1 .1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sigil.on,
+  .is-going .sigil.on,
+  .is-going .sigil.on .sigil__dot { animation: none; }
+}
+
+/* Возврат со страницы группы: знак стоит на стене сразу, без рисования */
+.is-instant .sigil,
+.is-instant .sigil path,
+.is-instant .sigil__dot { transition: none !important; }
+
+/* Нажатая клавиша в подсказке: в wall.css вспышка слишком яркая, здесь она приглушена -
+   цвет и рамка на полтона тише, ореол вдвое слабее */
+.keys kbd.hit {
+  color: rgba(240, 169, 74, .78);
+  border-color: rgba(240, 169, 74, .5);
+  box-shadow: 0 0 8px rgba(240, 169, 74, .2);
+}
+
+/* Раздел в работе (data-soon на карточке, main.js): строка под названием в дыму */
+.fog__soon {
+  margin: 20px 0 0;
+  font-size: clamp(17px, 1.5vw, 22px);
+  color: #3a2c22;
+}
+
+/* Дым накрывает все, включая подсказку по клавишам (.keys, z-index 4 в wall.css) */
+.fog { z-index: 6; }

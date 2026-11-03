@@ -1,0 +1,22 @@
+---
+# /notes/: своей страницы у заметок нет, их список - стена в комнате (/#notes).
+# Старые ссылки на /notes/ уводят туда. replace() не оставляет /notes/ в истории,
+# meta refresh - на случай без JS. Своя разметка целиком, без раскладки.
+layout: false
+eleventyExcludeFromCollections: true
+---
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Заметки</title>
+<meta name="robots" content="noindex">
+<link rel="canonical" href="{{ pathPrefix }}/#notes">
+<meta http-equiv="refresh" content="0; url={{ pathPrefix }}/#notes">
+<script>location.replace('{{ pathPrefix }}/#notes');</script>
+</head>
+<body>
+<p><a href="{{ pathPrefix }}/#notes">Заметки</a></p>
+</body>
+</html>

@@ -1,0 +1,373 @@
+/* Вариант D: камера уезжает вправо к стене, на стене выбирают группу заметок.
+   Подключается после main.css. Стена - дорисованное вправо продолжение кадра
+   (img/wall-right.jpg, сжатая копия img/wall-right-source.png). */
+
+:root {
+  --edge: var(--sw);                                  /* правый край кадра в координатах мира */
+  --lap: calc(var(--sw) * .08);                       /* нахлест стены на кадр: там они перетекают друг в друга */
+  --wall-w: calc(var(--sw) / var(--ratio) * 2.3333);  /* стена той же высоты, что кадр; 2987x1280 */
+  --wall-x: calc(var(--edge) - var(--lap));
+  /* Где встает камера: правый край экрана на 92% длины стены. В кадре пустая стена,
+     фонари и решетка; ковер на стене и пуф остаются за краем. */
+  --cam: calc(var(--wall-x) + var(--wall-w) * .92 - 100vw);
+  --pan-t: 1.7s;
+  --pan-ease: cubic-bezier(.65, 0, .2, 1);
+  --g-python: #f0a94a;         /* свет фонаря */
+  --g-docker: #4fd6c9;         /* неон из окна */
+}
+
+/* ---------- world ---------- */
+
+.world {
+  position: absolute;
+  inset: 0;
+  transition: translate var(--pan-t) var(--pan-ease);
+}
+
+.at-wall .world { translate: calc(var(--cam) * -1) 0; }
+
+.wall {
+  position: absolute;
+  bottom: 0;
+  left: var(--wall-x);
+  width: var(--wall-w);
+  height: calc(var(--sw) / var(--ratio));
+  z-index: 4;                  /* выше слоев сцены, иначе кадр перекроет нахлест */
+  background: url("img/wall-right.jpg") left center / cover no-repeat;
+  /* Левый край проявляется из кадра постепенно: диван и ковер совпадают по высоте, шва нет */
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 6.5%);
+  mask-image: linear-gradient(to right, transparent, #000 6.5%);
+}
+
+/* ---------- unblue ---------- */
+
+/* Диван в правой части кадра подсвечен холодным синим и выбивается из теплой комнаты.
+   Слой в режиме color отдает ему свой оттенок и насыщенность, а яркость оставляет
+   от кадра, поэтому работает и поверх видео. Края растушеваны маской. */
+.unblue {
+  position: absolute;
+  z-index: 3;
+  left: 72%;
+  top: 63%;
+  width: 28%;
+  height: 26%;
+  background: #6a4630;
+  opacity: .85;
+  mix-blend-mode: color;
+  -webkit-mask-image:
+    linear-gradient(to right, transparent, #000 26%),
+    linear-gradient(to bottom, transparent, #000 22%, #000 80%, transparent);
+  mask-image:
+    linear-gradient(to right, transparent, #000 26%),
+    linear-gradient(to bottom, transparent, #000 22%, #000 80%, transparent);
+  -webkit-mask-composite: source-in;
+  mask-composite: intersect;
+}
+
+/* ---------- sigils ---------- */
+
+.sigil {
+  position: absolute;
+  /* Посередине между списком групп и концом пустой стены (68% ее длины):
+     левый край экрана приходится на 92% - 100vw, список кончается у 7vw + 320px. */
+  left: calc(80% - 46.5vw + 160px);
+  /* И от низа: стена стоит на нижнем крае экрана, а сверху на широких окнах обрезана */
+  bottom: 57svh;
+  width: min(46svh, 29vw);
+  translate: -50% 50%;
+  color: var(--g-python);
+  opacity: 0;
+  filter: drop-shadow(0 0 14px color-mix(in srgb, currentColor 55%, transparent));
+  transition: opacity .35s var(--ease);
+}
+
+.sigil[data-g="docker"] { color: var(--g-docker); }
+
+.sigil path {
+  stroke: currentColor;
+  stroke-dasharray: 1 1.01;
+  stroke-dashoffset: 1;
+  /* Гаснет знак целиком, а штрихи сбрасываются уже невидимыми */
+  transition: stroke-dashoffset 0s .35s;
+}
+
+.sigil__brush { stroke-width: 15; }
+.sigil__line  { stroke-width: 5; }
+.sigil__thin  { stroke-width: 3.5; }
+
+.sigil__dot {
+  fill: var(--bg);
+  opacity: 0;
+  transition: opacity 0s .35s;
+}
+
+.sigil[data-g="docker"] .sigil__dot { fill: currentColor; }
+
+.sigil.on { opacity: .92; }
+
+.sigil.on path {
+  stroke-dashoffset: 0;
+  transition: stroke-dashoffset var(--d, 1.25s) cubic-bezier(.5, 0, .3, 1) var(--w, 0s);
+}
+
+.sigil.on .sigil__dot {
+  opacity: 1;
+  transition: opacity .3s ease 1.3s;
+}
+
+/* ---------- ui ---------- */
+
+/* Панель главной отстает от камеры и гаснет */
+.panel {
+  transition: opacity .5s var(--ease), translate var(--pan-t) var(--pan-ease);
+}
+
+.at-wall .panel {
+  opacity: 0;
+  translate: -24vw 0;
+  pointer-events: none;
+}
+
+.at-wall .settings { opacity: 0; pointer-events: none; }
+.settings { transition: opacity .4s var(--ease); }
+
+.wallui {
+  position: absolute;
+  z-index: 4;
+  top: clamp(76px, 13vh, 150px);
+  left: clamp(20px, 7vw, 110px);
+  width: min(320px, 26vw);
+  opacity: 0;
+  translate: 28px 0;
+  pointer-events: none;
+  transition: opacity .4s var(--ease), translate .6s var(--ease);
+}
+
+.at-wall .wallui {
+  opacity: 1;
+  translate: 0 0;
+  pointer-events: auto;
+  transition-delay: 1.1s;
+}
+
+.wallui h2 {
+  margin: 14px 0 0;
+  font-size: clamp(32px, 3.5vw, 54px);
+  font-weight: 600;
+  line-height: 1.02;
+  letter-spacing: -.01em;
+  white-space: nowrap;
+}
+
+.groups {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 26px;
+}
+
+/* Те же стеклянные карточки, что на главной: темная подложка с размытием держит
+   текст на любом фоне - и на темной стене, и там, куда падает свет фонаря */
+.group {
+  --g: var(--g-python);
+  display: flex;
+  flex-direction: column;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: rgba(14, 11, 16, .56);
+  -webkit-backdrop-filter: blur(12px) saturate(1.2);
+  backdrop-filter: blur(12px) saturate(1.2);
+  color: inherit;
+  text-decoration: none;
+  outline: none;
+  transition: border-color .35s var(--ease), background .35s var(--ease), box-shadow .35s var(--ease);
+}
+
+.group[data-g="docker"] { --g: var(--g-docker); }
+
+/* Выбранная группа светится своим цветом, как выбранная карточка на главной */
+.group.is-on {
+  border-color: color-mix(in srgb, var(--g) 62%, transparent);
+  background: rgba(24, 17, 14, .66);
+  box-shadow:
+    0 0 38px color-mix(in srgb, var(--g) 20%, transparent),
+    inset 0 0 30px color-mix(in srgb, var(--g) 8%, transparent);
+}
+
+.group__t {
+  font-size: clamp(26px, 2.4vw, 34px);
+  font-weight: 600;
+  line-height: 1.05;
+  transition: color .3s var(--ease);
+}
+
+.group.is-on .group__t { color: var(--g); }
+
+.group__d {
+  margin-top: 6px;
+  font-size: 16px;
+  color: var(--ink-2);
+}
+
+.group__m {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin-top: 12px;
+  font: 500 11px/1 var(--mono);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+
+.group__m b { color: var(--g); font-size: 14px; }
+
+.group__m i {
+  margin-left: auto;
+  font-style: normal;
+  color: var(--ink);
+  transition: translate .35s var(--ease);
+}
+
+.group.is-on .group__m i { translate: 4px 0; }
+
+/* Группа из одних черновиков: знак рисуется, но перейти пока некуда.
+   Название не глушим - на светлом фоне серое терялось; о черновике говорит пунктир. */
+.group--draft { cursor: default; border-style: dashed; }
+
+.back {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-top: 26px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: 500 11px/1 var(--mono);
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  cursor: pointer;
+  transition: color .25s var(--ease);
+}
+
+.back i { font-style: normal; transition: translate .35s var(--ease); }
+
+.back:hover,
+.back:focus-visible { color: var(--ink); outline: none; }
+
+.back:hover i { translate: -4px 0; }
+
+/* ---------- wasd ---------- */
+
+/* Выбранная карточка светится теплым, как лампы в комнате */
+.card.is-active {
+  border-color: rgba(240, 169, 74, .6);
+  background: rgba(34, 22, 13, .58);
+  box-shadow:
+    0 0 38px rgba(255, 170, 80, .2),
+    inset 0 0 30px rgba(255, 170, 80, .08);
+}
+
+.card { transition-property: transform, border-color, background, box-shadow; }
+
+.card.is-active .card__k { color: var(--acc); }
+.card.is-active .card__m i { translate: 4px 0; }
+
+.keys {
+  position: absolute;
+  z-index: 4;
+  left: 26px;
+  bottom: 18px;
+  font: 500 10px/1 var(--mono);
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.keys__set {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: opacity .4s var(--ease);
+}
+
+.keys__set span { margin: 0 14px 0 5px; }
+
+/* Оба набора лежат в одной точке, виден тот, что подходит месту */
+.keys__set--wall {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  white-space: nowrap;
+  opacity: 0;
+}
+
+.at-wall .keys__set--room { opacity: 0; }
+.at-wall .keys__set--wall { opacity: 1; transition-delay: 1.1s; }
+
+.keys kbd {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: rgba(14, 11, 16, .44);
+  font: inherit;
+  letter-spacing: 0;
+  color: var(--ink-2);
+  transition: color .16s, border-color .16s, box-shadow .16s;
+}
+
+.keys kbd.hit {
+  color: var(--acc);
+  border-color: var(--acc);
+  box-shadow: 0 0 12px rgba(240, 169, 74, .45);
+}
+
+@media (hover: none), (max-width: 1100px) {
+  .keys { display: none; }
+}
+
+/* ---------- narrow screens ---------- */
+
+@media (max-width: 1100px) {
+  /* Кадр на узком экране сдвинут влево на 5% своей ширины (см. .stage в main.css).
+     Камера встает так, что фонари висят у правого края, а слева от них пустая стена. */
+  :root {
+    --edge: calc(var(--sw) * .95);
+    --cam: calc(var(--wall-x) + var(--wall-w) * .8 - 100vw);
+  }
+
+  /* Как и кадр, стена сверху растворяется в фоне под текстом */
+  .wall {
+    -webkit-mask-image: linear-gradient(to right, transparent, #000 6.5%), linear-gradient(to bottom, transparent, #000 28%);
+    mask-image: linear-gradient(to right, transparent, #000 6.5%), linear-gradient(to bottom, transparent, #000 28%);
+    -webkit-mask-composite: source-in;
+    mask-composite: intersect;
+  }
+
+  .at-wall .panel { translate: -60vw 0; }
+
+  .wallui {
+    top: 58px;
+    left: 16px;
+    right: 16px;
+    width: auto;
+  }
+
+  .sigil {
+    left: calc(80% - 66vw);
+    bottom: 36svh;
+    width: min(26svh, 52vw);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --pan-t: .01s; }
+  .at-wall .wallui { transition-delay: 0s; }
+  .sigil.on path { transition-duration: .01s; transition-delay: 0s; }
+  .sigil.on .sigil__dot { transition-delay: 0s; }
+}
