@@ -5,23 +5,9 @@
   // и возврат к списку. Сам переход со списка делает браузер (vt.css).
   var bar = document.getElementById('bar');
   var progress = document.getElementById('progress');
-  var backs = Array.prototype.slice.call(document.querySelectorAll('[data-back]'));
   var heads = Array.prototype.slice.call(document.querySelectorAll('.note h2:not(.u-kicker)'));
   var links = Array.prototype.slice.call(document.querySelectorAll('.toc a'));
   var still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  // Пришли со списка своей группы (он же ссылка «к списку»): возвращаемся по истории,
-  // а не кладем в нее список второй раз. Сверяем пути referrer и ссылки, как
-  // note-group.js со стеной.
-  function cameFrom(link) {
-    try {
-      var from = new URL(document.referrer);
-      return from.origin === link.origin && from.pathname === link.pathname;
-    } catch (err) {
-      return false;
-    }
-  }
-
-  var fromList = cameFrom(backs[backs.length - 1]);
   // Раздел считается начатым, когда его заголовок поднялся под крошки
   var EDGE = 96;
 
@@ -69,19 +55,15 @@
     window.scrollTo({ top: to, behavior: still ? 'auto' : 'smooth' });
   }
 
-  function leave(e) {
-    if (e.metaKey || e.ctrlKey || e.shiftKey || e.button) return;
-    if (fromList && history.length > 1) {
-      e.preventDefault();
-      history.back();
-      return;
+  // Путь назад к списку - back.js. Пришли не со списка: он по метке сразу выберет строку
+  // заметки (note-group.js сверяет ее с путем ссылки строки). По истории метка не нужна:
+  // список вернется таким, каким его оставили.
+  wayBack({
+    before: function (byHistory) {
+      if (byHistory) return;
+      try { sessionStorage.setItem('note', location.pathname); } catch (err) {}
     }
-    // Список по этой метке сразу выберет строку заметки (note-group.js сверяет
-    // ее с путем ссылки строки)
-    try { sessionStorage.setItem('note', location.pathname); } catch (err) {}
-  }
-
-  backs.forEach(function (a) { a.addEventListener('click', leave); });
+  });
 
   // Свернутое оглавление закрывается, как только выбран раздел. Закрываем до перехода
   // по якорю, чтобы браузер считал положение заголовка уже без открытого списка.
@@ -89,20 +71,7 @@
     a.addEventListener('click', function () { a.closest('details').open = false; });
   });
 
-  // Кнопка в шапке блока копирует его код
-  Array.prototype.forEach.call(document.querySelectorAll('.copy'), function (btn) {
-    btn.addEventListener('click', function () {
-      var pre = btn.closest('.code').querySelector('pre');
-      if (!navigator.clipboard) return;
-      navigator.clipboard.writeText(pre.textContent).then(function () {
-        btn.classList.add('is-done');
-        setTimeout(function () { btn.classList.remove('is-done'); }, 1400);
-      });
-    });
-  });
-
-  // A, стрелка влево и Escape ведут к списку, как на странице группы ведут к стене.
-  // e.code не зависит от раскладки: на русской A - это «Ф».
+  // W и S - по разделам (A, стрелка влево и Escape к списку - back.js)
   var STEPS = { KeyW: -1, KeyS: 1 };
 
   document.addEventListener('keydown', function (e) {
@@ -112,9 +81,6 @@
     if (dir) {
       e.preventDefault();
       step(dir);
-    } else if (e.code === 'KeyA' || e.code === 'ArrowLeft' || e.key === 'Escape') {
-      e.preventDefault();
-      backs[backs.length - 1].click();
     }
   });
 })();

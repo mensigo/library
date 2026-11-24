@@ -3,22 +3,8 @@
 
   // Страница группы заметок: фильтр и поиск, выбор строки с клавиатуры, уход в заметку
   // и возврат к стене.
-  var backs = Array.prototype.slice.call(document.querySelectorAll('[data-back]'));
   var group = document.body.dataset.g;
   var still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-  // Пришли со стены (она же ссылка «к стене»): возвращаемся по истории, а не кладем
-  // в нее стену второй раз. Сверяем пути: у ссылки есть #notes, а в referrer хеша нет.
-  function cameFrom(link) {
-    try {
-      var from = new URL(document.referrer);
-      return from.origin === link.origin && from.pathname === link.pathname;
-    } catch (err) {
-      return false;
-    }
-  }
-
-  var fromWall = cameFrom(backs[backs.length - 1]);
 
   // Строки появляются по одной только при входе, а не каждый раз, когда фильтр
   // возвращает их в список
@@ -119,17 +105,13 @@
 
   // ---------- возврат к стене ----------
 
-  function leave(e) {
-    if (e.metaKey || e.ctrlKey || e.shiftKey || e.button) return;
-    // Стена по этой метке сразу покажет знак группы (wall.js)
-    try { sessionStorage.setItem('wall', group); } catch (err) {}
-    if (fromWall && history.length > 1) {
-      e.preventDefault();
-      history.back();
+  // Путь назад - back.js. Стена по метке сразу покажет знак группы (wall.js); метку
+  // ставим и при возврате по истории: если страницы стены нет в кеше, она загрузится заново.
+  wayBack({
+    before: function () {
+      try { sessionStorage.setItem('wall', group); } catch (err) {}
     }
-  }
-
-  backs.forEach(function (a) { a.addEventListener('click', leave); });
+  });
 
   // ---------- клавиши ----------
 
@@ -155,9 +137,8 @@
   }
 
   // / ставит курсор в поиск, Escape в поиске очищает его.
-  // W и S выбирают заметку, D открывает ее.
-  // A, стрелка влево и Escape ведут к стене, как A у стены ведет в комнату.
-  // e.code не зависит от раскладки: на русской A - это «Ф».
+  // W и S выбирают заметку, D открывает ее (A, стрелка влево и Escape к стене - back.js).
+  // e.code не зависит от раскладки.
   document.addEventListener('keydown', function (e) {
     if (e.key === '/' && document.activeElement !== find) {
       e.preventDefault();
@@ -181,9 +162,6 @@
       if (!document.activeElement.classList.contains('row')) return;
       e.preventDefault();
       document.activeElement.click();
-    } else if (e.code === 'KeyA' || e.code === 'ArrowLeft' || e.key === 'Escape') {
-      e.preventDefault();
-      backs[backs.length - 1].click();
     }
   });
 

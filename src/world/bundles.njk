@@ -6,7 +6,9 @@
 # /world/ (../fonts/, ../images/). note-groups.css идет после частей, чьи правила
 # перекрашивает; vt.css — последней. У блога vt.css нет: его вход и выход - затемнение,
 # а не переход браузера (docs/world.md, «Room ↔ blog»); blog.css - после prose.css,
-# чтобы поправить ее под ленту.
+# чтобы поправить ее под ленту. back.js (путь назад, wayBack) - первая часть бандла
+# каждой страницы с [data-back]: его вызывает код страницы; copy.js - кнопка копирования
+# у блоков кода.
 pagination:
   data: bundles
   size: 1
@@ -23,11 +25,11 @@ bundles:
   - out: home.js
     parts: [world/_src/fog.js, world/_src/wall.js, world/_src/cine.js, world/_src/smoke.js]
   - out: note-group.js
-    parts: [world/_src/note-group.js]
+    parts: [world/_src/back.js, world/_src/note-group.js]
   - out: note.js
-    parts: [world/_src/note.js]
+    parts: [world/_src/back.js, world/_src/copy.js, world/_src/note.js]
   - out: blog.js
-    parts: [world/_src/blog.js]
+    parts: [world/_src/back.js, world/_src/copy.js, world/_src/blog.js]
 permalink: "/world/{{ entry.out }}"
 eleventyExcludeFromCollections: true
 ---

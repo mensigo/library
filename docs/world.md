@@ -40,21 +40,23 @@ without its return from Cinema.
 | `src/world/_src/note.css` | Note page: sky, progress, HUD mark, header, lede, tldr, TOCs. |
 | `src/world/_src/prose.css` | Styles the built markdown, in notes (`.note.prose`) and posts (`.post__body.prose`): text, lists, headings, code bar, highlighted lines, output, figures, callouts, tables, verdict, footnotes, finale, terms. |
 | `src/world/_src/blog.css` | Feed and post page: grain and warm glow, `.dusk`, head with the Caveat title, posts, `· · ·`, pager; trims prose for posts (no section numbers, tighter spacing). |
-| `src/world/_src/blog.js` | Dusk in and out, back by history or link, A / Left / Escape, copy button. |
+| `src/world/_src/back.js` | The way back (`wayBack`, see "Way back"): first part of every bundle of a page with `[data-back]`, Cinema's landing too. |
+| `src/world/_src/copy.js` | The copy button on code blocks; in the note and blog bundles. |
+| `src/world/_src/blog.js` | Dusk in and out; the way back through the dusk (`hold`), any feed page counts as the feed (`also`). |
 | `src/world/_src/fog.js` | Fog transition on cards. `data-soon` → "в работе" line (`#fogSoon`), fog held 3.2 s instead of 2.3 s. `data-dusk` → the fog goes black (`.fog--dusk`), 450 ms, then the link. |
 | `src/world/_src/wall.js` | Pan on `#notes`, W/A/S/D, group and sigil selection, pause before leaving the wall, return to the wall. |
 | `src/world/_src/smoke.js` | Smoke on `#smoke`; only the coal wisp (`data-exhale="off"`). |
-| `src/world/_src/note-group.js` | Group page: filter, search, keys, back to the wall. |
-| `src/world/_src/note.js` | Note page: progress, W/S between sections, A back, copy button. |
+| `src/world/_src/note-group.js` | Group page: filter, search, keys, `sessionStorage.wall` on the way back. |
+| `src/world/_src/note.js` | Note page: progress, W/S between sections, `sessionStorage.note` on the way back by link. |
 | `src/cinema/index.html` | Cinema landing: `data-back` HUD link, `A в комнату` hint, `.cine` return block, `rel=expect`. |
-| `src/cinema/_src/return.css`, `return.js` | Cinema half of the room ↔ Cinema transition. In the landing bundles with `world/_src/vt.css`. |
+| `src/cinema/_src/return.css`, `return.js` | Cinema half of the room ↔ Cinema transition. In the landing bundles with `world/_src/vt.css` and `world/_src/back.js`. |
 
 Bundles (`src/world/bundles.njk`), in this order:
 
 - `home.css` = shell, room, cine, note-groups, vt; `home.js` = fog, wall, cine, smoke.
-- `note-group.css` = shell, notes, note-groups, vt; `note-group.js` = note-group.
-- `note.css` = shell, notes, note, prose, note-groups, vt; `note.js` = note.
-- `blog.css` = shell, prose, blog; `blog.js` = blog. No `vt.css`: the blog doesn't opt into
+- `note-group.css` = shell, notes, note-groups, vt; `note-group.js` = back, note-group.
+- `note.css` = shell, notes, note, prose, note-groups, vt; `note.js` = back, copy, note.
+- `blog.css` = shell, prose, blog; `blog.js` = back, copy, blog. No `vt.css`: the blog doesn't opt into
   cross-document view transitions, so the darkening isn't crossed with a black→black
   crossfade. No `note-groups.css`: posts have no group colour.
 
@@ -127,6 +129,24 @@ Rows, numbers, row tags, topics and embers all come from one filter,
   (`.group.is-on .group__t` ↔ page `h1`), `note-title` (`.row.is-open .row__t` ↔ note `h1`),
   `cinema-frame` (`.is-cine .cine__frame` ↔ `.hero`), `cine-bar-top/bot`, `cinema-hud`.
 
+## Way back
+
+One rule for every page with a `[data-back]` link (group page, note, feed, post, Cinema's
+landing), in `back.js`; each page calls `wayBack({ also, before, hold })` once.
+
+- The target is the last `[data-back]`. A click on any of them (no modifier, left button)
+  or A / Left / Escape (no meta/ctrl/alt, not in a field; Shift+A counts) leaves.
+- `history.back()` if the referrer's origin and pathname equal the target's (the link's
+  hash, `#notes`, doesn't count) and the tab has history; otherwise the link. A new tab
+  opened from the target has a referrer but no history, so it takes the link. New groups
+  and the `/library` prefix need no script change.
+- `also(from, link)`: other referrer paths that count as the target (the blog: any feed
+  page). `before(byHistory)`: the marks for the next page (`wall`, `note`, `cine`).
+  `hold(go)`: the pause before leaving (the blog's dusk, Cinema's bars); without it the
+  page leaves at once and the view transition does the rest.
+- A second click or key while leaving does nothing; a bfcache `pageshow` resets that.
+- Tests: `test/back.test.js` (jsdom).
+
 ## Room ↔ Cinema
 
 **Leaving** (`cine.js`, `cine.css`), click held 1600 ms with `.is-cine`:
@@ -163,8 +183,8 @@ under `(hover: none), (max-width: 1100px)`):
 - `.is-leaving` on Cinema for 1200 ms (`LEAVE` in `return.js`): bars (`.cine`, fixed,
   above HUD) slide in, hero text and scroll cue fade (.6 s ease-in-out), then the picture
   goes black (.7 s). `.hero` loses its VT name, nothing travels.
-- Then `history.back()` if opened from the room (referrer and `[data-back]` compared by
-  origin and pathname), else `sessionStorage.cine` + link.
+- Then the way back (`back.js`): `history.back()` if opened from the room, else
+  `sessionStorage.cine` + link.
 - Room opens in the same picture (`.is-cine-dark`: bars, `.cine__black`, lights off, no
   frame, no transitions) — in `pagereveal` on cache restore (before first paint), in
   `cine.js` at load on a direct visit. The VT between the two identical black screens is
@@ -201,9 +221,8 @@ Bebop (`/cinema/bebop/`) has no transition: its `БИБЛИОТЕКА` opens the
   opaque and fades it out (.7 s) on load and on a bfcache restore.
 - **Back**: `[data-back]` is the room on the feed and the feed on a post page (the `блог`
   crumb and `A · к ленте`). A / Left / Escape or a click: `.dusk.is-out` (450 ms), then
-  `history.back()` if the page was opened from that target (referrer check as in
-  `note.js`; on a post page any feed page counts, so page 2 → post → back returns to
-  page 2), else `location.href`. Every other same-site link on a blog page (dates,
+  the way back (`back.js`): `history.back()` if the page was opened from that target (on a
+  post page any feed page counts, so page 2 → post → back returns to page 2), else the link. Every other same-site link on a blog page (dates,
   `Читать дальше`, pager, `БИБЛИОТЕКА` on a post page) also goes through the black.
 - The room comes back from bfcache with the black fog on: `pageshow` drops `on`, and drops
   `fog--dusk` only 450 ms later, after the fade, or the smoke would show through. A smoke
@@ -225,9 +244,6 @@ Bebop (`/cinema/bebop/`) has no transition: its `БИБЛИОТЕКА` opens the
   group page, `sessionStorage.note` (the note's `location.pathname`) tells
   `note-group.js` which row to open/select, matched by `row.pathname`. `.is-open` is
   dropped 1 s after return.
-- `note.js` and `note-group.js` treat the page as opened from the page before when the
-  referrer's origin and pathname equal those of its `[data-back]` link, so new groups and
-  the `/library` prefix need no script change.
 
 ## Phones
 
@@ -264,6 +280,8 @@ The full mobile view is a later feature. What is in place, under 1100 px:
   Two anime drafts wait here: `anime-watched.md` (the watched table) and
   `made-in-abyss.md`.
   Images: `library_static/src/images/blog/`, listed in `images/blog/meta.md`.
+- **Page with a way back**: `data-back` on its back link(s) (the last one is the target),
+  `world/_src/back.js` first among its JS parts, one `wayBack(...)` call in its script.
 
 ## Don't repeat
 
