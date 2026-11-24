@@ -21,7 +21,7 @@ const collection = [
     item('/notes/python/unlimited-ints', { title: 'Неограниченные int', upd_date: new Date('2026-08-17'), draft: true, tags: ['Python'] }),
     item('/notes/docker/docker-history', { title: 'История Docker', upd_date: new Date('2026-10-02'), tags: ['Docker'] }),
     item('/notes/index', { title: 'Заметки' }),
-    item('/reviews/anime/made-in-abyss', { title: 'Made in Abyss', upd_date: new Date('2026-10-01') })
+    item('/cinema/index', { title: 'Cinema', upd_date: new Date('2026-10-01') })
 ];
 
 const NOW = new Date('2026-10-18T12:00:00Z');
@@ -147,7 +147,7 @@ describe('groupIdOf', () => {
     test('страницы уровнем выше и вне notes/ - без группы', () => {
         expect(groupIdOf('/notes/index')).toBeUndefined();
         expect(groupIdOf('/notes/group')).toBeUndefined();
-        expect(groupIdOf('/reviews/anime/made-in-abyss')).toBeUndefined();
+        expect(groupIdOf('/cinema/index')).toBeUndefined();
         expect(groupIdOf(undefined)).toBeUndefined();
     });
 });

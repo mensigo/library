@@ -7,9 +7,6 @@ to the wall → group page → note page; Blog card (`data-dusk`) → the room g
 `/blog/` (moved in by `pitch/blog/MIGRATION.md`). No card uses `data-soon` now; it stays
 in `fog.js` / `room.css` for the next unfinished section (the fog shows "в работе").
 
-Reviews (hidden for now) still use the old shell: `base.njk`, `css/styles.css`,
-`js/scripts.js`, described in `DESIGN.md`. Nothing here applies to them.
-
 Cross-document view transitions need http: use `npm run dev`, or for back/forward loops a
 static server on the build (`python3 -m http.server -d _site`). After a bfcache restore the
 dev server's live-reload client sometimes reloads the page, and the room then shows up
@@ -32,7 +29,7 @@ without its return from Cinema.
 | `src/blog/blog.11tydata.js` | Every post: `layout: world/post.njk`, `bundle: blog`, `permalink` `/blog/<id>/` (`false` for `draft: true`). `index.njk` overrides layout and permalink. |
 | `src/blog/*.md` | Posts. File name is free; the URL is the `id` in front matter. |
 | `src/_includes/world/note-sigils.njk` | Macro `sigil(id, mode)`: the group signs, `"wall"` (drawn stroke by stroke) or `"mark"` (already drawn). |
-| `src/_includes/meta.njk` | OG/Telegram `<meta>`, shared with the old shell. |
+| `src/_includes/meta.njk` | OG/Telegram `<meta>`, included by `shell.njk`. |
 | `src/world/bundles.njk` | Joins `world/_src/` into `/world/{home,note-group,note,blog}.{css,js}` (filter `bundle`). |
 | `src/world/_src/shell.css` | What every page needs: tokens (`--hand` too), `@font-face` (Ysabeau, Caveat), `.hud`, `.kicker`, `.frameline`. |
 | `src/world/_src/room.css` | Stage geometry (`--sw`, `--ratio: 1.7768`), panel, cards, glows, scrim, fog and `.fog--dusk`; camera pan, wall layer and mask, group list, sigils, key hints, `#fogSoon`. |
@@ -76,8 +73,7 @@ variable font, weights 400-700; a page that doesn't use it doesn't load it),
 JetBrains Mono from Google Fonts (`shell.njk`). Both local fonts are OFL 1.1; their license texts
 sit next to the files (`src/fonts/*-OFL.txt`) and ship with them.
 
-`sessionStorage` keys: `fog`, `wall`, `note`, `cine`, `cineIn`. The old shell's
-`localStorage` keys (`theme`, `rail`, `accent`) don't overlap with them.
+`sessionStorage` keys: `fog`, `wall`, `note`, `cine`, `cineIn`.
 
 ### Lists and numbers
 
@@ -94,7 +90,7 @@ Rows, numbers, row tags, topics and embers all come from one filter,
 - Embers (`view.drafts`): `draft: true` notes in the group's folder, under the group's
   `embers` heading. Not links. A draft still builds at its URL.
 - The room's «Заметки» count (`noteCount`): rows of the enabled groups.
-- TOC (`toc`): `h2` with an id, without `.u-kicker`, read from the built content.
+- TOC (`toc`, `lib/markdown.js`): `h2` with an id, without `.u-kicker`, read from the built content.
 - Posts (`blogPosts`, collection `posts`): `src/blog/*.md` without `draft: true`, newest
   `date` first, then `title`; 10 per feed page. Dates read `24 ноября`, with the year when
   it isn't the build year (`longDate`, UTC).
@@ -265,6 +261,8 @@ The full mobile view is a later feature. What is in place, under 1100 px:
   `<!-- more -->` on its own line ends the feed preview of a long post. A draft:
   `draft: true`, not built, may go without an `id` until published. Keep at least one
   published post, or `/blog/` isn't built (`test/blog-posts.test.js` checks it, and ids).
+  Two anime drafts wait here: `anime-watched.md` (the watched table) and
+  `made-in-abyss.md`.
   Images: `library_static/src/images/blog/`, listed in `images/blog/meta.md`.
 
 ## Don't repeat
@@ -289,6 +287,31 @@ The full mobile view is a later feature. What is in place, under 1100 px:
 - Without `.world { isolation: isolate; }` the wall's carpet strip at the frame's right
   edge looks lit in the room and goes dark when the pan starts.
 - Lantern fade through `opacity`: conflicts with `flicker`; use `filter`.
+
+## Authoring syntax
+
+Notes and blog posts are written in markdown; every rule below lives in `lib/markdown.js` (applied with `amendLibrary` in `.eleventy.js`) and is styled by `src/world/_src/prose.css`. Notes set no `layout:` (`notes.11tydata.js` gives them `world/note.njk`), posts get `world/post.njk` from `blog.11tydata.js`; frontmatter fields are listed in `CLAUDE.md`.
+
+- Code fences carry the language, optional highlighted lines, and an optional file name:
+  ```` ```python/3,5-7 slots.py ```` — line numbers are 0-indexed and go through the syntax-highlight plugin unchanged. A trailing `@3.12` token adds a version badge next to the language badge.
+  A second group after another slash marks lines in red instead of accent: ```` ```python//2 strict.py ```` highlights line 2 as a mistake.
+- `::: note`, `::: tip`, `::: warn`, `::: stop` … `:::` produce callouts. Text after the keyword replaces the default bold title.
+- `::: more Заголовок` … `:::` wraps a side note in a collapsible `.more` block; the text after `more` is the clickable summary (default «Подробнее»).
+- `::: out` … `:::` right after a fence renders the program's output attached to the block. A word after `out` relabels it. Plain text inside wraps; wrap the content in a nested fence when leading whitespace matters (bytecode dumps, tracebacks) — a fence inside `::: out` is rendered bare, keeping its highlighting but dropping the title bar and frame.
+- `![alt](/images/x.png "подпись")` alone in a paragraph becomes a `<figure class="fig">`; the title becomes the caption. A caption written as `"Схема | текст"` splits into an accent label and the caption body.
+- `::: split` … `:::` around two fences puts them side by side. Name them through the fence info line: ```` ```python было ````.
+- `:::: verdict` wrapping `::: yes` and `::: no` … `:::` blocks builds the two-column verdict. Four colons outside, three inside — that is how nesting is recognised. Text after `yes` / `no` overrides the default titles.
+- `::: finale` … `:::` closes the note. A word after `finale` replaces the «Итог» label.
+- `[^1]` in the text plus `[^1]: …` at the bottom produces the `.notes-block` footnote list with backlinks.
+- `*[CNCF]: расшифровка` on its own line (conventionally at the bottom of the file) turns every occurrence of `CNCF` in that file into a `.term` with the explanation as its hover caption (`markdown-it-abbr`).
+- Tables need no markup — every table is wrapped in `.tablewrap` automatically. `{:.ok}` / `{:.no}` mark a cell as a win or a loss. `{:.sortable}` on its own line after a blank line below the table adds the class to the table itself (without the blank line it becomes an extra empty row); no sorting JS exists in the world yet.
+- `{:.class}` attribute syntax is available via `markdown-it-attrs` for one-off modifiers. The delimiter is `{:` … `}`, not `{` … `}`, so that dicts and JSON inside `::: out` blocks survive.
+
+Hand-drawn SVG diagrams live in `src/_includes/figures/*.njk` as a complete `<figure class="fig">` and are pulled in with `{% include "figures/name.njk" %}`. Two rules: use the `.d-*` tokens instead of literal colors, so the drawing follows the theme, and keep the partial free of blank lines — a blank line ends the HTML block and markdown-it starts parsing the SVG as text.
+
+Drop to raw HTML only for `.note-media` (a narrow image with a caption, `note-media--sm`, as at the top of `notes/python/assert.md`). Everything else should be markdown.
+
+Headings generate the TOC. Start at `h2` and avoid skipping levels; anchor IDs are generated at build time by `generateSlug` in `lib/markdown.js`, and the note's TOC is built from them.
 
 ## Images and geometry
 

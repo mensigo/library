@@ -31,6 +31,5 @@ pitch/legacy/
 pitch/v3/
 /*.md
 !/CLAUDE.md
-!/DESIGN.md
 !/README.md
 !/GLOSSARY.md

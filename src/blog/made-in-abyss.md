@@ -1,10 +1,12 @@
 ---
-layout: page.njk
 title: Созданный в бездне
+date: 2025-10-26
+draft: true
 anime_status: 2 сезона (+3 фильма) / ongoing / 2017 - ...
 manga_status: 14 томов / ongoing / 2012 - ...
 manga_author: Акихито Цукуси
 tags:
+  - аниме
   - сэйнэн
   - приключения
   - фэнтези

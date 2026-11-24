@@ -1,17 +1,12 @@
 ---
-layout: plain.njk
-title: Интро
+title: Просмотренное аниме
+date: 2026-11-24
+draft: true
+tags: [аниме]
 ---
-
-## Интро
-
-{% sortableTable %}
 | Аниме              | Год  | Оценка |
 |--------------------|------|--------|
 | Созданный в бездне | 2017 | 6/10   |
 | Платиновый предел  | 2021 | 6/10   |
-{% endsortableTable %}
 
-
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec tristique arcu sed suscipit tempor.
-
+{:.sortable}

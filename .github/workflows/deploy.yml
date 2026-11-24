@@ -31,8 +31,8 @@ jobs:
 
       - name: Sync images
         run: |
-          rm -rf src/images/notes src/images/reviews
-          mkdir -p src/images/notes src/images/reviews
+          rm -rf src/images/notes
+          mkdir -p src/images/notes
           rsync -a --delete --exclude 'logo.png' --exclude '/world/*.png' images_repo/src/images/ src/images/
           rm -rf images_repo
 
