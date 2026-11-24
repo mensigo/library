@@ -1,0 +1,29 @@
+{#- Один пост: в ленте (full false) и на своей странице (full true), разметка общая.
+      p      - данные поста: id, title, date, tags, untitled
+      body   - отрендеренный HTML: в ленте templateContent, на странице content
+      prefix - pathPrefix (макрос не видит контекст страницы)
+    В ленте тело обрывается на <!-- more --> и получает «Читать дальше →». Ссылки в
+    постах корневые, rootLinks добавляет к ним префикс (MIGRATION.md, решение 7). -#}
+{%- macro post(p, body, full, prefix) -%}
+{%- set href = prefix ~ "/blog/" ~ p.id ~ "/" -%}
+{%- set part = body | beforeMore -%}
+<article class="post">
+  <div class="post__meta">
+    <a class="post__date" href="{{ href }}"><time datetime="{{ p.date | dateToRfc3339 | truncate(10, true, '') }}">{{ p.date | longDate }}</time></a>
+    {%- if p.tags and p.tags | length %}
+    <span class="post__kind">{{ p.tags | join(" · ") }}</span>
+    {%- endif %}
+  </div>
+  {%- if full %}
+  <h1 class="post__t">{{ p.title }}</h1>
+  {%- elif not p.untitled %}
+  <h2 class="post__t"><a href="{{ href }}">{{ p.title }}</a></h2>
+  {%- endif %}
+  <div class="post__body prose">
+{% if full %}{{ body | rootLinks(prefix) | safe }}{% else %}{{ part.html | rootLinks(prefix) | safe }}{% endif %}
+  </div>
+  {%- if not full and part.cut %}
+  <a class="post__more" href="{{ href }}">Читать дальше →</a>
+  {%- endif %}
+</article>
+{%- endmacro -%}

@@ -8,8 +8,19 @@
   var fogSoon = document.getElementById('fogSoon');
   var fogTimer;
 
-  // Возврат кнопкой «назад»: страница достается из кеша уже в дыму
-  window.addEventListener('pageshow', function () { fog.classList.remove('on'); });
+  // Затемнение для data-dusk: = .fog--dusk в room.css и .dusk.is-out в blog.css
+  var DUSK = 450;
+
+  // Возврат кнопкой «назад»: страница достается из кеша уже в дыму или в черном.
+  // Черное гаснет своим ходом и только потом перестает быть черным, иначе за
+  // .45 s проступил бы дым; следующая карточка с дымом снимет его и сама.
+  window.addEventListener('pageshow', function () {
+    fog.classList.remove('on');
+    clearTimeout(fogTimer);
+    if (fog.classList.contains('fog--dusk')) {
+      fogTimer = setTimeout(function () { fog.classList.remove('fog--dusk'); }, DUSK);
+    }
+  });
 
   document.querySelectorAll('.card').forEach(function (card) {
     card.addEventListener('click', function (e) {
@@ -17,6 +28,14 @@
       // с data-cine - комната становится кадром фильма (cine.js)
       if (card.hasAttribute('data-pan') || card.hasAttribute('data-cine')) return;
       e.preventDefault();
+      clearTimeout(fogTimer);
+      // Блог (data-dusk): комната просто гаснет, блог проявляется из черного (blog.js)
+      if (card.hasAttribute('data-dusk')) {
+        fog.classList.add('fog--dusk', 'on');
+        fogTimer = setTimeout(function () { location.href = card.getAttribute('href'); }, DUSK);
+        return;
+      }
+      fog.classList.remove('fog--dusk');
       fogTitle.textContent = card.dataset.title;
       // Раздел еще не готов: дым говорит об этом и держится дольше, чтобы успеть прочитать
       var soon = fogSoon ? card.dataset.soon : '';

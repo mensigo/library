@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Блог · Библиотека</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="blog.css">
+</head>
+<body>
+
+<!-- Затемнение: на входе гаснет, на выходе сгущается (blog.js) -->
+<div class="fog" id="fog" aria-hidden="true"></div>
+
+<nav class="hud" aria-label="Хлебные крошки">
+  <span class="dot"></span>
+  <a href="../v4/index-g.html" data-back><b>БИБЛИОТЕКА</b></a>
+  <span class="sep">/</span>
+  <span>блог</span>
+</nav>
+
+<main class="blog">
+  <header class="head">
+    <span class="kicker">02 / блог</span>
+    <h1 class="title">Блог</h1>
+    <p class="sub">Программы, железо, скиллы для Claude Code и немного обычной жизни.</p>
+  </header>
+
+  <div class="feed">
+    <article class="post" id="hello">
+      <div class="post__meta">
+        <a class="post__date" href="#hello"><time datetime="2026-11-24">24 ноября</time></a>
+      </div>
+      <div class="post__body">
+        <h2 class="post__t">Привет</h2>
+        <p>Это блог - место для всего, что не влезает в заметки.</p>
+        <p>Заметки остаются про Python и Docker изнутри, с кодом и схемами. Здесь будет проще: программы, которые я для себя открываю, железки, полезные скиллы для Claude Code и иногда что-то из обычной жизни.</p>
+        <p>Без расписания и без плана. Пишу, когда есть что рассказать. Позже сюда переедут и обзоры: аниме и книги станут постами со своими тегами.</p>
+        <p>Спасибо, что заглянули.</p>
+      </div>
+    </article>
+  </div>
+
+  <!-- Страницы ленты появятся, когда постов станет больше, чем влезает на одну:
+       ← новее · 1 / 3 · старее → (стили .pager в blog.css) -->
+
+  <footer class="foot">
+    <span>A · назад в комнату</span>
+  </footer>
+</main>
+
+<script src="blog.js"></script>
+</body>
+</html>

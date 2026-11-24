@@ -124,15 +124,7 @@ html {
 
 .side { top: 76px; }
 
-/* ---------- text ---------- */
-
-.note {
-  max-width: 720px;
-  font-size: 18px;
-  line-height: 1.6;
-}
-
-.note p { margin: 16px 0 0; }
+/* ---------- lede and tldr ---------- */
 
 .note .lede {
   margin: 0;
@@ -140,27 +132,6 @@ html {
   line-height: 1.45;
   color: var(--ink);
 }
-
-.note section > p,
-.note li { color: var(--ink-2); }
-
-.note b { color: var(--ink); font-weight: 600; }
-
-.note code {
-  padding: 1px 5px;
-  border-radius: 4px;
-  background: rgba(243, 236, 228, .07);
-  color: var(--ink);
-  font: 400 .82em/1 var(--mono);
-}
-
-.note ul {
-  margin: 14px 0 0;
-  padding-left: 20px;
-}
-
-.note li { margin-top: 8px; }
-.note li::marker { color: var(--ink-3); }
 
 /* Главное: каждая строка со своим угольком */
 .note .tldr {
@@ -189,146 +160,6 @@ html {
   background: var(--acc);
   box-shadow: 0 0 8px var(--acc);
 }
-
-.note h2 {
-  position: relative;
-  margin: 64px 0 0;
-  font-size: clamp(28px, 2.6vw, 36px);
-  font-weight: 600;
-  line-height: 1.1;
-}
-
-/* Номер раздела стоит на поле слева, как номер строки в списке */
-.h__n {
-  position: absolute;
-  right: 100%;
-  bottom: .5em;
-  margin-right: 18px;
-  font: 500 11px/1 var(--mono);
-  letter-spacing: .1em;
-  color: var(--ink-3);
-}
-
-.note h3 {
-  margin: 38px 0 0;
-  font-size: 23px;
-  font-weight: 600;
-  line-height: 1.2;
-}
-
-/* ---------- table ---------- */
-
-.tbl {
-  width: 100%;
-  margin: 22px 0 6px;
-  border-collapse: collapse;
-  font-size: 16px;
-  line-height: 1.4;
-}
-
-.tbl th {
-  padding: 0 14px 10px 0;
-  font: 500 10px/1 var(--mono);
-  letter-spacing: .14em;
-  text-transform: uppercase;
-  text-align: left;
-  color: var(--ink-3);
-}
-
-.tbl td {
-  padding: 9px 14px 9px 0;
-  border-top: 1px solid var(--line);
-  color: var(--ink-2);
-  vertical-align: baseline;
-}
-
-.tbl td:first-child {
-  font: 500 13px/1 var(--mono);
-  color: var(--acc);
-  white-space: nowrap;
-}
-
-/* ---------- code ---------- */
-
-.code {
-  margin: 22px 0 0;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: rgba(14, 11, 16, .6);
-  overflow: hidden;
-}
-
-.code figcaption {
-  display: flex;
-  justify-content: space-between;
-  padding: 10px 16px;
-  border-bottom: 1px solid var(--line);
-  font: 500 10px/1 var(--mono);
-  letter-spacing: .14em;
-  text-transform: uppercase;
-  color: var(--ink-3);
-}
-
-.code pre {
-  margin: 0;
-  padding: 14px 16px 16px;
-  overflow-x: auto;
-  font: 400 13.5px/1.6 var(--mono);
-  color: #e3d9cd;
-}
-
-.code pre b { color: var(--acc); font-weight: 500; }
-.code pre q { color: #9fcfc6; quotes: none; }
-
-/* Вывод программы: тот же блок, ниже и тише */
-.code .out {
-  border-top: 1px dashed var(--line);
-  color: var(--ink-2);
-}
-
-.code .out::before {
-  content: "вывод";
-  display: block;
-  margin-bottom: 8px;
-  font: 500 10px/1 var(--mono);
-  letter-spacing: .14em;
-  text-transform: uppercase;
-  color: var(--ink-3);
-}
-
-.flow {
-  padding: 14px 16px;
-  border: 1px dashed var(--line);
-  border-radius: 8px;
-  font: 400 13px/1.7 var(--mono);
-}
-
-.note .flow { margin-top: 22px; }
-.flow i { font-style: normal; color: var(--acc); }
-.flow code { padding: 0; background: none; font-size: 1em; }
-
-/* ---------- callout ---------- */
-
-.callout {
-  --c: var(--acc);
-  margin: 24px 0 0;
-  padding: 14px 18px 16px;
-  border-left: 2px solid var(--c);
-  background: color-mix(in srgb, var(--c) 9%, transparent);
-  font-size: 17px;
-  line-height: 1.5;
-}
-
-.callout--warn { --c: #e8745a; }
-
-.callout > b {
-  font: 500 10px/1 var(--mono);
-  letter-spacing: .16em;
-  text-transform: uppercase;
-  color: var(--c);
-}
-
-.note .callout p { margin: 8px 0 0; color: var(--ink-2); }
 
 /* ---------- toc ---------- */
 
@@ -445,9 +276,6 @@ html {
 @media (max-width: 1100px) {
   .hud { top: 0; left: 0; padding: 16px 16px 12px; }
   .hud__opt { display: none; }
-
-  .note { font-size: 17px; }
-  .note h2 { margin-top: 48px; }
 
   .h__n,
   .toc:not(.toc--m) { display: none; }

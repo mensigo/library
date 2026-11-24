@@ -1,0 +1,26 @@
+---
+layout: world/shell.njk
+---
+{#- Страница поста: /blog/<id>/. Раскладку, бандл и адрес дает blog/blog.11tydata.js.
+    Тот же пост, что в ленте (post-macro.njk), но целиком и с заголовком h1.
+    «Назад» (data-back) - лента: blog.js вернется по истории на ту ее страницу,
+    с которой пришли. -#}
+{%- from "world/post-macro.njk" import post as postBlock -%}
+<div class="dusk" id="dusk" aria-hidden="true"></div>
+
+<nav class="hud" aria-label="Хлебные крошки">
+  <span class="dot"></span>
+  <a href="{{ pathPrefix }}/"><b>БИБЛИОТЕКА</b></a>
+  <span class="sep">/</span>
+  <a href="{{ pathPrefix }}/blog/" data-back>блог</a>
+  <span class="sep hud__opt">/</span>
+  <span class="hud__opt hud__t">{{ title }}</span>
+</nav>
+
+<main class="blog blog--post">
+  {{ postBlock({ id: id, title: title, date: page.date, tags: tags, untitled: untitled }, content, true, pathPrefix) }}
+
+  <footer class="foot">
+    <a href="{{ pathPrefix }}/blog/" data-back>A · к ленте</a>
+  </footer>
+</main>

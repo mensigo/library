@@ -10,7 +10,7 @@ eleventyExcludeFromCollections: true
 ---
 {%- from "world/note-sigils.njk" import sigil -%}
 {%- set notesCount = collections.notes | length -%}
-{%- set reviewsCount = collections.reviews | length -%}
+{%- set postsCount = collections.posts | length -%}
 <header class="hero" id="hero">
   <!-- Мир: комната и стена справа от нее. По клику на «Заметки» камера уезжает вправо,
        то есть весь мир сдвигается влево, пока стена не займет экран. -->
@@ -66,11 +66,11 @@ eleventyExcludeFromCollections: true
         <span class="card__d">Python изнутри: от tuple до async.</span>
         <span class="card__m"><b>{{ notesCount }}</b> {{ notesCount | plural('заметка', 'заметки', 'заметок') }} <i>→</i></span>
       </a>
-      <a class="card" href="#reviews" data-title="Обзоры" data-soon="Раздел еще пишется.">
-        <span class="card__k">02 / обзоры</span>
-        <span class="card__t">Обзоры</span>
-        <span class="card__d">Аниме и философия. С оценкой и вердиктом.</span>
-        <span class="card__m"><b>{{ reviewsCount }}</b> {{ reviewsCount | plural('обзор', 'обзора', 'обзоров') }} <i>→</i></span>
+      <a class="card" href="{{ pathPrefix }}/blog/" data-title="Блог" data-dusk>
+        <span class="card__k">02 / блог</span>
+        <span class="card__t">Блог</span>
+        <span class="card__d">Программы, обзоры, жизнь.</span>
+        <span class="card__m"><b>{{ postsCount }}</b> {{ postsCount | plural('пост', 'поста', 'постов') }} <i>→</i></span>
       </a>
       <a class="card" href="{{ pathPrefix }}/cinema/" data-title="Cinema" data-cine>
         <span class="card__k">03 / cinema</span>
@@ -139,7 +139,8 @@ eleventyExcludeFromCollections: true
 </header>
 
 <!-- Дымовой переход для раздела без своего перехода. У раздела, который еще не готов
-     (data-soon на карточке), под названием появляется строка «в работе». -->
+     (data-soon на карточке), под названием появляется строка «в работе». Для блога
+     (data-dusk) тот же слой просто чернеет, без названия (.fog--dusk). -->
 <div class="fog" id="fog" aria-live="polite">
   <div class="fog__inner">
     <span class="kicker" id="fogKicker">переход</span>

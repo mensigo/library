@@ -1,0 +1,228 @@
+/* Блог (src/blog/): лента /blog/ и страница поста /blog/<id>/. Из питча pitch/blog/
+   (вариант A, «тетрадь»): одна колонка, дата рукой, между постами три точки. Фон почти
+   ровный: без стены и сцены, только зерно и слабый теплый свет сверху.
+   Бандл blog: shell.css, prose.css, эта часть - последней, чтобы поправить prose под
+   ленту. vt.css в бандле нет: вход и выход - затемнение (.dusk), а не переход
+   браузера (docs/world.md, «Room ↔ blog»). */
+
+:root {
+  --gut: clamp(16px, 5vw, 84px);
+  color-scheme: dark;
+}
+
+html { background: var(--bg); }
+
+body {
+  min-height: 100svh;
+  background:
+    radial-gradient(120% 60% at 50% -10%, rgba(240, 169, 74, .07), transparent 60%),
+    var(--bg);
+  line-height: 1.6;
+}
+
+/* Зерно поверх фона: чтобы ровный черный не выглядел пустым экраном */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: .05;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+}
+
+/* ---------- затемнение ---------- */
+
+/* Страница открывается черной и проявляется (.is-clear), уходит - снова в черное
+   (.is-out, 450 ms = задержка перед уходом в blog.js и .fog--dusk в room.css) */
+.dusk {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: #000;
+  pointer-events: none;
+  opacity: 1;
+  transition: opacity .7s var(--ease);
+}
+
+.dusk.is-clear { opacity: 0; }
+.dusk.is-out { opacity: 1; transition-duration: .45s; }
+
+/* ---------- hud ---------- */
+
+.hud { z-index: 5; }
+.hud a { color: inherit; text-decoration: none; transition: color .2s var(--ease); }
+.hud a:hover,
+.hud a:focus-visible { color: var(--acc); }
+.hud a:hover b,
+.hud a:focus-visible b { color: var(--acc); }
+
+/* Название поста в крошках не длиннее строки */
+.hud__t {
+  max-width: 32ch;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* ---------- шапка ---------- */
+
+.blog {
+  position: relative;
+  width: min(100%, 760px);
+  margin: 0 auto;
+  padding: 120px var(--gut) 60px;
+}
+
+.title {
+  margin: 12px 0 0;
+  font-family: var(--hand);
+  font-size: clamp(54px, 6vw, 84px);
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0;
+}
+
+.head .sub {
+  margin: 14px 0 0;
+  max-width: 40ch;
+  font-size: clamp(16px, 1.35vw, 19px);
+}
+
+/* ---------- пост ---------- */
+
+.feed { margin-top: 64px; }
+
+.post__meta {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  margin-bottom: 8px;
+}
+
+.post__date {
+  font-family: var(--hand);
+  font-size: 26px;
+  line-height: 1;
+  color: var(--ink-2);
+  text-decoration: none;
+  transition: color .2s var(--ease);
+}
+
+.post__date:hover,
+.post__date:focus-visible { color: var(--acc); }
+
+.post__kind {
+  font: 500 10px/1 var(--mono);
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.post__t {
+  margin: 0 0 10px;
+  font-size: 26px;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -.005em;
+}
+
+.post__t a { color: inherit; text-decoration: none; }
+
+/* Страница поста: заголовок крупнее, но той же гарнитурой */
+h1.post__t {
+  font-size: clamp(32px, 3.4vw, 44px);
+  line-height: 1.1;
+  text-wrap: balance;
+}
+
+/* Тело поста - prose (вся разметка заметок), но плотнее: первый абзац без отступа
+   сверху, номеров разделов на поле нет */
+.post__body.prose {
+  max-width: none;
+  font-size: 17px;
+}
+
+.post__body.prose > :first-child { margin-top: 0; }
+.post__body.prose p { margin-top: 14px; }
+.post__body.prose h2 { margin-top: 44px; font-size: clamp(24px, 2.2vw, 30px); }
+.post__body.prose h2:not(.u-kicker)::before { content: none; }
+.post__body.prose li::marker { color: var(--acc); }
+
+.post + .post::before {
+  content: "· · ·";
+  display: block;
+  margin: 52px 0 44px;
+  text-align: center;
+  /* Разрядка ставит пробел и после последней точки: отступ слева его уравнивает */
+  letter-spacing: .6em;
+  text-indent: .6em;
+  color: var(--ink-3);
+}
+
+/* Длинный пост в ленте обрывается на <!-- more --> */
+.post__more {
+  display: inline-block;
+  margin-top: 18px;
+  font: 500 11px/1 var(--mono);
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--acc);
+  text-decoration: none;
+}
+
+.post__more:hover,
+.post__more:focus-visible { text-decoration: underline; text-underline-offset: 4px; }
+
+/* ---------- страницы ленты ---------- */
+
+.pager {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 64px;
+  padding-top: 22px;
+  border-top: 1px solid var(--line);
+  font: 500 11px/1 var(--mono);
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+
+.pager__l { color: inherit; text-decoration: none; transition: color .2s var(--ease); }
+.pager a.pager__l:hover,
+.pager a.pager__l:focus-visible { color: var(--acc); }
+.pager__l.is-off { color: var(--ink-3); opacity: .5; }
+.pager__n { color: var(--ink-3); }
+.pager__n b { color: var(--ink); }
+
+.foot {
+  margin-top: 40px;
+  font: 500 10px/1 var(--mono);
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.foot a { color: inherit; text-decoration: none; }
+.foot a:hover,
+.foot a:focus-visible { color: var(--acc); }
+
+/* ---------- узкий экран ---------- */
+
+@media (max-width: 1100px) {
+  .blog { padding-top: 96px; }
+  .hud__opt { display: none; }
+}
+
+/* Подсказка по клавишам - только там, где есть клавиатура (как .keys в room.css) */
+@media (hover: none), (max-width: 1100px) {
+  .foot { display: none; }
+}
+
+@media (max-width: 600px) {
+  .post__t { font-size: 22px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dusk { transition-duration: .01s; }
+}

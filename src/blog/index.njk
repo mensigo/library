@@ -1,0 +1,59 @@
+---
+# Лента блога: /blog/, дальше /blog/page/2/… По 10 постов, новые выше (коллекция
+# posts, фильтр blogPosts). Пейджер виден, только когда страниц больше одной.
+# Пустая коллекция не дает ни одной страницы: /blog/ пропадет, и карточка в комнате
+# повиснет. Держите хотя бы один опубликованный пост.
+layout: world/shell.njk
+bundle: blog
+title: Блог
+pagination:
+  data: collections.posts
+  size: 10
+  alias: posts
+permalink: "/blog/{% if pagination.pageNumber > 0 %}page/{{ pagination.pageNumber + 1 }}/{% endif %}"
+eleventyExcludeFromCollections: true
+---
+{%- from "world/post-macro.njk" import post -%}
+<!-- Затемнение: на входе гаснет, на выходе сгущается (blog.js) -->
+<div class="dusk" id="dusk" aria-hidden="true"></div>
+
+<nav class="hud" aria-label="Хлебные крошки">
+  <span class="dot"></span>
+  <a href="{{ pathPrefix }}/" data-back><b>БИБЛИОТЕКА</b></a>
+  <span class="sep">/</span>
+  <span>блог</span>
+</nav>
+
+<main class="blog">
+  <header class="head">
+    <span class="kicker">02 / блог</span>
+    <h1 class="title">Блог</h1>
+    <p class="sub">Программы, железо, агенты, обзоры аниме/книг.</p>
+  </header>
+
+  <div class="feed">
+    {%- for item in posts %}
+    {{ post(item.data, item.templateContent, false, pathPrefix) }}
+    {%- endfor %}
+  </div>
+
+  {%- if pagination.pages | length > 1 %}
+  <nav class="pager" aria-label="Страницы ленты">
+    {%- if pagination.href.previous %}
+    <a class="pager__l" href="{{ pathPrefix }}{{ pagination.href.previous }}">← новее</a>
+    {%- else %}
+    <span class="pager__l is-off">← новее</span>
+    {%- endif %}
+    <span class="pager__n"><b>{{ pagination.pageNumber + 1 }}</b> / {{ pagination.pages | length }}</span>
+    {%- if pagination.href.next %}
+    <a class="pager__l" href="{{ pathPrefix }}{{ pagination.href.next }}">старее →</a>
+    {%- else %}
+    <span class="pager__l is-off">старее →</span>
+    {%- endif %}
+  </nav>
+  {%- endif %}
+
+  <footer class="foot">
+    <span>A · назад в комнату</span>
+  </footer>
+</main>

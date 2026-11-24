@@ -1,10 +1,11 @@
-# World: the room, the wall, notes, the way into Cinema
+# World: the room, the wall, notes, the blog, the way into Cinema
 
 The site's main design (pitch v4 variant G, moved into `src/` by `pitch/v4/MIGRATION.md`).
 `/` is a still frame of the room (no video) and a wall to the right of it that the camera
 pans to. From the room: Cinema card → film-frame transition to `/cinema/`; `#notes` → pan
-to the wall → group page → note page. The Reviews card has `data-soon` and only shows
-"в работе" in the fog.
+to the wall → group page → note page; Blog card (`data-dusk`) → the room goes black →
+`/blog/` (moved in by `pitch/blog/MIGRATION.md`). No card uses `data-soon` now; it stays
+in `fog.js` / `room.css` for the next unfinished section (the fog shows "в работе").
 
 Reviews (hidden for now) still use the old shell: `base.njk`, `css/styles.css`,
 `js/scripts.js`, described in `DESIGN.md`. Nothing here applies to them.
@@ -25,18 +26,25 @@ without its return from Cinema.
 | `src/notes/groups.js` | Note groups: `id`, `title`, `desc`, `tag`, `embers`, `find`, `enabled`. Global data `noteGroups` (`.eleventy.js`). |
 | `src/_includes/world/shell.njk` | `<head>` and body slot for every page above: fonts, `meta.njk`, `/world/<bundle>.css` + `.js`, `data-g`, `wall.avif` preload, `rel=expect`. |
 | `src/_includes/world/note.njk` | Note layout: sky, progress, HUD with the mark, header, lede/tldr, both TOCs, back link. |
+| `src/_includes/world/post.njk` | Post page `/blog/<id>/`: dusk, HUD `БИБЛИОТЕКА / блог / <title>`, one post in full, `A · к ленте`. |
+| `src/_includes/world/post-macro.njk` | Macro `post(p, body, full, prefix)`: `article.post` with meta (date → `/blog/<id>/`, kinds), heading, body. Feed (`full` false): body up to `<!-- more -->` + `Читать дальше →`, `h2` unless `untitled`; post page: whole body, `h1`. |
+| `src/blog/index.njk` | Feed `/blog/`, `/blog/page/<n>/`: pagination over `collections.posts`, 10 per page; head, posts, pager (only with more than one page). |
+| `src/blog/blog.11tydata.js` | Every post: `layout: world/post.njk`, `bundle: blog`, `permalink` `/blog/<id>/` (`false` for `draft: true`). `index.njk` overrides layout and permalink. |
+| `src/blog/*.md` | Posts. File name is free; the URL is the `id` in front matter. |
 | `src/_includes/world/note-sigils.njk` | Macro `sigil(id, mode)`: the group signs, `"wall"` (drawn stroke by stroke) or `"mark"` (already drawn). |
 | `src/_includes/meta.njk` | OG/Telegram `<meta>`, shared with the old shell. |
-| `src/world/bundles.njk` | Joins `world/_src/` into `/world/{home,note-group,note}.{css,js}` (filter `bundle`). |
-| `src/world/_src/shell.css` | What every page needs: tokens, `@font-face`, `.hud`, `.kicker`, `.frameline`. |
-| `src/world/_src/room.css` | Stage geometry (`--sw`, `--ratio: 1.7768`), panel, cards, glows, scrim, fog; camera pan, wall layer and mask, group list, sigils, key hints, `#fogSoon`. |
+| `src/world/bundles.njk` | Joins `world/_src/` into `/world/{home,note-group,note,blog}.{css,js}` (filter `bundle`). |
+| `src/world/_src/shell.css` | What every page needs: tokens (`--hand` too), `@font-face` (Ysabeau, Caveat), `.hud`, `.kicker`, `.frameline`. |
+| `src/world/_src/room.css` | Stage geometry (`--sw`, `--ratio: 1.7768`), panel, cards, glows, scrim, fog and `.fog--dusk`; camera pan, wall layer and mask, group list, sigils, key hints, `#fogSoon`. |
 | `src/world/_src/cine.css`, `cine.js` | Room → film frame before Cinema, and back. |
 | `src/world/_src/vt.css` | All view transitions (wall↔group, group↔note, room↔Cinema). In every bundle and the Cinema landing. |
 | `src/world/_src/note-groups.css` | Group colours (`--g-python`, `--g-docker`), Docker's `--done`, square markers and light swap. After the parts it recolours. |
 | `src/world/_src/notes.css` | Group page and the parts of the note page shared with it: backdrop, head, mark, rows, topics, embers, back link. |
-| `src/world/_src/note.css` | Note page: sky, progress, HUD mark, header, TOCs. |
-| `src/world/_src/prose.css` | Styles the built note markup: code bar, highlighted lines, output, figures, callouts, tables, verdict, footnotes, finale, terms. |
-| `src/world/_src/fog.js` | Fog transition on cards. `data-soon` → "в работе" line (`#fogSoon`), fog held 3.2 s instead of 2.3 s. |
+| `src/world/_src/note.css` | Note page: sky, progress, HUD mark, header, lede, tldr, TOCs. |
+| `src/world/_src/prose.css` | Styles the built markdown, in notes (`.note.prose`) and posts (`.post__body.prose`): text, lists, headings, code bar, highlighted lines, output, figures, callouts, tables, verdict, footnotes, finale, terms. |
+| `src/world/_src/blog.css` | Feed and post page: grain and warm glow, `.dusk`, head with the Caveat title, posts, `· · ·`, pager; trims prose for posts (no section numbers, tighter spacing). |
+| `src/world/_src/blog.js` | Dusk in and out, back by history or link, A / Left / Escape, copy button. |
+| `src/world/_src/fog.js` | Fog transition on cards. `data-soon` → "в работе" line (`#fogSoon`), fog held 3.2 s instead of 2.3 s. `data-dusk` → the fog goes black (`.fog--dusk`), 450 ms, then the link. |
 | `src/world/_src/wall.js` | Pan on `#notes`, W/A/S/D, group and sigil selection, pause before leaving the wall, return to the wall. |
 | `src/world/_src/smoke.js` | Smoke on `#smoke`; only the coal wisp (`data-exhale="off"`). |
 | `src/world/_src/note-group.js` | Group page: filter, search, keys, back to the wall. |
@@ -49,15 +57,22 @@ Bundles (`src/world/bundles.njk`), in this order:
 - `home.css` = shell, room, cine, note-groups, vt; `home.js` = fog, wall, cine, smoke.
 - `note-group.css` = shell, notes, note-groups, vt; `note-group.js` = note-group.
 - `note.css` = shell, notes, note, prose, note-groups, vt; `note.js` = note.
+- `blog.css` = shell, prose, blog; `blog.js` = blog. No `vt.css`: the blog doesn't opt into
+  cross-document view transitions, so the darkening isn't crossed with a black→black
+  crossfade. No `note-groups.css`: posts have no group colour.
 
 Nothing under `world/_src/` is published. Every bundle sits in `/world/`, so every `url()` in
 a source is relative to `/world/` (`../fonts/`, `../images/`) and works with or without
 the `/library` prefix. All links in templates go through `{{ pathPrefix }}`. Markdown doesn't
 get it, so a note links another note relatively (`../disassemble/`);
-`test/markdown-links.test.js` fails on a root link in markdown.
+`test/markdown-links.test.js` fails on a root link in markdown. Posts are the exception:
+one body renders at two depths (`/blog/`, `/blog/<id>/`), so they link from the root
+(`/notes/python/slots/`, `/images/blog/x.avif`) and both templates pass the body through
+`rootLinks(pathPrefix)`; the same test fails on a relative link in `src/blog/`.
 
 Fonts: Ysabeau Infant from `src/fonts/` (`shell.css`), Caveat from `src/fonts/` for the room's
-title only (`room.css`, Cyrillic and Latin subsets of the variable font, weights 400-700),
+title and the blog's title and dates (`shell.css`, `--hand`; Cyrillic and Latin subsets of the
+variable font, weights 400-700; a page that doesn't use it doesn't load it),
 JetBrains Mono from Google Fonts (`shell.njk`). Both local fonts are OFL 1.1; their license texts
 sit next to the files (`src/fonts/*-OFL.txt`) and ship with them.
 
@@ -76,6 +91,9 @@ sit next to the files (`src/fonts/*-OFL.txt`) and ship with them.
 - Embers (`groupDrafts`): `draft: true` notes in the group's folder, under the group's
   `embers` heading. Not links. A draft still builds at its URL.
 - TOC (`toc`): `h2` with an id, without `.u-kicker`, read from the built content.
+- Posts (`blogPosts`, collection `posts`): `src/blog/*.md` without `draft: true`, newest
+  `date` first, then `title`; 10 per feed page. Dates read `24 ноября`, with the year when
+  it isn't the build year (`longDate`, UTC).
 - Every list is sorted, and `title` (`localeCompare`, `'ru'`) is the last key, so two
   builds in a row are identical.
 
@@ -102,6 +120,9 @@ sit next to the files (`src/fonts/*-OFL.txt`) and ship with them.
 - `--done` per sigil = when its last stroke ends; a new sigil needs its own value.
 - The `.mark` on group/note pages and the `.sigil` on the wall are drawn from the same
   paths in `note-sigils.njk`; only `--done` lives apart, in `room.css` / `note-groups.css`.
+- The 450 ms of darkening: `.fog--dusk` transition (`room.css`) = `DUSK` in `fog.js` =
+  `.dusk.is-out` transition (`blog.css`) = `OUT` in `blog.js`. The `.dusk` fade-in (.7 s,
+  `blog.css`) is free to change alone.
 - View-transition names, in pairs: `sigil` (`.sigil.on` ↔ `.mark`), `group-title`
   (`.group.is-on .group__t` ↔ page `h1`), `note-title` (`.row.is-open .row__t` ↔ note `h1`),
   `cinema-frame` (`.is-cine .cine__frame` ↔ `.hero`), `cine-bar-top/bot`, `cinema-hud`.
@@ -173,6 +194,22 @@ Bebop (`/cinema/bebop/`) has no transition: its `БИБЛИОТЕКА` opens the
   `persisted` clears that mark, so a later fresh load doesn't find the sign drawn.
   `<link rel="expect" href="#ready">` holds the first frame until the camera is at the wall.
 
+## Room ↔ blog
+
+- **In**: the card has `data-dusk`. `fog.js` adds `fog--dusk` + `on` (the fog layer, black,
+  no title, .45 s), waits 450 ms, goes to the href. The blog page starts with `.dusk`
+  opaque and fades it out (.7 s) on load and on a bfcache restore.
+- **Back**: `[data-back]` is the room on the feed and the feed on a post page (the `блог`
+  crumb and `A · к ленте`). A / Left / Escape or a click: `.dusk.is-out` (450 ms), then
+  `history.back()` if the page was opened from that target (referrer check as in
+  `note.js`; on a post page any feed page counts, so page 2 → post → back returns to
+  page 2), else `location.href`. Every other same-site link on a blog page (dates,
+  `Читать дальше`, pager, `БИБЛИОТЕКА` on a post page) also goes through the black.
+- The room comes back from bfcache with the black fog on: `pageshow` drops `on`, and drops
+  `fog--dusk` only 450 ms later, after the fade, or the smoke would show through. A smoke
+  card removes `fog--dusk` itself too.
+- No view transition: the blog bundle has no `vt.css` (see "Don't repeat").
+
 ## Group page ↔ note
 
 - Keys (`note-group.js`): W/S, Up/Down move through visible rows, D opens. Selected =
@@ -217,6 +254,14 @@ The full mobile view is a later feature. What is in place, under 1100 px:
 - **Group**: an entry in `src/notes/groups.js`, its strokes in `note-sigils.njk`, its
   colour and `--done` in `note-groups.css`, and the folder `src/notes/<id>/`. The folder
   name is its id. `enabled: false` shows it dimmed on the wall (`.group--draft`).
+
+- **Post**: one `.md` in `src/blog/` with `id` (the next free number, never reused),
+  `title`, `date`, optional `tags` (the kind: `claude`, `программы`, `железо`, `жизнь`…),
+  `untitled: true` for no heading in the feed. No `layout:` line. Root links only.
+  `<!-- more -->` on its own line ends the feed preview of a long post. A draft:
+  `draft: true`, not built, may go without an `id` until published. Keep at least one
+  published post, or `/blog/` isn't built (`test/blog-posts.test.js` checks it, and ids).
+  Images: `library_static/src/images/blog/`, listed in `images/blog/meta.md`.
 
 ## Don't repeat
 

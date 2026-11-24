@@ -4,7 +4,9 @@
 # на world/_src/ нет. Каждая запись — один файл в /world/; части — пути от src/.
 # Все бандлы лежат на одном уровне, поэтому url() в любом исходнике — относительно
 # /world/ (../fonts/, ../images/). note-groups.css идет после частей, чьи правила
-# перекрашивает; vt.css — последней.
+# перекрашивает; vt.css — последней. У блога vt.css нет: его вход и выход - затемнение,
+# а не переход браузера (docs/world.md, «Room ↔ blog»); blog.css - после prose.css,
+# чтобы поправить ее под ленту.
 pagination:
   data: bundles
   size: 1
@@ -16,12 +18,16 @@ bundles:
     parts: [world/_src/shell.css, world/_src/notes.css, world/_src/note-groups.css, world/_src/vt.css]
   - out: note.css
     parts: [world/_src/shell.css, world/_src/notes.css, world/_src/note.css, world/_src/prose.css, world/_src/note-groups.css, world/_src/vt.css]
+  - out: blog.css
+    parts: [world/_src/shell.css, world/_src/prose.css, world/_src/blog.css]
   - out: home.js
     parts: [world/_src/fog.js, world/_src/wall.js, world/_src/cine.js, world/_src/smoke.js]
   - out: note-group.js
     parts: [world/_src/note-group.js]
   - out: note.js
     parts: [world/_src/note.js]
+  - out: blog.js
+    parts: [world/_src/blog.js]
 permalink: "/world/{{ entry.out }}"
 eleventyExcludeFromCollections: true
 ---
