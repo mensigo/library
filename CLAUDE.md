@@ -90,3 +90,17 @@ Content files use these frontmatter fields:
 `test/scripts.test.js` covers the exported utility functions from `scripts.js`; `test/filters.test.js` covers `lib/filters.js`; `test/note-drafts.test.js` checks that drafts sit where their tag says; `test/markdown-links.test.js` fails on root links (`](/…)`, `href="/…"`) in `src/**/*.md` outside `src/drafts/`, since markdown doesn't get `pathPrefix`: link notes relatively (`../disassemble/`). `test/links.test.js` walks every `href` and `src` in `_site/` and every `url()` in the `/world/` and `/cinema/` bundles, and fails on dangling internal links and on `a.row[href="#"]` (run a build first; images are skipped when `src/images/world/` wasn't copied in). No CI runs the tests: run `npm run build:check` before pushing. Jest runs with jsdom environment. Coverage includes `src/js/**/*.js` and `lib/**/*.js`.
 
 `scripts.js` binds its bootstrap to `DOMContentLoaded` rather than calling `init()` immediately — that keeps the module safe to `require()` in jsdom, where the event never fires.
+
+## Agent skills
+
+### Issue tracker
+
+Issues live in GitHub Issues on `library` (via `gh`). See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+The five canonical labels plus `done`. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: `GLOSSARY.md` + `docs/adr/` at the repo root. See `docs/agents/domain.md`.
