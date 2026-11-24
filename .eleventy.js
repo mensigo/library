@@ -429,12 +429,9 @@ module.exports = function(eleventyConfig) {
             });
     });
 
-    // Опубликованные обзоры: их число на карточке «Обзоры» в комнате (src/index.njk)
-    eleventyConfig.addCollection("reviews", function(collection) {
-        return collection.getFilteredByGlob("src/reviews/**/*.md")
-            .filter(item => !item.inputPath.endsWith('index.md') && item.data.draft !== true)
-            .sort((a, b) => (a.data.title || '').toString().localeCompare((b.data.title || '').toString(), 'ru', { sensitivity: 'base' }));
-    });
+    // Опубликованные посты блога, новые выше: по ним листается лента (src/blog/index.njk),
+    // их число - на карточке «Блог» в комнате
+    eleventyConfig.addCollection("posts", (collection) => worldFilters.blogPosts(collection.getAll()));
 
     // Shortcode для сортируемых таблиц
     eleventyConfig.addPairedShortcode("sortableTable", function(content) {

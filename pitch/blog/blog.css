@@ -1,0 +1,311 @@
+/* Питч блога. Токены и шрифты - как в мире (src/world/_src/shell.css), фон почти
+   ровный: без стены и сцены, только зерно и слабый теплый свет сверху.
+   Вариант A из трех (тетрадь), остальные отброшены. */
+
+@font-face {
+  font-family: "Ysabeau Infant";
+  src: url("../../src/fonts/YsabeauInfant-VariableFont_wght.woff2") format("woff2");
+  font-weight: 100 900;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Ysabeau Infant";
+  src: url("../../src/fonts/YsabeauInfant-Italic-VariableFont_wght.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Caveat";
+  src: url("../../src/fonts/Caveat-Cyrillic-VariableFont_wght.woff2") format("woff2");
+  font-weight: 400 700;
+  font-display: swap;
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+
+@font-face {
+  font-family: "Caveat";
+  src: url("../../src/fonts/Caveat-Latin-VariableFont_wght.woff2") format("woff2");
+  font-weight: 400 700;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+2000-206F;
+}
+
+:root {
+  --bg: #07060a;
+  --ink: #f3ece4;
+  --ink-2: rgba(243, 236, 228, .72);
+  --ink-3: rgba(243, 236, 228, .46);
+  --line: rgba(243, 236, 228, .14);
+  --acc: #f0a94a;
+  --acc-soft: rgba(240, 169, 74, .14);
+  --sans: "Ysabeau Infant", "Segoe UI", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --hand: "Caveat", var(--sans);
+  --ease: cubic-bezier(.2, .7, .2, 1);
+  --gut: clamp(16px, 5vw, 84px);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+
+html { background: var(--bg); }
+
+body {
+  margin: 0;
+  min-height: 100svh;
+  background:
+    radial-gradient(120% 60% at 50% -10%, rgba(240, 169, 74, .07), transparent 60%),
+    var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 17px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Зерно поверх фона: чтобы ровный черный не выглядел пустым экраном */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: .05;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+}
+
+a { color: inherit; }
+
+/* ---------- затемнение ---------- */
+
+.fog {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: #000;
+  pointer-events: none;
+  opacity: 1;
+  transition: opacity .7s var(--ease);
+}
+
+.fog.is-clear { opacity: 0; }
+.fog.is-out { opacity: 1; transition-duration: .45s; }
+
+/* ---------- hud ---------- */
+
+.hud {
+  position: absolute;
+  top: 22px;
+  left: 26px;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font: 500 11px/1 var(--mono);
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+
+.hud a { text-decoration: none; }
+.hud b { color: var(--ink); font-weight: 700; }
+.hud .sep { color: var(--ink-3); }
+
+.dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--acc);
+  box-shadow: 0 0 12px var(--acc);
+  animation: ember 3.2s ease-in-out infinite;
+}
+
+@keyframes ember { 50% { opacity: .45; } }
+
+/* ---------- шапка ---------- */
+
+.blog {
+  position: relative;
+  width: min(100%, 760px);
+  margin: 0 auto;
+  padding: 120px var(--gut) 60px;
+}
+
+.kicker {
+  font: 500 11px/1 var(--mono);
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: var(--acc);
+}
+
+.title {
+  margin: 12px 0 0;
+  font-family: var(--hand);
+  font-size: clamp(54px, 6vw, 84px);
+  font-weight: 600;
+  line-height: 1;
+}
+
+.sub {
+  margin: 14px 0 0;
+  max-width: 40ch;
+  font-size: clamp(16px, 1.35vw, 19px);
+  color: var(--ink-2);
+}
+
+/* ---------- пост: общее ---------- */
+
+.feed { margin-top: 64px; }
+
+.post__meta {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+}
+
+.post__date {
+  color: var(--ink-3);
+  text-decoration: none;
+  transition: color .2s var(--ease);
+}
+
+.post__date:hover { color: var(--acc); }
+
+.post__kind {
+  font: 500 10px/1 var(--mono);
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.post__t {
+  margin: 0 0 10px;
+  font-size: 26px;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -.005em;
+}
+
+.post__body p,
+.post__body li { color: var(--ink-2); }
+.post__body p { margin: 0 0 14px; }
+.post__body > :last-child { margin-bottom: 0; }
+.post__body ul { margin: 0 0 14px; padding-left: 20px; }
+.post__body li::marker { color: var(--acc); }
+
+.post__body code {
+  font: 400 .86em/1 var(--mono);
+  padding: .15em .4em;
+  border-radius: 5px;
+  background: rgba(243, 236, 228, .07);
+  color: var(--ink);
+}
+
+.post__body pre {
+  margin: 0 0 14px;
+  padding: 14px 18px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: rgba(0, 0, 0, .35);
+  overflow-x: auto;
+}
+
+.post__body pre code { padding: 0; background: none; font-size: 14px; line-height: 1.6; }
+
+.fig { margin: 4px 0 14px; }
+
+.fig__ph {
+  aspect-ratio: 16 / 9;
+  border-radius: 10px;
+  background:
+    radial-gradient(60% 80% at 70% 30%, rgba(240, 169, 74, .22), transparent 70%),
+    linear-gradient(160deg, #1a1620, #0c0a10);
+  border: 1px solid var(--line);
+}
+
+.fig figcaption {
+  margin-top: 8px;
+  font-size: 14px;
+  color: var(--ink-3);
+}
+
+/* ---------- тетрадь: одна колонка, дата рукой, между постами три точки ---------- */
+
+.post__meta { margin-bottom: 8px; }
+
+.post__date {
+  font-family: var(--hand);
+  font-size: 26px;
+  line-height: 1;
+  color: var(--ink-2);
+}
+
+.post + .post::before {
+  content: "· · ·";
+  display: block;
+  margin: 52px 0 44px;
+  text-align: center;
+  letter-spacing: .6em;
+  color: var(--ink-3);
+}
+
+/* ---------- страницы ---------- */
+
+.pager {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 64px;
+  padding-top: 22px;
+  border-top: 1px solid var(--line);
+  font: 500 11px/1 var(--mono);
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+
+.pager__l { text-decoration: none; transition: color .2s var(--ease); }
+.pager a.pager__l:hover { color: var(--acc); }
+.pager__l.is-off { color: var(--ink-3); opacity: .5; }
+.pager__n { color: var(--ink-3); }
+.pager__n b { color: var(--ink); }
+
+.foot {
+  margin-top: 40px;
+  font: 500 10px/1 var(--mono);
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+/* ---------- узкий экран ---------- */
+
+@media (max-width: 1100px) {
+  .hud { top: 16px; left: 16px; }
+  .blog { padding-top: 96px; }
+  .foot { display: none; }
+}
+
+@media (max-width: 600px) {
+  .post__t { font-size: 22px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dot { animation: none; }
+  .fog { transition-duration: .01s; }
+}
+
+/* Длинный пост в ленте обрывается на <!-- more --> (MIGRATION.md, решение 3) */
+.post__more {
+  display: inline-block;
+  margin-top: 4px;
+  font: 500 11px/1 var(--mono);
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--acc);
+  text-decoration: none;
+}
+
+.post__more:hover { text-decoration: underline; text-underline-offset: 4px; }

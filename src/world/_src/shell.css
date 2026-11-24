@@ -18,6 +18,26 @@
   font-display: swap;
 }
 
+/* Рукописный шрифт: заголовок комнаты и блог (название, даты постов). Страница, где
+   его нет, его не грузит: браузер берет начертание при первом использовании. */
+@font-face {
+  font-family: "Caveat";
+  src: url("../fonts/Caveat-Cyrillic-VariableFont_wght.woff2") format("woff2");
+  font-weight: 400 700;
+  font-display: swap;
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+
+@font-face {
+  font-family: "Caveat";
+  src: url("../fonts/Caveat-Latin-VariableFont_wght.woff2") format("woff2");
+  font-weight: 400 700;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC,
+                 U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193,
+                 U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
 :root {
   --bg: #07060a;
   --ink: #f3ece4;
@@ -28,6 +48,7 @@
   --acc-soft: rgba(240, 169, 74, .14);
   --sans: "Ysabeau Infant", "Segoe UI", system-ui, sans-serif;
   --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --hand: "Caveat", var(--sans);
   --ease: cubic-bezier(.2, .7, .2, 1);
   /* Ширина сцены: кадр 1672x941 всегда закрывает окно целиком. От нее же считается
      стена - и в комнате, и за страницами группы и заметки. */

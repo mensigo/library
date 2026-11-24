@@ -19,21 +19,22 @@ Build output goes to `_site/`. In production (`NODE_ENV=production`), the path p
 
 This is an [Eleventy](https://www.11ty.dev/) static site — a personal library/notes site. Two designs live side by side:
 
-- **The world** (`docs/world.md`) — `/` is the room, `/#notes` the wall with the note groups, `/notes/<group>/` a group page, `/notes/<group>/<note>/` a note. The way into `/cinema/` (a hand-authored world of its own, `src/cinema/`) starts from the room.
-- **The old shell** (`DESIGN.md`) — used only by reviews: anime (`reviews/anime/*.md`) and philosophy (`reviews/philosophy/<author>/*.md`). Hidden for now: `reviews/reviews.11tydata.js` sets `permalink: false`, so none is built; the room's Reviews card still counts them. They move to the new design later, as their own migration.
+- **The world** (`docs/world.md`) — `/` is the room, `/#notes` the wall with the note groups, `/notes/<group>/` a group page, `/notes/<group>/<note>/` a note, `/blog/` the blog feed (`/blog/page/<n>/`), `/blog/<id>/` a post. The way into `/cinema/` (a hand-authored world of its own, `src/cinema/`) starts from the room.
+- **The old shell** (`DESIGN.md`) — used only by reviews: anime (`reviews/anime/*.md`) and philosophy (`reviews/philosophy/<author>/*.md`). Hidden for now: `reviews/reviews.11tydata.js` sets `permalink: false`, so none is built, and no room card counts them. They come back later as blog posts with their own tags (`аниме`, `книги`), as their own migration.
 
 ### Key files
 
-- **`.eleventy.js`** — all Eleventy config: collections, filters, shortcodes, passthrough copies, and the markdown pipeline. Defines `anime`, `notes`, `philosophyCategories`, `reviews`, and `searchIndex` collections; registers the `bundle` filter and the filters from `lib/filters.js`; loads `src/notes/groups.js` as the global `noteGroups`.
-- **`lib/filters.js`** — the world's filters (`groupNotes`, `groupDrafts`, `topics`, `toc`, `shortDate`, `isFresh`), kept out of `.eleventy.js` so Jest can import them.
+- **`.eleventy.js`** — all Eleventy config: collections, filters, shortcodes, passthrough copies, and the markdown pipeline. Defines `anime`, `notes`, `philosophyCategories`, `posts` (the blog, via `blogPosts`), and `searchIndex` collections; registers the `bundle` filter and the filters from `lib/filters.js`; loads `src/notes/groups.js` as the global `noteGroups`.
+- **`lib/filters.js`** — the world's filters (`groupNotes`, `groupDrafts`, `topics`, `toc`, `shortDate`, `isFresh`; for the blog `blogPosts`, `longDate`, `rootLinks`, `beforeMore`), kept out of `.eleventy.js` so Jest can import them.
 - **`DESIGN.md`** — the old shell's design foundation, plus the markdown authoring syntax both designs use. **`docs/world.md`** — the new design: files, bundles, transitions, values that must stay in sync, images. Read the right one before touching CSS or adding markup patterns.
 
 The world:
 
 - **`src/index.njk`** (the room), **`src/notes/group.njk`** (group pages, paginated over `noteGroups`), **`src/notes/index.njk`** (`/notes/` → `/#notes` redirect). One-off pages keep their markup inline.
-- **`src/_includes/world/`** — layouts several pages share: `shell.njk` (`<head>` + body slot; page data `bundle`, `groupId`, `expectReady`), `note.njk` (the note page), `note-sigils.njk` (macro `sigil(id, "wall" | "mark")`). `src/_includes/meta.njk` holds the OG/Telegram tags for both designs.
-- **`src/world/_src/`** — CSS/JS sources, never published. **`src/world/bundles.njk`** joins them into `/world/{home,note-group,note}.{css,js}`. `src/cinema/_src/` + `src/cinema/bundles.njk` do the same for Cinema.
+- **`src/_includes/world/`** — layouts several pages share: `shell.njk` (`<head>` + body slot; page data `bundle`, `groupId`, `expectReady`), `note.njk` (the note page), `post.njk` (the post page), `post-macro.njk` (macro `post(…)`: one post, shared by the feed and the post page), `note-sigils.njk` (macro `sigil(id, "wall" | "mark")`). `src/_includes/meta.njk` holds the OG/Telegram tags for both designs.
+- **`src/world/_src/`** — CSS/JS sources, never published. **`src/world/bundles.njk`** joins them into `/world/{home,note-group,note,blog}.{css,js}`. `src/cinema/_src/` + `src/cinema/bundles.njk` do the same for Cinema.
 - **`src/notes/groups.js`** — one entry per note group (`id`, `title`, `desc`, `tag`, `embers`, `find`, `enabled`). **`src/notes/notes.11tydata.js`** gives every note `layout: world/note.njk` and `groupId` from its folder name.
+- **`src/blog/`** — `index.njk` (the feed, paginated over `collections.posts`, 10 per page), one `.md` per post, `blog.11tydata.js` (layout `world/post.njk`, bundle `blog`, permalink `/blog/<id>/`, `false` for drafts).
 - **`src/drafts/`** — drafts with no group tag: not built, in no collection (`drafts.11tydata.js`). A draft with a group's tag lives in that group's folder with `draft: true`.
 
 The old shell (reviews only; delete these files, the `searchIndex` collection, the `src/css` / `src/js` passthroughs and `test/scripts.test.js` when reviews move):
@@ -83,11 +84,17 @@ Content files use these frontmatter fields:
 - `lede` — optional one-paragraph subtitle (also the row's description); `tldr` — optional list rendered as a key-points block
 - `reading_time` — optional override of the computed reading time
 - `score`, `anime_status`, `manga_status`, `manga_author` — reviews only; surface in the rail's `.railcard`
-- `draft: true` — excludes item from search index and from the group's rows; a draft in `notes/<group>/` is listed in the group page's embers block
+- `draft: true` — excludes item from search index and from the group's rows; a draft in `notes/<group>/` is listed in the group page's embers block. A blog draft isn't built at all and may go without an `id`
+
+Blog posts (`src/blog/*.md`) use `title`, `tags` (the post's kind, shown in the feed; never a note group's tag), `tg_desc` / `tg_pub_time` as notes, `draft`, and:
+- `id` — required once published: the URL `/blog/<id>/`. Written by hand, the next free number; never computed, never reused (`test/blog-posts.test.js`)
+- `date` — required: feed order (newest first) and the shown date. Eleventy's own field, not `upd_date`
+- `untitled: true` — no heading in the feed (short posts)
+- `<!-- more -->` on its own line ends the feed preview; the post page shows everything
 
 ### Tests
 
-`test/scripts.test.js` covers the exported utility functions from `scripts.js`; `test/filters.test.js` covers `lib/filters.js`; `test/note-drafts.test.js` checks that drafts sit where their tag says; `test/markdown-links.test.js` fails on root links (`](/…)`, `href="/…"`) in `src/**/*.md` outside `src/drafts/`, since markdown doesn't get `pathPrefix`: link notes relatively (`../disassemble/`). `test/links.test.js` walks every `href` and `src` in `_site/` and every `url()` in the `/world/` and `/cinema/` bundles, and fails on dangling internal links and on `a.row[href="#"]` (run a build first; images are skipped when `src/images/world/` wasn't copied in). No CI runs the tests: run `npm run build:check` before pushing. Jest runs with jsdom environment. Coverage includes `src/js/**/*.js` and `lib/**/*.js`.
+`test/scripts.test.js` covers the exported utility functions from `scripts.js`; `test/filters.test.js` covers `lib/filters.js`; `test/note-drafts.test.js` checks that drafts sit where their tag says; `test/markdown-links.test.js` fails on root links (`](/…)`, `href="/…"`) in `src/**/*.md` outside `src/drafts/` and `src/blog/`, since markdown doesn't get `pathPrefix`: link notes relatively (`../disassemble/`). In `src/blog/` it's the reverse: a post renders at two depths, so it links from the root (`/notes/python/slots/`) and the templates prefix those links (`rootLinks`); a relative link there fails. `test/blog-posts.test.js` checks posts' `title`, `date` and unique `id`s. `test/links.test.js` walks every `href` and `src` in `_site/` and every `url()` in the `/world/` and `/cinema/` bundles, and fails on dangling internal links and on `a.row[href="#"]` (run a build first; images are skipped when `src/images/world/` wasn't copied in). No CI runs the tests: run `npm run build:check` before pushing. Jest runs with jsdom environment. Coverage includes `src/js/**/*.js` and `lib/**/*.js`.
 
 `scripts.js` binds its bootstrap to `DOMContentLoaded` rather than calling `init()` immediately — that keeps the module safe to `require()` in jsdom, where the event never fires.
 
