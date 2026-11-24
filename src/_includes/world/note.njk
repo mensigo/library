@@ -3,11 +3,11 @@ layout: world/shell.njk
 bundle: note
 ---
 {#- Страница заметки (pitch note-slots.html). Раскладку и groupId дает
-    notes/notes.11tydata.js. Номер в kicker - номер строки заметки на странице
-    группы (groupNotes); у черновика его нет, kicker - только группа.
+    notes/notes.11tydata.js. Номер в kicker и теги - строка заметки на странице
+    группы (noteGroup, rowOf); у черновика номера нет, kicker - только группа.
     Оглавление собирается при сборке (фильтр toc), W/S/A и копирование - note.js. -#}
 {%- from "world/note-sigils.njk" import sigil -%}
-{%- set notes = collections.all | groupNotes(groupId) -%}
+{%- set row = (collections.all | noteGroup(groupId)).rowOf(page.url) -%}
 {%- set sections = content | toc -%}
 {#- Один список на два оглавления: в боковой колонке и свернутое под шапкой на узком экране -#}
 {%- macro tocList(sections) %}
@@ -44,11 +44,11 @@ bundle: note
 
 <main class="wrap">
   <header class="nhead">
-    <span class="kicker">{% for n in notes %}{% if n.url == page.url %}{{ ("0" ~ loop.index).slice(-2) }} / {% endif %}{% endfor %}{{ groupId }}</span>
+    <span class="kicker">{% if row and row.n %}{{ ("0" ~ row.n).slice(-2) }} / {% endif %}{{ groupId }}</span>
     <h1>{% if titleHtml %}{{ titleHtml | safe }}{% else %}{{ title }}{% endif %}</h1>
     <p class="meta"><span><b>{{ reading_time or (content | readingTime) }}</b> мин</span>
       {%- if upd_date %}<span>{{ upd_date | shortDate }}</span>{% endif %}
-      {%- for g in noteGroups %}{% if g.id == groupId %}{% for t in (tags or []) | reject("equalto", g.tag) %}<i>{{ t }}</i>{% endfor %}{% endif %}{% endfor %}</p>
+      {%- for t in (row.tags if row else []) %}<i>{{ t }}</i>{% endfor %}</p>
   </header>
 
   <div class="layout">

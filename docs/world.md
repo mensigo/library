@@ -81,15 +81,19 @@ sit next to the files (`src/fonts/*-OFL.txt`) and ship with them.
 
 ### Lists and numbers
 
-- Rows (`groupNotes`, `lib/filters.js`): published notes of the group, newest `upd_date`
-  first, then `title`. `01..NN` is the position in that order, so a note's number changes
-  when another note is updated. The note's kicker `01 / python` uses the same number; a
-  draft's kicker is just the group.
-- "Fresh" marker: `upd_date` within 45 days of the build date (`isFresh`).
-- Topics (`topics`): `все` first, then tags by count, ties by name; the group's own tag
-  is left out, of the topics and of the row tags.
-- Embers (`groupDrafts`): `draft: true` notes in the group's folder, under the group's
+Rows, numbers, row tags, topics and embers all come from one filter,
+`collections.all | noteGroup(id)` (`lib/note-group.js`); templates only render its result.
+
+- Rows (`view.rows`): published notes of the group, newest `upd_date` first, then
+  `title`. `01..NN` is the position in that order (`row.n`), so a note's number changes
+  when another note is updated. The note's kicker `01 / python` uses the same number
+  (`view.rowOf(page.url)`); a draft's kicker is just the group.
+- "Fresh" marker (`row.fresh`): `upd_date` within 45 days of the build date.
+- Topics (`view.topics`): `все` first, then tags by count, ties by name; the group's own
+  tag is left out, of the topics and of the row tags (`row.tags`).
+- Embers (`view.drafts`): `draft: true` notes in the group's folder, under the group's
   `embers` heading. Not links. A draft still builds at its URL.
+- The room's «Заметки» count (`noteCount`): rows of the enabled groups.
 - TOC (`toc`): `h2` with an id, without `.u-kicker`, read from the built content.
 - Posts (`blogPosts`, collection `posts`): `src/blog/*.md` without `draft: true`, newest
   `date` first, then `title`; 10 per feed page. Dates read `24 ноября`, with the year when

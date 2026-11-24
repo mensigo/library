@@ -9,7 +9,7 @@ title: Библиотека
 eleventyExcludeFromCollections: true
 ---
 {%- from "world/note-sigils.njk" import sigil -%}
-{%- set notesCount = collections.notes | length -%}
+{%- set notesCount = collections.all | noteCount -%}
 {%- set postsCount = collections.posts | length -%}
 <header class="hero" id="hero">
   <!-- Мир: комната и стена справа от нее. По клику на «Заметки» камера уезжает вправо,
@@ -89,14 +89,14 @@ eleventyExcludeFromCollections: true
     <nav class="groups" aria-label="Группы заметок">
       {%- for g in noteGroups %}
       {%- if g.enabled %}
-      {%- set n = collections.all | groupNotes(g.id) | length %}
+      {%- set n = (collections.all | noteGroup(g.id)).rows | length %}
       <a class="group" href="{{ pathPrefix }}/notes/{{ g.id }}/" data-g="{{ g.id }}">
         <span class="group__t">{{ g.title }}</span>
         <span class="group__d">{{ g.desc }}</span>
         <span class="group__m"><b>{{ n }}</b> {{ n | plural('заметка', 'заметки', 'заметок') }} <i>→</i></span>
       </a>
       {%- else %}
-      {%- set n = collections.all | groupDrafts(g.id) | length %}
+      {%- set n = (collections.all | noteGroup(g.id)).drafts | length %}
       <a class="group group--draft" href="#notes" data-g="{{ g.id }}" aria-disabled="true">
         <span class="group__t">{{ g.title }}</span>
         <span class="group__d">{{ g.desc }}</span>

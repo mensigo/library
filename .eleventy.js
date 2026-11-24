@@ -7,6 +7,7 @@ const markdownItContainer = require("markdown-it-container");
 const markdownItFootnote = require("markdown-it-footnote");
 const markdownItAbbr = require("markdown-it-abbr");
 const worldFilters = require("./lib/filters");
+const { noteGroup, noteCount } = require("./lib/note-group");
 
 // Тот же алгоритм, что и generateSlug в src/js/scripts.js: якоря,
 // сгенерированные на сборке, должны совпадать с теми, что ищет TOC в браузере.
@@ -318,9 +319,13 @@ module.exports = function(eleventyConfig) {
             + fs.readFileSync(path.join(__dirname, "src", name), "utf8"))
         .join("\n"));
 
-    // Фильтры нового дизайна (lib/filters.js): строки и темы страницы группы,
-    // оглавление и даты заметки.
+    // Фильтры нового дизайна (lib/filters.js): оглавление и даты заметки, лента блога.
     Object.entries(worldFilters).forEach(([name, fn]) => eleventyConfig.addFilter(name, fn));
+
+    // Группа заметок целиком (lib/note-group.js): строки, номера, темы, черновики;
+    // noteCount - число на карточке «Заметки» в комнате.
+    eleventyConfig.addFilter("noteGroup", (collection, id) => noteGroup(collection, id));
+    eleventyConfig.addFilter("noteCount", noteCount);
 
     // Группы заметок (src/notes/groups.js) нужны и вне notes/: стену рисует src/index.njk.
     eleventyConfig.addGlobalData("noteGroups", () => require("./src/notes/groups.js"));
@@ -419,14 +424,6 @@ module.exports = function(eleventyConfig) {
             });
 
         return categories;
-    });
-
-    // Коллекция заметок (notes)
-    eleventyConfig.addCollection("notes", function(collection) {
-        return collection.getFilteredByGlob("src/notes/**/*.md")
-            .filter(item => {
-                return !item.inputPath.includes('index.md') && item.data.draft !== true;
-            });
     });
 
     // Опубликованные посты блога, новые выше: по ним листается лента (src/blog/index.njk),

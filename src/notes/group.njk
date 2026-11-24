@@ -1,7 +1,7 @@
 ---
 # Страница группы заметок: /notes/<id>/ на каждую запись из notes/groups.js
-# (pitch notes-python.html). Строки - опубликованные заметки группы, новые выше,
-# номер строки - позиция в этом порядке; блок черновиков - черновики из папки группы.
+# (pitch notes-python.html). Строки, их номера, темы и черновики - из noteGroup
+# (lib/note-group.js), шаблон только рисует их.
 # Из коллекций исключена: в поиск старой оболочки и в ее списки она не входит.
 layout: world/shell.njk
 bundle: note-group
@@ -16,8 +16,7 @@ eleventyComputed:
   groupId: "{{ noteGroup.id }}"
 ---
 {%- from "world/note-sigils.njk" import sigil -%}
-{%- set notes = collections.all | groupNotes(noteGroup.id) -%}
-{%- set drafts = collections.all | groupDrafts(noteGroup.id) -%}
+{%- set view = collections.all | noteGroup(noteGroup.id) -%}
 <!-- Та же стена, на которой выбирали группу, в том же месте, где встала камера:
      при переходе фон не меняется, только темнеет под список. -->
 <div class="backdrop" aria-hidden="true"></div>
@@ -52,10 +51,11 @@ eleventyComputed:
       </label>
 
       <div id="rows">
-        {%- for note in notes %}
-        {%- set tags = (note.data.tags or []) | reject("equalto", noteGroup.tag) | list %}
-        <a class="row{% if note.data.upd_date | isFresh %} row--fresh{% endif %}" href="{{ pathPrefix }}{{ note.url }}" data-tags="{{ tags | join(',') }}">
-          <span class="row__n">{{ ("0" ~ loop.index).slice(-2) }}</span>
+        {%- for row in view.rows %}
+        {%- set note = row.note %}
+        {%- set tags = row.tags %}
+        <a class="row{% if row.fresh %} row--fresh{% endif %}" href="{{ pathPrefix }}{{ note.url }}" data-tags="{{ tags | join(',') }}">
+          <span class="row__n">{{ ("0" ~ row.n).slice(-2) }}</span>
           <span class="row__body">
             <span class="row__t">{% if note.data.titleHtml %}{{ note.data.titleHtml | safe }}{% else %}{{ note.data.title }}{% endif %}</span>
             {%- if note.data.lede %}
@@ -77,19 +77,19 @@ eleventyComputed:
       <div class="topics">
         <span class="kicker">Темы</span>
         <div class="topics__list" role="group" aria-label="Фильтр по теме">
-          {%- for t in notes | topics(noteGroup.tag) %}
+          {%- for t in view.topics %}
           <button class="topic" type="button" data-tag="{{ t.tag }}" aria-pressed="{{ 'true' if loop.first else 'false' }}">{{ t.label }} <b>{{ t.count }}</b></button>
           {%- endfor %}
         </div>
       </div>
-      {%- if drafts | length %}
+      {%- if view.drafts | length %}
 
       <!-- Черновики этой группы: еще не заметки, но уже видно, что на подходе -->
       <div class="embers">
         <span class="kicker">{{ noteGroup.embers }}</span>
         <ul>
-          {%- for draft in drafts %}
-          <li><span class="dot"></span><span class="embers__t">{{ draft.data.title }}</span><small>черновик · {{ draft.data.upd_date | shortDate }}</small></li>
+          {%- for draft in view.drafts %}
+          <li><span class="dot"></span><span class="embers__t">{{ draft.note.data.title }}</span><small>черновик · {{ draft.note.data.upd_date | shortDate }}</small></li>
           {%- endfor %}
         </ul>
       </div>
